@@ -10,7 +10,7 @@ interface AppointmentDetailModalProps {
   therapist: Therapist | undefined;
   onClose: () => void;
   onEdit: (appointment: Appointment) => void;
-  onDelete: (appointmentId: string) => void;
+  onDelete: (appointmentId: string, seriesId?: string, fromDate?: Date) => void;
   onStatusChange: (appointment: Appointment, newStatus: AppointmentStatus) => void;
   onPaymentStatusChange: (appointment: Appointment, newStatus: 'paid' | 'pending') => void;
   onPackagePayment: (appointment: Appointment) => void;
@@ -168,7 +168,19 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
                             <Edit className="w-5 h-5" />
                         </button>
                         <button
-                            onClick={() => onDelete(appointment.id)}
+                            onClick={() => {
+                                if (appointment.seriesId) {
+                                    if (window.confirm("Você quer excluir todos os eventos futuros nesta série? \n'OK' para excluir a série, 'Cancelar' para excluir apenas este evento.")) {
+                                        onDelete(appointment.id, appointment.seriesId, appointment.startTime);
+                                    } else {
+                                        onDelete(appointment.id);
+                                    }
+                                } else {
+                                   if(window.confirm('Tem certeza que deseja excluir este agendamento?')) {
+                                       onDelete(appointment.id);
+                                   }
+                                }
+                            }}
                             className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
                             title="Excluir Agendamento"
                         >

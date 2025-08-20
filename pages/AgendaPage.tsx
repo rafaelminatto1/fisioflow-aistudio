@@ -164,14 +164,30 @@ export default function AgendaPage() {
     } catch { showToast('Falha ao atualizar pagamento.', 'error'); }
   };
 
-  const handleDelete = async (appointmentId: string, seriesId?: string) => {
-    const confirmed = window.confirm('Tem certeza que deseja excluir este agendamento?');
+  const handleDelete = async (appointmentId: string, seriesId?: string, fromDate?: Date) => {
+    // Confirmation is now handled in the context menu, but we keep a fallback for other UI parts
+    const confirmed = seriesId
+      ? true
+      : window.confirm('Tem certeza que deseja excluir este agendamento?');
+
     if (!confirmed) return;
+
     try {
+      if (seriesId && fromDate) {
+        await appointmentService.deleteAppointmentSeries(seriesId, fromDate);
+        showToast('Série de agendamentos excluída com sucesso!', 'success');
+      } else {
         await appointmentService.deleteAppointment(appointmentId);
         showToast('Agendamento excluído com sucesso!', 'success');
-        refetch();
-    } catch { showToast('Falha ao excluir agendamento.', 'error'); }
+      }
+      refetch();
+    } catch (error) {
+      console.error('Falha ao excluir agendamento:', error);
+      showToast('Falha ao excluir agendamento.', 'error');
+    }
+
+    setContextMenu(null);
+    setSelectedAppointment(null);
   };
   
   const handleUpdateValue = async (appointmentId: string, newValue: number) => {
@@ -347,7 +363,7 @@ export default function AgendaPage() {
                 therapist={selectedTherapist}
                 onClose={() => setSelectedAppointment(null)}
                 onEdit={() => showToast('Funcionalidade de edição a ser implementada.', 'info')}
-                onDelete={(id) => { handleDelete(id); setSelectedAppointment(null); }}
+                onDelete={(id, seriesId, fromDate) => { handleDelete(id, seriesId, fromDate); setSelectedAppointment(null); }}
                 onStatusChange={(app, status) => { handleStatusChange(app, status); setSelectedAppointment(null); }}
                 onPaymentStatusChange={(app, status) => { handlePaymentStatusChange(app, status); setSelectedAppointment(null); }}
                 onPackagePayment={() => showToast('Funcionalidade de pacote a ser implementada.', 'info')}
@@ -355,14 +371,15 @@ export default function AgendaPage() {
             />
         )}
         {contextMenu && (
-            <AppointmentContextMenu 
+            <AppointmentContextMenu
                 x={contextMenu.x}
                 y={contextMenu.y}
+                appointment={contextMenu.appointment}
                 onClose={() => setContextMenu(null)}
                 onSetStatus={(status) => handleStatusChange(contextMenu.appointment, status)}
                 onSetPayment={(status) => handlePaymentStatusChange(contextMenu.appointment, status)}
                 onEdit={() => showToast('Funcionalidade de edição a ser implementada.', 'info')}
-                onDelete={() => handleDelete(contextMenu.appointment.id)}
+                onDelete={handleDelete}
             />
         )}
       </AnimatePresence>

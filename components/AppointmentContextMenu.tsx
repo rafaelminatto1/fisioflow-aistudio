@@ -1,19 +1,20 @@
 // components/AppointmentContextMenu.tsx
 import React, { useEffect, useRef } from 'react';
-import { AppointmentStatus } from '../types';
-import { CheckCircle, DollarSign, Edit, Trash2 } from 'lucide-react';
+import { Appointment, AppointmentStatus } from '../types';
+import { CheckCircle, DollarSign, Edit, Trash2, Repeat } from 'lucide-react';
 
 interface AppointmentContextMenuProps {
   x: number;
   y: number;
+  appointment: Appointment;
   onClose: () => void;
   onSetStatus: (status: AppointmentStatus) => void;
   onSetPayment: (status: 'paid' | 'pending') => void;
   onEdit: () => void;
-  onDelete: () => void;
+  onDelete: (appointmentId: string, seriesId?: string, fromDate?: Date) => void;
 }
 
-const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({ x, y, onClose, onSetStatus, onSetPayment, onEdit, onDelete }) => {
+const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({ x, y, appointment, onClose, onSetStatus, onSetPayment, onEdit, onDelete }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -31,11 +32,23 @@ const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({ x, y, o
     onClose();
   };
 
+  const handleDelete = () => {
+    if (appointment.seriesId) {
+      if (window.confirm("Você quer excluir todos os eventos futuros nesta série? \n'OK' para excluir a série, 'Cancelar' para excluir apenas este evento.")) {
+        onDelete(appointment.id, appointment.seriesId, appointment.startTime);
+      } else {
+        onDelete(appointment.id);
+      }
+    } else {
+      onDelete(appointment.id);
+    }
+  };
+
   return (
     <div
       ref={menuRef}
       style={{ top: y, left: x }}
-      className="absolute z-30 w-56 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-fast"
+      className="absolute z-30 w-60 rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none animate-fade-in-fast"
     >
       <div className="py-1" role="menu" aria-orientation="vertical">
         <button onClick={() => handleAction(() => onSetStatus(AppointmentStatus.Completed))} className="w-full text-left flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900" role="menuitem">
@@ -48,8 +61,8 @@ const AppointmentContextMenu: React.FC<AppointmentContextMenuProps> = ({ x, y, o
         <button onClick={() => handleAction(onEdit)} className="w-full text-left flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 hover:text-slate-900" role="menuitem">
             <Edit className="mr-3 h-4 w-4 text-blue-500" /> Editar Consulta...
         </button>
-        <button onClick={() => handleAction(onDelete)} className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700" role="menuitem">
-            <Trash2 className="mr-3 h-4 w-4" /> Excluir
+        <button onClick={() => handleAction(handleDelete)} className="w-full text-left flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700" role="menuitem">
+            <Trash2 className="mr-3 h-4 w-4" /> Excluir Agendamento...
         </button>
       </div>
        <style>{`
