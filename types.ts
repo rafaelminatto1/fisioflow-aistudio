@@ -133,7 +133,6 @@ export enum AppointmentType {
     Evaluation = 'Avaliação',
     Session = 'Sessão',
     Return = 'Retorno',
-    Teleconsulta = 'Teleconsulta',
     Pilates = 'Pilates',
     Urgent = 'Urgente'
 }
@@ -144,7 +143,6 @@ export const AppointmentTypeColors: Record<string, string> = {
     [AppointmentType.Return]: 'blue',
     [AppointmentType.Pilates]: 'amber',
     [AppointmentType.Urgent]: 'red',
-    [AppointmentType.Teleconsulta]: 'indigo',
 };
 
 

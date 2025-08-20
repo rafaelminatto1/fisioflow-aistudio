@@ -1,10 +1,13 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Calendar, Clock } from 'lucide-react';
-import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary } from '../types';
+import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary, RecurrenceRule } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import PatientSearchInput from './agenda/PatientSearchInput';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import RecurrenceSelector from './RecurrenceSelector';
+import { findConflict } from '../services/scheduling/conflictDetection';
+import { generateRecurrences } from '../services/scheduling/recurrenceService';
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
@@ -24,12 +27,13 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
   const [duration, setDuration] = useState(60);
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>(undefined);
   
   const { showToast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
   
   const slotDate = useMemo(() => appointmentToEdit?.startTime || initialData?.date || new Date(), [appointmentToEdit, initialData]);
-  const slotTime = useMemo(() => format(slotDate, 'HH:mm'), [slotDate]);
+  const [slotTime, setSlotTime] = useState(useMemo(() => format(slotDate, 'HH:mm'), [slotDate]));
   const [therapistId, setTherapistId] = useState(appointmentToEdit?.therapistId || initialData?.therapistId || therapists[0]?.id || '');
   
   useEffect(() => {
@@ -42,12 +46,16 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
             setDuration(dur);
             setNotes(appointmentToEdit.observations || '');
             setTherapistId(appointmentToEdit.therapistId);
+            setSlotTime(format(appointmentToEdit.startTime, 'HH:mm'));
+            setRecurrenceRule(appointmentToEdit.recurrenceRule);
         } else {
             setSelectedPatient(null);
             setAppointmentType(AppointmentType.Session);
             setDuration(60);
             setNotes('');
             setTherapistId(initialData?.therapistId || therapists[0]?.id || '');
+            setSlotTime(format(initialData?.date || new Date(), 'HH:mm'));
+            setRecurrenceRule(undefined);
         }
     }
   }, [appointmentToEdit, initialData, isOpen, patients, therapists]);
@@ -78,11 +86,11 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
     
     const endTime = new Date(startTime.getTime() + duration * 60000);
 
-    const appointmentData: Appointment = {
+    const baseAppointment: Appointment = {
       id: appointmentToEdit?.id || `app_${Date.now()}`,
       patientId: selectedPatient.id,
       patientName: selectedPatient.name,
-      patientAvatarUrl: selectedPatient.avatarUrl,
+      patientAvatarUrl: (selectedPatient as any).avatarUrl || `https://i.pravatar.cc/150?u=${selectedPatient.id}`,
       therapistId: therapistId,
       title: appointmentToEdit?.title || `${appointmentType}`,
       startTime: startTime,
@@ -92,9 +100,29 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
       observations: notes,
       value: appointmentToEdit?.value || 120,
       paymentStatus: appointmentToEdit?.paymentStatus || 'pending',
+      recurrenceRule: recurrenceRule,
+      seriesId: appointmentToEdit?.seriesId,
     };
+    
+    const appointmentsToSave = generateRecurrences(baseAppointment);
+    
+    const conflict = findConflict(appointmentsToSave, allAppointments, appointmentToEdit?.id);
+    if (conflict) {
+        showToast(`Conflito com o agendamento de ${conflict.patientName} em ${format(conflict.startTime, 'dd/MM HH:mm')}.`, 'error');
+        setIsSaving(false);
+        return;
+    }
 
-    const success = await onSave(appointmentData);
+    // In a real scenario, this might be a single batch API call
+    let success = true;
+    for (const app of appointmentsToSave) {
+        const result = await onSave(app);
+        if(!result) {
+            success = false;
+            break;
+        }
+    }
+
     if (success) {
       onClose();
     }
@@ -114,7 +142,9 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
         
         <div className="bg-sky-50 px-4 py-3 flex items-center gap-4 text-sm">
           <div className="flex items-center gap-2"><Calendar className="w-4 h-4 text-sky-600" /><span className="font-medium">{format(slotDate, "EEEE, d 'de' MMMM", { locale: ptBR })}</span></div>
-          <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-sky-600" /><span className="font-medium">{slotTime}</span></div>
+          <div className="flex items-center gap-2"><Clock className="w-4 h-4 text-sky-600" />
+            <input type="time" value={slotTime} onChange={e => setSlotTime(e.target.value)} className="font-medium bg-transparent border-none p-0 focus:ring-0" />
+          </div>
         </div>
         
         <div className="p-4 space-y-4 overflow-y-auto">
@@ -167,6 +197,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
             </div>
           </div>
           
+          {!appointmentToEdit?.seriesId && <RecurrenceSelector recurrenceRule={recurrenceRule} onChange={setRecurrenceRule} />}
+
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">Observações</label>
             <textarea

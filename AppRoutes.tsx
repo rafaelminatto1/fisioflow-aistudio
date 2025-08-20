@@ -37,7 +37,6 @@ import AgendaSettingsPage from './pages/AgendaSettingsPage';
 import MedicalReportPage from './pages/MedicalReportPage';
 import MentoriaPage from './pages/MentoriaPage';
 import WhatsAppPage from './pages/WhatsAppPage';
-import TeleconsultaPage from './pages/TeleconsultaPage';
 import PartnershipPage from './pages/PartnershipPage';
 import AcompanhamentoPage from './pages/AcompanhamentoPage';
 import InventoryDashboardPage from './pages/InventoryDashboardPage';
@@ -64,40 +63,6 @@ import ClientListPage from './pages/partner-portal/ClientListPage';
 import ClientDetailPage from './pages/partner-portal/ClientDetailPage';
 import PartnerExerciseLibraryPage from './pages/partner-portal/PartnerExerciseLibraryPage';
 import FinancialsPage from './pages/partner-portal/FinancialsPage';
-
-const APP_SETTINGS_KEY = 'fisioflow_app_settings';
-
-const getTeleconsultaEnabled = () => {
-    try {
-        const stored = localStorage.getItem(APP_SETTINGS_KEY);
-        if (stored) {
-            return JSON.parse(stored).teleconsultaEnabled === true;
-        }
-    } catch (e) { /* ignore */ }
-    return false; // Default to false
-};
-
-const TeleconsultaGuard: React.FC = () => {
-    const [isEnabled, setIsEnabled] = React.useState(getTeleconsultaEnabled());
-    const location = useLocation();
-
-    React.useEffect(() => {
-        const handleSettingsChange = () => {
-            setIsEnabled(getTeleconsultaEnabled());
-        };
-        window.addEventListener('app-settings-changed', handleSettingsChange);
-        return () => {
-            window.removeEventListener('app-settings-changed', handleSettingsChange);
-        };
-    }, []);
-
-    if (!isEnabled) {
-        return <Navigate to="/agenda" state={{ from: location, message: 'Módulo de Teleconsulta desativado.' }} replace />;
-    }
-
-    return <TeleconsultaPage />;
-};
-
 
 const AppRoutes: React.FC = () => {
     return (
@@ -192,7 +157,6 @@ const AppRoutes: React.FC = () => {
                     <Route path="/ai-settings" element={<AiSettingsPage />} />
                     <Route path="/agenda-settings" element={<AgendaSettingsPage />} />
                     <Route path="/atendimento/:appointmentId" element={<AtendimentoPage />} />
-                    <Route path="/teleconsulta/:appointmentId" element={<TeleconsultaGuard />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />
                   </Routes>
                 </MainLayout>

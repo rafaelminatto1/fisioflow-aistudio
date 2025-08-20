@@ -16,6 +16,11 @@ const PatientTooltip: React.FC<PatientTooltipProps> = ({ appointment, x, y }) =>
       className="absolute z-20 w-64 p-3 bg-slate-800 text-white text-sm rounded-lg shadow-xl pointer-events-none animate-fade-in-fast"
     >
       <h4 className="font-bold mb-2">{appointment.patientName}</h4>
+      {appointment.sessionNumber && appointment.totalSessions && (
+          <p className="text-xs text-slate-300 mb-2">
+            Sessão: <strong>{appointment.sessionNumber}</strong> de <strong>{appointment.totalSessions}</strong>
+          </p>
+      )}
       <div className="flex items-center mb-2">
         <Phone className="w-4 h-4 mr-2 text-slate-400" />
         <span>{appointment.patientPhone || 'Não informado'}</span>

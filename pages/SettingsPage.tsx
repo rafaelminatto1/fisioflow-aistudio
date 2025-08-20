@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { User, Shield, Bell, KeyRound, FileText, CreditCard, ExternalLink, Video } from 'lucide-react';
+import { User, Shield, Bell, KeyRound, FileText, CreditCard, ExternalLink } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
 const SettingsCard: React.FC<{ icon: React.ReactNode; title: string; description: string; children: React.ReactNode }> = ({ icon, title, description, children }) => (
@@ -24,32 +24,7 @@ const SettingsCard: React.FC<{ icon: React.ReactNode; title: string; description
     </div>
 );
 
-const APP_SETTINGS_KEY = 'fisioflow_app_settings';
-
-const getSettings = () => {
-    try {
-        const stored = localStorage.getItem(APP_SETTINGS_KEY);
-        return stored ? JSON.parse(stored) : { teleconsultaEnabled: false };
-    } catch {
-        return { teleconsultaEnabled: false };
-    }
-};
-
-const saveSettings = (settings: { teleconsultaEnabled: boolean }) => {
-    localStorage.setItem(APP_SETTINGS_KEY, JSON.stringify(settings));
-    window.dispatchEvent(new Event('app-settings-changed'));
-};
-
-
 const SettingsPage: React.FC = () => {
-    const [settings, setSettings] = React.useState(getSettings);
-    
-    const handleTeleconsultaToggle = (enabled: boolean) => {
-        const newSettings = { ...settings, teleconsultaEnabled: enabled };
-        setSettings(newSettings);
-        saveSettings(newSettings);
-    };
-
     return (
         <>
             <PageHeader
@@ -101,30 +76,6 @@ const SettingsPage: React.FC = () => {
                                 <p className="text-sm text-slate-500">Adicione uma camada extra de segurança à sua conta. (Obrigatório por LGPD)</p>
                             </div>
                              <span className="text-sm font-semibold text-green-600">Ativado</span>
-                        </div>
-                    </div>
-                </SettingsCard>
-
-                 <SettingsCard
-                    icon={<Video className="w-6 h-6" />}
-                    title="Módulos"
-                    description="Habilite ou desabilite funcionalidades opcionais da plataforma."
-                >
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-lg">
-                            <div>
-                                <h4 className="font-semibold text-slate-800">Módulo de Teleconsulta</h4>
-                                <p className="text-sm text-slate-500">Permite realizar atendimentos por vídeo. A ativação solicitará permissão de câmera e microfone.</p>
-                            </div>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                                <input 
-                                    type="checkbox" 
-                                    checked={settings.teleconsultaEnabled}
-                                    onChange={(e) => handleTeleconsultaToggle(e.target.checked)}
-                                    className="sr-only peer" 
-                                />
-                                <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-sky-500"></div>
-                            </label>
                         </div>
                     </div>
                 </SettingsCard>

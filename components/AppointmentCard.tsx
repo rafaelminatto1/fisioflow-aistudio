@@ -24,6 +24,7 @@ const getAppointmentStyle = (color: string) => {
         case 'blue': return 'from-blue-500 to-blue-600 shadow-blue-200';
         case 'amber': return 'from-amber-500 to-amber-600 shadow-amber-200';
         case 'red': return 'from-red-500 to-red-600 shadow-red-200';
+        case 'indigo': return 'from-indigo-500 to-indigo-600 shadow-indigo-200';
         default: return 'from-slate-500 to-slate-600 shadow-slate-200';
     }
 }
@@ -51,7 +52,6 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({ appointment, onSelect
           (isCompleted || isCancelled) && 'opacity-60 hover:opacity-100'
       )}
       style={{ top: `${top}px`, height: `${height}px`, minHeight: '20px' }}
-      title={`${appointment.title}\nPaciente: ${appointment.patientName}\nTipo: ${appointment.type}`}
       data-id={appointment.id}
     >
       <div className="flex justify-between items-start flex-grow min-h-0">

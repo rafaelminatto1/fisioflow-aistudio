@@ -4,19 +4,6 @@ import { X, Edit, Trash2, Play, ChevronDown, DollarSign, Save } from 'lucide-rea
 import { Appointment, Patient, Therapist, AppointmentStatus, AppointmentType } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
-const APP_SETTINGS_KEY = 'fisioflow_app_settings';
-
-const getTeleconsultaEnabled = () => {
-    try {
-        const stored = localStorage.getItem(APP_SETTINGS_KEY);
-        if (stored) {
-            return JSON.parse(stored).teleconsultaEnabled === true;
-        }
-    } catch (e) { /* ignore */ }
-    return false; // Default to false
-};
-
-
 interface AppointmentDetailModalProps {
   appointment: Appointment | null;
   patient: Patient | undefined;
@@ -35,17 +22,6 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
     const { showToast } = useToast();
     const [isEditingValue, setIsEditingValue] = useState(false);
     const [localValue, setLocalValue] = useState(appointment?.value || 0);
-    const [teleconsultaEnabled, setTeleconsultaEnabled] = useState(getTeleconsultaEnabled);
-
-    useEffect(() => {
-        const handleSettingsChange = () => {
-            setTeleconsultaEnabled(getTeleconsultaEnabled());
-        };
-        window.addEventListener('app-settings-changed', handleSettingsChange);
-        return () => {
-            window.removeEventListener('app-settings-changed', handleSettingsChange);
-        };
-    }, []);
 
     useEffect(() => {
         setLocalValue(appointment?.value || 0);
@@ -65,20 +41,12 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
         setIsEditingValue(false);
     };
     
-    const isTeleconsulta = appointment.type === AppointmentType.Teleconsulta;
-    
     const handleStartSession = () => {
-        if (isTeleconsulta && !teleconsultaEnabled) {
-            showToast('O Módulo de Teleconsulta está desativado. Ative-o nas Configurações para iniciar a sessão.', 'info');
-            return;
-        }
-
-        const sessionUrl = isTeleconsulta ? `/teleconsulta/${appointment.id}` : `/atendimento/${appointment.id}`;
         onClose();
-        navigate(sessionUrl);
+        navigate(`/atendimento/${appointment.id}`);
     };
     
-    const sessionButtonText = isTeleconsulta ? 'Iniciar Teleconsulta' : 'Iniciar Atendimento';
+    const sessionButtonText = 'Iniciar Atendimento';
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -138,7 +106,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
                                     : 'bg-green-100 text-green-800 hover:bg-green-200'
                                 }`}
                             >
-                                Pago
+                                Pagou
                             </button>
                             <button
                                 onClick={() => onPaymentStatusChange(appointment, 'pending')}
@@ -184,12 +152,6 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
                             Pagar Pacote
                         </button>
                      )}
-                     <button
-                        onClick={() => showToast('Funcionalidade "Enviar pré-avaliação" a ser implementada.', 'info')}
-                        className="w-full text-center bg-white border border-green-600 text-green-600 font-bold py-2 px-4 rounded-lg hover:bg-green-50"
-                    >
-                        Enviar pré-avaliação
-                    </button>
                     <div className="flex items-center gap-2">
                         <button
                              onClick={handleStartSession}
