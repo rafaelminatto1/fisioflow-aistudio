@@ -73,6 +73,7 @@ class AIService {
   async processQuery(query: AIQuery): Promise<AIResponse> {
     logger.info(`Processing query: "${query.text}"`);
     let response: AIResponse;
+    const cacheKey = query.text.trim().toLowerCase();
 
     // 1. Search internal knowledge base
     const internalResult = await this.searchInternal(query);
@@ -84,7 +85,7 @@ class AIService {
     }
 
     // 2. Check cache
-    const cachedResult = await cacheService.get(query.hash);
+    const cachedResult = await cacheService.get(cacheKey);
     if (cachedResult) {
       logger.info('Returning response from cache.');
       response = { ...cachedResult, source: ResponseSource.CACHE };
@@ -96,7 +97,7 @@ class AIService {
     try {
       const premiumResult = await this.queryPremium(query);
       if (premiumResult) {
-        await cacheService.set(query.hash, premiumResult);
+        await cacheService.set(cacheKey, premiumResult);
         logger.info(`Returning response from premium provider: ${premiumResult.provider}`);
         response = premiumResult;
         this.analytics.trackQuery(query, response);

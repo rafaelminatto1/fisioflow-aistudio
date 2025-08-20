@@ -68,7 +68,6 @@ export interface AIQuery {
   }
   priority: 'low' | 'normal' | 'high'
   maxResponseTime: number
-  hash: string
   createdAt: string
 }
 

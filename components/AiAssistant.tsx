@@ -60,9 +60,6 @@ const AiAssistant: React.FC = () => {
     setIsLoading(true);
 
     try {
-        // Create a hash for caching. Simple hash for now.
-        const hash = btoa(input.trim().toLowerCase());
-
         const query = {
             id: `query_${Date.now()}`,
             text: input,
@@ -70,7 +67,6 @@ const AiAssistant: React.FC = () => {
             context: { userRole: 'Fisioterapeuta' },
             priority: 'normal' as 'normal',
             maxResponseTime: 5000,
-            hash,
             createdAt: new Date().toISOString(),
         };
 
