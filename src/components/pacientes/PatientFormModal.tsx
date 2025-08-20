@@ -2,8 +2,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Save, User, AlertCircle } from 'lucide-react';
-import { Patient } from '../types';
-import { useToast } from '../contexts/ToastContext';
+import { Patient } from '@/types';
+import { useToast } from '@/contexts/ToastContext';
 
 interface PatientFormModalProps {
   isOpen: boolean;
