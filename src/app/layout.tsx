@@ -2,6 +2,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import AuthProvider from "@/components/auth/AuthProvider";
+import { ToastProvider } from "@/contexts/ToastContext";
 import "./globals.css";
 import { Toaster } from "@/components/ui/Toaster";
 
@@ -23,8 +24,10 @@ export default function RootLayout({
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`font-sans ${inter.variable} bg-slate-50 antialiased`}>
         <AuthProvider>
-          {children}
-          <Toaster />
+          <ToastProvider>
+            {children}
+            <Toaster />
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>

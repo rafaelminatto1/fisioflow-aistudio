@@ -1,38 +1,35 @@
+'use client';
 
+import React, { useState, useEffect, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Search, Filter, Plus } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
+import PatientFormModal from './PatientFormModal';
+import { PatientSummary, Patient } from '@/types';
+import axios from 'axios';
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { Plus, Search, Filter } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import { Patient, PatientSummary } from '../types';
-import { useNavigate } from 'react-router-dom';
-import PatientFormModal from '../components/PatientFormModal';
-import Skeleton from '../components/ui/Skeleton';
-import { useToast } from '../contexts/ToastContext';
-import { usePatients } from '../hooks/usePatients';
-import { useDebounce } from '../hooks/useDebounce';
-
-
+// PatientRow can be a separate component or stay here. Keeping it here for simplicity.
 const PatientRow: React.FC<{ patient: PatientSummary }> = ({ patient }) => {
-  const navigate = useNavigate();
+  const router = useRouter();
   const statusColorMap = {
     Active: 'bg-green-100 text-green-800',
     Inactive: 'bg-yellow-100 text-yellow-800',
     Discharged: 'bg-slate-100 text-slate-800',
   };
-  const lastVisitDate = new Date(patient.lastVisit);
-  const formattedLastVisit = !isNaN(lastVisitDate.getTime()) ? lastVisitDate.toLocaleDateString('pt-BR') : 'N/A';
+  const lastVisitDate = patient.lastVisit ? new Date(patient.lastVisit) : null;
+  const formattedLastVisit = lastVisitDate ? lastVisitDate.toLocaleDateString('pt-BR') : 'N/A';
 
   return (
     <tr 
         className="border-b border-slate-200 hover:bg-slate-50 cursor-pointer"
-        onClick={() => navigate(`/patients/${patient.id}`)}
+        onClick={() => router.push(`/pacientes/${patient.id}`)}
     >
       <td className="p-4 whitespace-nowrap">
         <div className="flex items-center">
           <img className="h-10 w-10 rounded-full object-cover" src={patient.avatarUrl} alt={patient.name} />
           <div className="ml-4">
             <div className="text-sm font-medium text-slate-900">{patient.name}</div>
-            <div className="text-sm text-slate-500">{patient.email}</div>
+            <div className="text-sm text-slate-500">{patient.email || ''}</div>
           </div>
         </div>
       </td>
@@ -48,60 +45,92 @@ const PatientRow: React.FC<{ patient: PatientSummary }> = ({ patient }) => {
 };
 
 
-const PatientListPage: React.FC = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { patients, isLoading, error, fetchInitialPatients, fetchMorePatients, addPatient, hasMore, isLoadingMore } = usePatients();
+interface PatientListClientProps {
+  initialPatients: PatientSummary[];
+  initialHasMore: boolean;
+  initialSearch?: string;
+  initialStatus?: string;
+}
+
+export default function PatientListClient({
+  initialPatients,
+  initialHasMore,
+  initialSearch = '',
+  initialStatus = 'All',
+}: PatientListClientProps) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [patients, setPatients] = useState<PatientSummary[]>(initialPatients);
+  const [hasMore, setHasMore] = useState(initialHasMore);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
+  const [isPending, startTransition] = useTransition();
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
-      fetchInitialPatients({ searchTerm: debouncedSearchTerm, statusFilter });
-  }, [debouncedSearchTerm, statusFilter, fetchInitialPatients]);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('q', debouncedSearchTerm);
+    params.set('status', statusFilter);
 
-  const handleSavePatient = async (patientData: Omit<Patient, 'id' | 'lastVisit'>) => {
-      await addPatient(patientData);
-      setIsModalOpen(false);
+    startTransition(() => {
+        router.replace(`/pacientes?${params.toString()}`);
+    });
+  }, [debouncedSearchTerm, statusFilter, router, searchParams]);
+
+  // When the server-fetched initialPatients change, we update our state
+  useEffect(() => {
+    setPatients(initialPatients);
+    setHasMore(initialHasMore);
+  }, [initialPatients, initialHasMore]);
+
+  const handleLoadMore = async () => {
+    if (isLoadingMore || !hasMore) return;
+    setIsLoadingMore(true);
+
+    try {
+      const lastCursor = patients.length > 0 ? patients[patients.length - 1].id : undefined;
+      const response = await axios.get('/api/pacientes', {
+        params: {
+          q: searchTerm,
+          status: statusFilter,
+          cursor: lastCursor,
+        }
+      });
+      const { items, nextCursor } = response.data;
+      setPatients(prev => [...prev, ...items]);
+      setHasMore(!!nextCursor);
+    } catch (error) {
+      console.error("Failed to fetch more patients", error);
+      // Here you would show a toast message
+    } finally {
+      setIsLoadingMore(false);
+    }
   };
 
-  const renderContent = () => {
-    if (isLoading) {
-      return Array.from({ length: 10 }).map((_, i) => (
-        <tr key={i}>
-            <td className="p-4" colSpan={4}><Skeleton className="h-12 w-full" /></td>
-        </tr>
-      ));
-    }
+  const handleSavePatient = async (patientData: Omit<Patient, 'id' | 'lastVisit'>) => {
+    try {
+      await axios.post('/api/pacientes', patientData);
+      setIsModalOpen(false);
+      // Show success toast
 
-    if (error) {
-        return <tr><td colSpan={4} className="text-center p-10 text-red-500">Falha ao carregar pacientes.</td></tr>;
-    }
+      // Refresh the page to show the new patient.
+      // This will re-run the server component's fetch logic.
+      router.refresh();
 
-    if (patients.length === 0 && !isLoading) {
-        return <tr><td colSpan={4} className="text-center p-10 text-slate-500">Nenhum paciente encontrado.</td></tr>;
+    } catch (error) {
+      console.error("Failed to save patient", error);
+      // Show error toast
     }
-
-    return patients.map(patient => (
-      <PatientRow key={patient.id} patient={patient} />
-    ));
   };
 
   return (
     <>
-      <PageHeader
-        title="Gestão de Pacientes"
-        subtitle="Adicione, visualize e gerencie as informações dos seus pacientes."
-      >
-        <button 
-          onClick={() => setIsModalOpen(true)}
-          className="inline-flex items-center justify-center rounded-lg border border-transparent bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2">
-          <Plus className="-ml-1 mr-2 h-5 w-5" />
-          Novo Paciente
-        </button>
-      </PageHeader>
-      
       <PatientFormModal 
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
@@ -146,15 +175,19 @@ const PatientListPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-slate-200">
-              {renderContent()}
+              {patients.map(patient => (
+                <PatientRow key={patient.id} patient={patient} />
+              ))}
             </tbody>
           </table>
+          {isPending && <p className="text-center p-4">Atualizando...</p>}
+          {!isPending && patients.length === 0 && <p className="text-center p-10 text-slate-500">Nenhum paciente encontrado.</p>}
         </div>
       </div>
       {hasMore && (
         <div className="bg-white p-4 rounded-b-2xl shadow-sm text-center">
             <button
-                onClick={fetchMorePatients}
+                onClick={handleLoadMore}
                 disabled={isLoadingMore}
                 className="text-sm font-semibold text-sky-600 hover:text-sky-800 disabled:opacity-50"
             >
@@ -164,6 +197,4 @@ const PatientListPage: React.FC = () => {
       )}
     </>
   );
-};
-
-export default PatientListPage;
+}
