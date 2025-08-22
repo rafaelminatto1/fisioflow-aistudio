@@ -47,7 +47,7 @@ const AppointmentCard: React.FC<AppointmentCardProps> = ({ appointment, onSelect
       onDragStart={(e) => onDragStart(e, appointment)}
       onDragEnd={onDragEnd}
       className={cn(
-          "absolute left-1 right-1 p-2 rounded-lg text-white text-xs z-10 cursor-grab active:cursor-grabbing transition-all overflow-hidden flex flex-col group shadow-lg",
+          "absolute left-1 right-1 p-2 rounded-lg text-white text-xs z-10 cursor-pointer active:cursor-grabbing transition-all overflow-hidden flex flex-col group shadow-lg",
           `bg-gradient-to-r ${getAppointmentStyle(appointment.typeColor)}`,
           (isCompleted || isCancelled) && 'opacity-60 hover:opacity-100'
       )}
