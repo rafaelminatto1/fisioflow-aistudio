@@ -1,7 +1,8 @@
+
 // pages/ClinicalLibraryPage.tsx
 import React, { useState, useEffect } from 'react';
 import { ChevronDown, CheckCircle2, Search } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import useMaterialCategories from '../hooks/useMaterialCategories';
 import PageLoader from '../components/ui/PageLoader';
 import PageHeader from '../components/PageHeader';
@@ -32,13 +33,13 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ category, isOpen, onToggl
             >
                 {category.materials.map(material => (
                     <li key={material.id}>
-                        <Link
+                        <ReactRouterDOM.Link
                             to={`/materials/${material.id}`}
                             className="flex items-center p-3 hover:bg-slate-50 rounded-md cursor-pointer transition-colors duration-200 w-full"
                         >
                             <CheckCircle2 className="text-teal-500 mr-3 flex-shrink-0" />
                             <span className="text-slate-700">{material.name}</span>
-                        </Link>
+                        </ReactRouterDOM.Link>
                     </li>
                 ))}
             </ul>

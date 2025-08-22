@@ -1,7 +1,6 @@
 
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { User, Shield, Bell, KeyRound, FileText, CreditCard, ExternalLink } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 
@@ -86,20 +85,20 @@ const SettingsPage: React.FC = () => {
                     description="Consulte os termos de uso, política de privacidade e gerencie seu plano."
                 >
                      <div className="space-y-4">
-                        <Link to="/subscription" className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                        <ReactRouterDOM.Link to="/subscription" className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
                             <div>
                                 <h4 className="font-semibold text-slate-800">Gerenciar Assinatura</h4>
                                 <p className="text-sm text-slate-500">Visualize os detalhes do seu plano atual e opções de upgrade.</p>
                             </div>
                             <ExternalLink className="w-5 h-5 text-slate-500" />
-                        </Link>
-                         <Link to="/legal" className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
+                        </ReactRouterDOM.Link>
+                         <ReactRouterDOM.Link to="/legal" className="flex items-center justify-between p-4 bg-slate-50 rounded-lg hover:bg-slate-100 transition-colors">
                             <div>
                                 <h4 className="font-semibold text-slate-800">Termos e Privacidade</h4>
                                 <p className="text-sm text-slate-500">Leia nossa Política de Privacidade e Termos de Uso.</p>
                             </div>
                              <ExternalLink className="w-5 h-5 text-slate-500" />
-                        </Link>
+                        </ReactRouterDOM.Link>
                     </div>
                 </SettingsCard>
 

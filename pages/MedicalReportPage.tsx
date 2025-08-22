@@ -1,7 +1,7 @@
 
 // pages/MedicalReportPage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { Patient, MedicalReport } from '../types';
 import * as patientService from '../services/patientService';
 import * as reportService from '../services/reportService';
@@ -13,8 +13,8 @@ import { useToast } from '../contexts/ToastContext';
 import { User, Sparkles, Save, FileCheck, ChevronLeft, Loader, FileText } from 'lucide-react';
 
 const MedicalReportPage: React.FC = () => {
-    const { patientId, reportId } = useParams<{ patientId?: string; reportId?: string }>();
-    const navigate = useNavigate();
+    const { patientId, reportId } = ReactRouterDOM.useParams<{ patientId?: string; reportId?: string }>();
+    const navigate = ReactRouterDOM.useNavigate();
     const { showToast } = useToast();
 
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -119,9 +119,9 @@ const MedicalReportPage: React.FC = () => {
     return (
         <div className="space-y-6">
             <PageHeader title={pageTitle} subtitle={`Geração de relatório médico com assistente de IA.`}>
-                <Link to={backLink} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+                <ReactRouterDOM.Link to={backLink} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
                     <ChevronLeft className="-ml-1 mr-2 h-5 w-5" /> Voltar
-                </Link>
+                </ReactRouterDOM.Link>
             </PageHeader>
             
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

@@ -1,7 +1,7 @@
 
 // pages/partner-portal/ClientListPage.tsx
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
 import { PartnershipClient } from '../../types';
 import * as partnershipService from '../../services/partnershipService';
@@ -11,7 +11,7 @@ import { useToast } from '../../contexts/ToastContext';
 import { Search } from 'lucide-react';
 
 const ClientRow: React.FC<{ client: PartnershipClient }> = ({ client }) => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     return (
         <tr 
             className="border-b border-slate-200 hover:bg-slate-50 cursor-pointer"

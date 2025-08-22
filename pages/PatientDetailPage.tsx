@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { User, Cake, Phone, Mail, ChevronLeft, Edit, FileText, Plus, Target, ListChecks, ShieldCheck, Paperclip, Upload, BarChart, Heart, X, Download, Send, Layers, CalendarDays, BookOpen, Lightbulb, ClipboardList } from 'lucide-react';
 import * as patientService from '../services/patientService';
 import * as soapNoteService from '../services/soapNoteService';
@@ -104,7 +104,7 @@ const TabButton: React.FC<{ icon: React.ElementType, label: string; isActive: bo
 );
 
 const PatientDetailPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const { id } = ReactRouterDOM.useParams<{ id: string }>();
     const { patients, therapists, refetch: refetchDataContext } = useData();
     
     const [patient, setPatient] = useState<Patient | null>(null);
@@ -336,10 +336,10 @@ const PatientDetailPage: React.FC = () => {
                 title={patient.name}
                 subtitle={`Detalhes do prontuário, histórico e agendamentos.`}
             >
-                <Link to="/patients" className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 mr-3">
+                <ReactRouterDOM.Link to="/patients" className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 mr-3">
                     <ChevronLeft className="-ml-1 mr-2 h-5 w-5" />
                     Voltar
-                </Link>
+                </ReactRouterDOM.Link>
                  <button onClick={() => setIsPatientModalOpen(true)} className="inline-flex items-center rounded-lg border border-transparent bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-600">
                     <Edit className="-ml-1 mr-2 h-5 w-5" />
                     Editar Cadastro
@@ -392,7 +392,7 @@ const PatientDetailPage: React.FC = () => {
                             <ul className="space-y-3">
                                 {projects.map((project) => (
                                     <li key={project.id} className="p-3 bg-slate-50 rounded-lg">
-                                        <Link to={`/tasks?projectId=${project.id}`} className="font-semibold text-slate-800 hover:text-sky-600">{project.title}</Link>
+                                        <ReactRouterDOM.Link to={`/tasks?projectId=${project.id}`} className="font-semibold text-slate-800 hover:text-sky-600">{project.title}</ReactRouterDOM.Link>
                                     </li>
                                 ))}
                             </ul>
@@ -483,9 +483,9 @@ const PatientDetailPage: React.FC = () => {
                                         <div key={report.id} className="p-3 bg-slate-50 rounded-lg">
                                             <p className="font-semibold text-slate-800">{report.title}</p>
                                             <div className="mt-3 pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
-                                                <Link to={`/medical-report/edit/${report.id}`} className="inline-flex items-center px-2.5 py-1.5 border border-slate-300 text-xs font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50">
+                                                <ReactRouterDOM.Link to={`/medical-report/edit/${report.id}`} className="inline-flex items-center px-2.5 py-1.5 border border-slate-300 text-xs font-medium rounded-md text-slate-700 bg-white hover:bg-slate-50">
                                                     <Edit className="w-3 h-3 mr-1.5" /> {report.status === 'draft' ? 'Editar' : 'Visualizar'}
-                                                </Link>
+                                                </ReactRouterDOM.Link>
                                                 <button onClick={() => handleSendReport(report)} disabled={report.status !== 'finalized' || isSendingReport === report.id} className="inline-flex items-center px-2.5 py-1.5 border border-transparent text-xs font-medium rounded-md text-white bg-sky-500 hover:bg-sky-600 disabled:bg-slate-300">
                                                     <Send className="w-3 h-3 mr-1.5" /> Enviar
                                                 </button>
@@ -496,9 +496,9 @@ const PatientDetailPage: React.FC = () => {
                                         </div>
                                     ))}
                                 </div>
-                                <Link to={`/medical-report/new/${patient.id}`} className="w-full inline-flex items-center justify-center rounded-lg border border-transparent bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-600">
+                                <ReactRouterDOM.Link to={`/medical-report/new/${patient.id}`} className="w-full inline-flex items-center justify-center rounded-lg border border-transparent bg-sky-500 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-sky-600">
                                     <Plus className="-ml-1 mr-2 h-5 w-5" /> Gerar Novo Laudo
-                                </Link>
+                                </ReactRouterDOM.Link>
                             </InfoCard>
                             <InfoCard title="Anexos do Paciente" icon={<Paperclip />}>
                                  <div className="space-y-3 mb-4">

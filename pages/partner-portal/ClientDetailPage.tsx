@@ -1,6 +1,7 @@
+
 // pages/partner-portal/ClientDetailPage.tsx
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
 import { Patient, Voucher, SoapNote } from '../../types';
 import * as partnershipService from '../../services/partnershipService';
@@ -26,7 +27,7 @@ const SoapNoteCard: React.FC<{ note: SoapNote }> = ({ note }) => (
 
 
 const ClientDetailPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const { id } = ReactRouterDOM.useParams<{ id: string }>();
     const { user } = useAuth();
     const { showToast } = useToast();
     
@@ -57,10 +58,10 @@ const ClientDetailPage: React.FC = () => {
     return (
         <>
             <PageHeader title={patient.name} subtitle={`Plano: ${voucher.plan.name}`}>
-                 <Link to="/partner/clients" className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
+                 <ReactRouterDOM.Link to="/partner/clients" className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50">
                     <ChevronLeft className="-ml-1 mr-2 h-5 w-5" />
                     Voltar para a Lista
-                </Link>
+                </ReactRouterDOM.Link>
             </PageHeader>
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                  {/* Left Column */}

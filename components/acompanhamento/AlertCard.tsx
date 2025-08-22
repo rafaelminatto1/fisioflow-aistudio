@@ -1,7 +1,7 @@
 
 // components/acompanhamento/AlertCard.tsx
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { Patient, AppointmentStatus } from '../../types';
 import { Phone, MessageSquare, CalendarPlus, StickyNote, CheckCircle, XCircle } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
@@ -23,7 +23,7 @@ const AlertCard: React.FC<AlertCardProps> = ({ patient, type, onOpenObservationM
     const { appointments } = useData();
     const { showToast } = useToast();
     const { user } = useAuth();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     const patientData = useMemo(() => {
         const patientAppointments = appointments

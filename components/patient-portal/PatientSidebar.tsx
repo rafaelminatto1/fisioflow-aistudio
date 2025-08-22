@@ -1,13 +1,12 @@
 
-
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { LayoutGrid, NotebookText, LogOut, Stethoscope, TrendingUp, ShoppingCart, Ticket, Calendar, FileText, Dumbbell, Bell, Flame } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
 
 const NavLinkComponent = ({ to, icon: Icon, label, badgeCount }: { to: string, icon: React.ElementType, label: string, badgeCount?: number }) => (
-    <NavLink
+    <ReactRouterDOM.NavLink
       to={to}
       className={({ isActive }) =>
         `flex items-center p-3 rounded-lg transition-colors duration-200 ${
@@ -24,12 +23,12 @@ const NavLinkComponent = ({ to, icon: Icon, label, badgeCount }: { to: string, i
                 {badgeCount > 9 ? '9+' : badgeCount}
             </span>
         ) : null}
-    </NavLink>
+    </ReactRouterDOM.NavLink>
 );
 
 const PatientSidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
   const { unreadCount } = useNotifications(user?.id);
 
   const handleLogout = () => {

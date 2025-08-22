@@ -1,6 +1,7 @@
+
 // pages/EventDetailPage.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { Event, EventRegistration, RegistrationStatus, EventProvider } from '../types';
 import { eventService } from '../services/eventService';
 import { useToast } from '../contexts/ToastContext';
@@ -21,7 +22,7 @@ const TabButton: React.FC<{ icon: React.ElementType, label: string; isActive: bo
 );
 
 const EventDetailPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const { id } = ReactRouterDOM.useParams<{ id: string }>();
     const { showToast } = useToast();
     const { user } = useAuth();
     
@@ -83,10 +84,10 @@ const EventDetailPage: React.FC = () => {
 
     return (
         <>
-            <Link to="/events" className="inline-flex items-center text-sm font-semibold text-slate-600 hover:text-slate-800 mb-4">
+            <ReactRouterDOM.Link to="/events" className="inline-flex items-center text-sm font-semibold text-slate-600 hover:text-slate-800 mb-4">
                 <ChevronLeft className="mr-2 h-4 w-4" />
                 Voltar para todos os eventos
-            </Link>
+            </ReactRouterDOM.Link>
 
             <EventDetailHeader
                 event={event}

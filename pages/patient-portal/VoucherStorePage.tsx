@@ -1,7 +1,7 @@
 
 // pages/patient-portal/VoucherStorePage.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
 import { VoucherPlan } from '../../types';
 import * as voucherService from '../../services/voucherService';
@@ -18,7 +18,7 @@ const VoucherStorePage: React.FC = () => {
     
     const { user } = useAuth();
     const { showToast } = useToast();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     useEffect(() => {
         const fetchPlans = async () => {

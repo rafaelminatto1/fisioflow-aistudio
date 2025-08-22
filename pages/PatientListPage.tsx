@@ -1,10 +1,9 @@
 
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Filter } from 'lucide-react';
 import PageHeader from '../components/PageHeader';
 import { Patient, PatientSummary } from '../types';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import PatientFormModal from '../components/PatientFormModal';
 import Skeleton from '../components/ui/Skeleton';
 import { useToast } from '../contexts/ToastContext';
@@ -13,7 +12,7 @@ import { useDebounce } from '../hooks/useDebounce';
 
 
 const PatientRow: React.FC<{ patient: PatientSummary }> = ({ patient }) => {
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
   const statusColorMap = {
     Active: 'bg-green-100 text-green-800',
     Inactive: 'bg-yellow-100 text-yellow-800',

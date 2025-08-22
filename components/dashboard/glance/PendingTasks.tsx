@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { Task, TaskStatus, TaskPriority } from '../../../types';
 import * as taskService from '../../../services/taskService';
 import { ClipboardList, ChevronsUp, ChevronUp, ChevronsDown } from 'lucide-react';
@@ -10,7 +9,7 @@ import Skeleton from '../../ui/Skeleton';
 const PendingTasks: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     useEffect(() => {
         const fetchTasks = async () => {

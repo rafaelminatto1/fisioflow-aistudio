@@ -1,7 +1,6 @@
 
-
 import React from 'react';
-import { useLocation, Navigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import PageLoader from './ui/PageLoader';
 import { Role } from '../types';
@@ -13,21 +12,21 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, allowedRoles }) => {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
+  const location = ReactRouterDOM.useLocation();
 
   if (isLoading) {
     return <PageLoader />;
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <ReactRouterDOM.Navigate to="/login" state={{ from: location }} replace />;
   }
   
   if (!allowedRoles.includes(user!.role)) {
     // If user is logged in but tries to access a page they don't have permission for,
     // redirect them to their default dashboard.
     const defaultRoute = user!.role === Role.Patient ? '/portal/dashboard' : '/dashboard';
-    return <Navigate to={defaultRoute} replace />;
+    return <ReactRouterDOM.Navigate to={defaultRoute} replace />;
   }
 
 

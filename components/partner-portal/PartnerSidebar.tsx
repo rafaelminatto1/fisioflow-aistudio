@@ -1,13 +1,12 @@
 
-
 import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { LayoutGrid, Users, LogOut, Stethoscope, Activity, DollarSign } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const PartnerSidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
 
   const handleLogout = () => {
     logout();
@@ -32,7 +31,7 @@ const PartnerSidebar: React.FC = () => {
       </div>
       <nav className="flex-1 px-2 py-4 space-y-2">
         {navItems.map((item) => (
-          <NavLink
+          <ReactRouterDOM.NavLink
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
@@ -45,7 +44,7 @@ const PartnerSidebar: React.FC = () => {
           >
             <item.icon className="w-6 h-6 mr-3" />
             <span>{item.label}</span>
-          </NavLink>
+          </ReactRouterDOM.NavLink>
         ))}
       </nav>
       {user && (

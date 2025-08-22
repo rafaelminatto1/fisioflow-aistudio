@@ -1,7 +1,7 @@
 
 // pages/MaterialDetailPage.tsx
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { getMaterialById } from '../services/clinicalMaterialService';
 import { generateClinicalMaterialContent } from '../services/geminiService';
 import { ClinicalMaterialData } from '../types';
@@ -18,7 +18,7 @@ const mapCategoryToType = (categoryName: string): ClinicalMaterialData['tipo_mat
 };
 
 const MaterialDetailPage: React.FC = () => {
-    const { id } = useParams<{ id: string }>();
+    const { id } = ReactRouterDOM.useParams<{ id: string }>();
     const { showToast } = useToast();
 
     const [isLoading, setIsLoading] = useState(true);
@@ -84,13 +84,13 @@ const MaterialDetailPage: React.FC = () => {
                 title={pageTitle}
                 subtitle="Conteúdo detalhado do material da biblioteca clínica."
             >
-                <Link
+                <ReactRouterDOM.Link
                     to="/materials"
                     className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
                 >
                     <ChevronLeft className="-ml-1 mr-2 h-5 w-5" />
                     Voltar para Biblioteca
-                </Link>
+                </ReactRouterDOM.Link>
             </PageHeader>
             {isLoading ? renderLoading() : (
                  <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm">

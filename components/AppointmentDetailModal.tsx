@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { X, Edit, Trash2, Play, ChevronDown, DollarSign, Save } from 'lucide-react';
 import { Appointment, Patient, Therapist, AppointmentStatus, AppointmentType } from '../types';
 import { useToast } from '../contexts/ToastContext';
@@ -18,7 +19,7 @@ interface AppointmentDetailModalProps {
 }
 
 const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appointment, patient, therapist, onClose, onEdit, onDelete, onStatusChange, onPaymentStatusChange, onPackagePayment, onUpdateValue }) => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     const { showToast } = useToast();
     const [isEditingValue, setIsEditingValue] = useState(false);
     const [localValue, setLocalValue] = useState(appointment?.value || 0);
@@ -62,7 +63,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
 
                 <div className="p-4 space-y-3">
                     <div className="flex text-sm"><span className="w-24 text-slate-500 shrink-0">Fisioterapeuta:</span><span className="font-semibold text-slate-800">{therapist.name}</span></div>
-                    <div className="flex text-sm"><span className="w-24 text-slate-500 shrink-0">Paciente:</span><Link to={`/patients/${patient.id}`} className="font-semibold text-blue-600 hover:underline truncate">{patient.name}</Link></div>
+                    <div className="flex text-sm"><span className="w-24 text-slate-500 shrink-0">Paciente:</span><ReactRouterDOM.Link to={`/patients/${patient.id}`} className="font-semibold text-blue-600 hover:underline truncate">{patient.name}</ReactRouterDOM.Link></div>
                     <div className="flex text-sm"><span className="w-24 text-slate-500 shrink-0">Celular:</span><span className="font-semibold text-slate-800">{patient.phone || 'Não informado'}</span></div>
                     
                     {appointment.sessionNumber && appointment.totalSessions && (

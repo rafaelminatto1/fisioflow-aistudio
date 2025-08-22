@@ -1,6 +1,7 @@
+
 // components/dashboard/glance/RecentActivity.tsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { RecentActivity as ActivityType } from '../../../types';
 import * as activityService from '../../../services/activityService';
 import { Activity, Dumbbell, NotebookText } from 'lucide-react';
@@ -26,7 +27,7 @@ const activityIcons: Record<ActivityType['type'], React.ReactNode> = {
 const RecentActivity: React.FC = () => {
     const [activities, setActivities] = useState<ActivityType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     useEffect(() => {
         const fetchActivities = async () => {

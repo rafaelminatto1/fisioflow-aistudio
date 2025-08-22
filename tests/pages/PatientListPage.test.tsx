@@ -1,9 +1,10 @@
+
 // tests/pages/PatientListPage.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom/vitest';
 import { vi, describe, it, expect, beforeEach, type Mock } from 'vitest';
-import { MemoryRouter } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import PatientListPage from '../../pages/PatientListPage';
 import { usePatients } from '../../hooks/usePatients';
 import { PatientSummary } from '../../types';
@@ -76,9 +77,9 @@ describe('PatientListPage', () => {
 
   const renderComponent = () => {
     render(
-      <MemoryRouter>
+      <ReactRouterDOM.MemoryRouter>
         <PatientListPage />
-      </MemoryRouter>
+      </ReactRouterDOM.MemoryRouter>
     );
   };
 

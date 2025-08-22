@@ -1,7 +1,7 @@
 
 // pages/AtendimentoPage.tsx
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { Save, BrainCircuit, Loader, Target, ListChecks, FileText, Edit, Trash2, Paperclip, Upload, CheckCircle } from 'lucide-react';
 import { usePageData } from '../hooks/usePageData';
 import { useToast } from '../contexts/ToastContext';
@@ -23,8 +23,8 @@ interface PainPoint {
 }
 
 const AtendimentoPage: React.FC = () => {
-    const { appointmentId } = useParams<{ appointmentId: string }>();
-    const navigate = useNavigate();
+    const { appointmentId } = ReactRouterDOM.useParams<{ appointmentId: string }>();
+    const navigate = ReactRouterDOM.useNavigate();
     const { showToast } = useToast();
 
     // Data states

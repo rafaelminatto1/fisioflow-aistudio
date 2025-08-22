@@ -1,6 +1,6 @@
 
 import React, { useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { EnrichedAppointment, Appointment, AppointmentStatus } from '../../../types';
 import { Calendar, Clock } from 'lucide-react';
 
@@ -9,7 +9,7 @@ interface TodaysAppointmentsProps {
 }
 
 const TodaysAppointments: React.FC<TodaysAppointmentsProps> = ({ appointments }) => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     const todaysScheduledAppointments = useMemo(() => {
         return appointments

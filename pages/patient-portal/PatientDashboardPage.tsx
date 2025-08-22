@@ -1,7 +1,6 @@
 
-
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import PageHeader from '../../components/PageHeader';
 import { useAuth } from '../../contexts/AuthContext';
 import * as treatmentService from '../../services/treatmentService';
@@ -16,7 +15,7 @@ interface EnrichedExercise extends Exercise {
 }
 
 const QuickActionCard: React.FC<{ to: string; icon: React.ReactNode; title: string; subtitle: string; }> = ({ to, icon, title, subtitle }) => (
-    <Link to={to} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg hover:bg-slate-50 transition-all duration-300 flex items-center">
+    <ReactRouterDOM.Link to={to} className="bg-white p-6 rounded-2xl shadow-sm hover:shadow-lg hover:bg-slate-50 transition-all duration-300 flex items-center">
         <div className="bg-teal-100 text-teal-600 p-4 rounded-full mr-4">
             {icon}
         </div>
@@ -25,7 +24,7 @@ const QuickActionCard: React.FC<{ to: string; icon: React.ReactNode; title: stri
             <p className="text-sm text-slate-500">{subtitle}</p>
         </div>
         <ChevronRight className="w-6 h-6 text-slate-400 ml-auto" />
-    </Link>
+    </ReactRouterDOM.Link>
 );
 
 const NextAppointmentCard: React.FC<{ appointment: Appointment | undefined }> = ({ appointment }) => (
@@ -53,9 +52,9 @@ const TodaysExerciseCard: React.FC<{ exercise: EnrichedExercise }> = ({ exercise
             <h4 className="font-semibold text-slate-800">{exercise.name}</h4>
             <p className="text-sm text-slate-500">{exercise.prescription.sets}x {exercise.prescription.repetitions}</p>
         </div>
-        <Link to="/portal/my-exercises" className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-100">
+        <ReactRouterDOM.Link to="/portal/my-exercises" className="p-2 bg-white rounded-full shadow-sm hover:bg-slate-100">
              <ChevronRight className="w-5 h-5 text-teal-600" />
-        </Link>
+        </ReactRouterDOM.Link>
     </div>
 );
 

@@ -1,7 +1,6 @@
 
-
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { Stethoscope, Loader } from 'lucide-react';
 import { Role } from '../types';
@@ -13,8 +12,8 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   
   const { login } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = ReactRouterDOM.useNavigate();
+  const location = ReactRouterDOM.useLocation();
   
   const from = (location.state as any)?.from?.pathname || '/';
 

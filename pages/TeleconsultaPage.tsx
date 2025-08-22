@@ -1,7 +1,7 @@
 
 // pages/TeleconsultaPage.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useData } from '../contexts/DataContext';
 import { Appointment, Patient, Exercise, SoapNote, PainPoint } from '../types';
 import PageLoader from '../components/ui/PageLoader';
@@ -31,8 +31,8 @@ const getTeleconsultaEnabled = () => {
 
 
 const TeleconsultaPage: React.FC = () => {
-  const { appointmentId } = useParams<{ appointmentId: string }>();
-  const navigate = useNavigate();
+  const { appointmentId } = ReactRouterDOM.useParams<{ appointmentId: string }>();
+  const navigate = ReactRouterDOM.useNavigate();
   const { showToast } = useToast();
   const { appointments, patients, refetch: refetchDataContext } = useData();
 
