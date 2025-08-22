@@ -25,6 +25,7 @@ import AppointmentDetailModal from '../components/AppointmentDetailModal';
 import PatientTooltip from '../components/PatientTooltip';
 import AppointmentContextMenu from '../components/AppointmentContextMenu';
 import SaturdayScaleModal from '../components/SaturdayScaleModal';
+import AppointmentFormModal from '../components/AppointmentFormModal';
 
 const SLOT_HEIGHT = 40; // in pixels for a 30-minute slot
 const START_HOUR = 7;
@@ -39,6 +40,8 @@ export default function AgendaPage() {
   
   // Interaction states
   const [selectedAppointment, setSelectedAppointment] = useState<EnrichedAppointment | null>(null);
+  const [isAppointmentFormOpen, setIsAppointmentFormOpen] = useState(false);
+  const [appointmentToEdit, setAppointmentToEdit] = useState<EnrichedAppointment | null>(null);
   const [contextMenu, setContextMenu] = useState<{ x: number, y: number, appointment: EnrichedAppointment } | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number, y: number, appointment: EnrichedAppointment } | null>(null);
   const [draggedAppointment, setDraggedAppointment] = useState<EnrichedAppointment | null>(null);
@@ -171,14 +174,50 @@ export default function AgendaPage() {
     } catch { showToast('Falha ao atualizar pagamento.', 'error'); }
   };
 
-  const handleDelete = async (appointmentId: string, seriesId?: string) => {
-    const confirmed = window.confirm('Tem certeza que deseja excluir este agendamento?');
-    if (!confirmed) return;
+  const handleSaveAppointment = async (appointmentData: Appointment): Promise<boolean> => {
     try {
-        await appointmentService.deleteAppointment(appointmentId);
-        showToast('Agendamento excluído com sucesso!', 'success');
-        refetch();
-    } catch { showToast('Falha ao excluir agendamento.', 'error'); }
+      await appointmentService.saveAppointment(appointmentData);
+      showToast('Consulta salva com sucesso!', 'success');
+      refetch();
+      setIsAppointmentFormOpen(false);
+      setAppointmentToEdit(null);
+      return true;
+    } catch (error) {
+      showToast('Falha ao salvar a consulta.', 'error');
+      return false;
+    }
+  };
+
+  const handleDeleteAppointment = async (appointmentId: string, seriesId?: string): Promise<boolean> => {
+      const appointmentToDelete = appointments.find(a => a.id === appointmentId);
+      if (!appointmentToDelete) return false;
+      
+      const confirmed = window.confirm(seriesId ? 'Excluir esta e todas as futuras ocorrências?' : 'Tem certeza que deseja excluir este agendamento?');
+      if (!confirmed) return false;
+
+      try {
+          if (seriesId) {
+              await appointmentService.deleteAppointmentSeries(seriesId, appointmentToDelete.startTime);
+          } else {
+              await appointmentService.deleteAppointment(appointmentId);
+          }
+          showToast('Agendamento(s) removido(s) com sucesso!', 'success');
+          refetch();
+          setIsAppointmentFormOpen(false); // Close form modal if open
+          setAppointmentToEdit(null);
+          setSelectedAppointment(null); // Close detail modal if open
+          return true;
+      } catch {
+          showToast('Falha ao remover agendamento(s).', 'error');
+          return false;
+      }
+  };
+  
+  const handleEditClick = (appointment: EnrichedAppointment) => {
+    setSelectedAppointment(null); // Close detail modal
+    setContextMenu(null); // Close context menu
+    setAppointmentToEdit(appointment);
+    setIsAppointmentFormOpen(true);
   };
   
   const handleUpdateValue = async (appointmentId: string, newValue: number) => {
@@ -353,12 +392,27 @@ export default function AgendaPage() {
                 patient={fullSelectedPatient}
                 therapist={selectedTherapist}
                 onClose={() => setSelectedAppointment(null)}
-                onEdit={() => showToast('Funcionalidade de edição a ser implementada.', 'info')}
-                onDelete={(id) => { handleDelete(id); setSelectedAppointment(null); }}
+                onEdit={() => handleEditClick(selectedAppointment)}
+                onDelete={(id) => { handleDeleteAppointment(id); setSelectedAppointment(null); }}
                 onStatusChange={(app, status) => { handleStatusChange(app, status); setSelectedAppointment(null); }}
                 onPaymentStatusChange={(app, status) => { handlePaymentStatusChange(app, status); setSelectedAppointment(null); }}
                 onPackagePayment={() => showToast('Funcionalidade de pacote a ser implementada.', 'info')}
                 onUpdateValue={(id, val) => { handleUpdateValue(id, val); setSelectedAppointment(null); }}
+            />
+        )}
+        {isAppointmentFormOpen && (
+            <AppointmentFormModal 
+                isOpen={isAppointmentFormOpen}
+                onClose={() => {
+                    setIsAppointmentFormOpen(false);
+                    setAppointmentToEdit(null);
+                }}
+                onSave={handleSaveAppointment}
+                onDelete={handleDeleteAppointment}
+                appointmentToEdit={appointmentToEdit}
+                patients={patients}
+                therapists={therapists}
+                allAppointments={appointments}
             />
         )}
         {contextMenu && (
@@ -368,8 +422,8 @@ export default function AgendaPage() {
                 onClose={() => setContextMenu(null)}
                 onSetStatus={(status) => handleStatusChange(contextMenu.appointment, status)}
                 onSetPayment={(status) => handlePaymentStatusChange(contextMenu.appointment, status)}
-                onEdit={() => showToast('Funcionalidade de edição a ser implementada.', 'info')}
-                onDelete={() => handleDelete(contextMenu.appointment.id)}
+                onEdit={() => handleEditClick(contextMenu.appointment)}
+                onDelete={() => handleDeleteAppointment(contextMenu.appointment.id, contextMenu.appointment.seriesId)}
             />
         )}
       </AnimatePresence>
