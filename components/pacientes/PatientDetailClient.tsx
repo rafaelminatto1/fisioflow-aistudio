@@ -3,8 +3,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { User, Stethoscope, Paperclip, History, Plus } from 'lucide-react';
 import { Patient, SoapNote, TreatmentPlan } from '../../types'; // Assuming types are accessible
+import { User, Stethoscope, Paperclip, History, Plus } from 'lucide-react';
 import InfoCard from '@/components/ui/InfoCard';
 import ClinicalHistoryTimeline from './ClinicalHistoryTimeline';
 import NewSoapNoteModal from './NewSoapNoteModal';
@@ -101,8 +101,8 @@ export default function PatientDetailClient({ patient: initialPatient }: Patient
              </InfoCard>
              <InfoCard title="Contato de Emergência">
                  <div className="space-y-4">
-                     <InfoPill label="Nome" value={patient.emergencyContactName || 'N/A'} />
-                     <InfoPill label="Telefone" value={patient.emergencyContactPhone || 'N/A'} />
+                     <InfoPill label="Nome" value={patient.emergencyContact.name || 'N/A'} />
+                     <InfoPill label="Telefone" value={patient.emergencyContact.phone || 'N/A'} />
                  </div>
              </InfoCard>
           </div>

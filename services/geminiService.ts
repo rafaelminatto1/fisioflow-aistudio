@@ -533,7 +533,6 @@ O resultado deve ser **APENAS o código HTML** do corpo do e-mail, sem \`\`\`htm
 <p>Faz um tempinho que não nos vemos aqui na FisioFlow e ficamos pensando em você. Eu e o(a) Dr(a). {{nome_ultimo_fisio}} estávamos comentando sobre a sua evolução e gostaríamos de saber como você tem passado.</p>
 <p>Lembre-se que a continuidade do tratamento é fundamental para manter os resultados que conquistamos juntos e prevenir que o desconforto retorne. O cuidado com seu corpo é um investimento contínuo na sua qualidade de vida!</p>
 <p>Que tal agendar uma consulta de reavaliação para vermos como você está? Será ótimo te rever e garantir que tudo continua bem.</p>
-<p>Você pode encontrar o melhor horário diretamente no nosso portal:</p>
 <p><a href="{{link_agendamento}}" style="background-color: #3B82F6; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Ver Horários Disponíveis</a></p>
 <p>Um grande abraço,<br>
 Equipe FisioFlow</p>
@@ -722,5 +721,46 @@ export const generatePatientClinicalSummary = async (patient: Patient, notes: So
     } catch (error) {
         console.error("Error generating clinical summary:", error);
         throw new Error("Falha ao gerar o resumo clínico com a IA.");
+    }
+};
+
+const PROMPT_TEMPLATE_RETENTION = `
+# Persona
+Você é um Coordenador de Cuidados ao Paciente, especialista em comunicação empática e reengajamento. Seu objetivo é ajudar fisioterapeutas a contatar pacientes em risco de abandono de forma proativa e acolhedora.
+
+# Contexto
+O paciente {{nome_paciente}} foi sinalizado no painel de acompanhamento pelo seguinte motivo: "{{motivo_alerta}}". Precisamos criar uma mensagem curta e amigável para ser enviada via WhatsApp.
+
+# Tarefa
+Crie uma sugestão de mensagem de WhatsApp para o fisioterapeuta enviar ao paciente. A mensagem deve:
+1. Ser pessoal e amigável, usando o primeiro nome do paciente.
+2. Reconhecer o motivo do alerta de forma sutil e sem culpa (ex: "Notei que não conseguimos encontrar um novo horário para você").
+3. Mostrar preocupação com o bem-estar e a continuidade do tratamento do paciente.
+4. Ser proativa, oferecendo ajuda para reagendar ou discutir o tratamento.
+5. Ter um tom positivo e encorajador.
+6. Finalizar com uma saudação cordial e o nome do fisioterapeuta responsável (use "Dr(a). [Seu Nome]").
+
+# Formato de Saída (Obrigatório em Markdown, apenas o texto da mensagem)
+`;
+
+export interface RetentionSuggestionData {
+    nome_paciente: string;
+    motivo_alerta: string;
+}
+
+export const generateRetentionSuggestion = async (data: RetentionSuggestionData): Promise<string> => {
+    let prompt = PROMPT_TEMPLATE_RETENTION
+        .replace(new RegExp(`{{nome_paciente}}`, 'g'), data.nome_paciente.split(' ')[0])
+        .replace(new RegExp(`{{motivo_alerta}}`, 'g'), data.motivo_alerta);
+
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: prompt,
+        });
+        return response.text;
+    } catch (error) {
+        console.error("Error generating retention suggestion:", error);
+        throw new Error("Falha ao gerar a sugestão com a IA.");
     }
 };

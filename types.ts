@@ -109,6 +109,13 @@ export interface Patient {
   painPoints?: PainPoint[];
 }
 
+export type AlertType = 'abandonment' | 'highRisk' | 'attention';
+
+export interface AlertPatient extends Patient {
+    alertReason: string;
+    alertType: AlertType;
+}
+
 export interface PatientSummary {
   id: string;
   name: string;
@@ -760,7 +767,7 @@ export interface StockMovement {
   createdAt: string; // ISO String
 }
 
-export enum AlertType {
+export enum InventoryAlertType {
     LowStock = 'Estoque Baixo',
     OutOfStock = 'Sem Estoque',
     Expiring = 'Vencimento Próximo',
@@ -769,7 +776,7 @@ export enum AlertType {
 
 export interface InventoryAlert {
     id: string;
-    type: AlertType;
+    type: InventoryAlertType;
     itemId: string;
     itemName: string;
     message: string;

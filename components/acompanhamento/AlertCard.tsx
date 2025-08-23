@@ -2,24 +2,22 @@
 // components/acompanhamento/AlertCard.tsx
 import React, { useMemo } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import { Patient, AppointmentStatus } from '../../types';
-import { Phone, MessageSquare, CalendarPlus, StickyNote, CheckCircle, XCircle } from 'lucide-react';
+import { Patient, AppointmentStatus, AlertPatient } from '../../types';
+import { Phone, MessageSquare, CalendarPlus, StickyNote, CheckCircle, XCircle, BrainCircuit, AlertTriangle } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
 import { useToast } from '../../contexts/ToastContext';
 import { useAuth } from '../../contexts/AuthContext';
 import * as patientService from '../../services/patientService';
 
-type AlertType = 'abandonment' | 'highRisk' | 'attention';
-
 interface AlertCardProps {
-    patient: Patient;
-    type: AlertType;
+    patient: AlertPatient;
     onOpenObservationModal: (patient: Patient) => void;
     onOpenRescheduleModal: (patient: Patient) => void;
+    onOpenAiSuggestion: (patient: AlertPatient) => void;
     onUpdate: () => void;
 }
 
-const AlertCard: React.FC<AlertCardProps> = ({ patient, type, onOpenObservationModal, onOpenRescheduleModal, onUpdate }) => {
+const AlertCard: React.FC<AlertCardProps> = ({ patient, onOpenObservationModal, onOpenRescheduleModal, onOpenAiSuggestion, onUpdate }) => {
     const { appointments } = useData();
     const { showToast } = useToast();
     const { user } = useAuth();
@@ -58,15 +56,16 @@ const AlertCard: React.FC<AlertCardProps> = ({ patient, type, onOpenObservationM
         }
     };
     
-    let borderColorClass = '';
-    switch (type) {
-        case 'abandonment': borderColorClass = 'border-red-500'; break;
-        case 'highRisk': borderColorClass = 'border-amber-500'; break;
-        case 'attention': borderColorClass = 'border-sky-500'; break;
-    }
+    const typeInfo = {
+        abandonment: { borderColor: 'border-red-500', bgColor: 'bg-red-50', textColor: 'text-red-700' },
+        highRisk: { borderColor: 'border-amber-500', bgColor: 'bg-amber-50', textColor: 'text-amber-700' },
+        attention: { borderColor: 'border-sky-500', bgColor: 'bg-sky-50', textColor: 'text-sky-700' },
+    };
+    
+    const currentTypeInfo = typeInfo[patient.alertType];
 
     return (
-        <div className={`bg-white rounded-2xl shadow-sm border-t-4 ${borderColorClass} overflow-hidden flex flex-col h-full`}>
+        <div className={`bg-white rounded-2xl shadow-sm border-t-4 ${currentTypeInfo.borderColor} overflow-hidden flex flex-col h-full`}>
             <div className="p-4 flex-grow">
                 <div className="flex items-start justify-between cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
                     <div className="flex items-center">
@@ -78,6 +77,11 @@ const AlertCard: React.FC<AlertCardProps> = ({ patient, type, onOpenObservationM
                     </div>
                 </div>
                 
+                <div className={`mt-3 p-2 text-xs font-semibold rounded-md flex items-center ${currentTypeInfo.bgColor} ${currentTypeInfo.textColor}`}>
+                    <AlertTriangle size={14} className="mr-2 shrink-0" />
+                    <p>{patient.alertReason}</p>
+                </div>
+
                 <div className="mt-4 space-y-2 text-sm">
                      <div className="flex justify-between">
                         <span className="text-slate-500">Última Visita:</span>
@@ -87,33 +91,29 @@ const AlertCard: React.FC<AlertCardProps> = ({ patient, type, onOpenObservationM
                         <span className="text-slate-500">Próxima Consulta:</span>
                         <span className="font-semibold text-slate-700">{patientData.nextAppointment}</span>
                     </div>
-                     <div>
-                        <span className="text-slate-500">Assiduidade (últimas 5):</span>
-                        <div className="flex gap-1.5 mt-1">
-                            {patientData.attendance.map((attended, index) => (
-                                <div key={index} title={attended ? 'Presente' : 'Faltou'} className={`w-full h-2 rounded-full ${attended ? 'bg-green-500' : 'bg-red-500'}`}></div>
-                            ))}
-                        </div>
-                    </div>
                 </div>
             </div>
 
             <div className="bg-slate-50 p-2 flex justify-around items-center border-t mt-auto">
-                <a href={`https://wa.me/${patient.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => handleLogContact('WhatsApp')} className="flex flex-col items-center text-xs text-slate-600 hover:text-green-600 p-1 rounded-md w-1/4">
+                <button onClick={() => onOpenAiSuggestion(patient)} title="Sugestão de Contato com IA" className="flex flex-col items-center text-xs text-slate-600 hover:text-teal-600 p-1 rounded-md w-1/5">
+                    <BrainCircuit size={20} />
+                    <span>IA</span>
+                </button>
+                <a href={`https://wa.me/${patient.phone.replace(/\D/g, '')}`} target="_blank" rel="noopener noreferrer" onClick={() => handleLogContact('WhatsApp')} title="Enviar WhatsApp" className="flex flex-col items-center text-xs text-slate-600 hover:text-green-600 p-1 rounded-md w-1/5">
                     <MessageSquare size={20} />
-                    <span>WhatsApp</span>
+                    <span>Chat</span>
                 </a>
-                 <button onClick={() => onOpenRescheduleModal(patient)} className="flex flex-col items-center text-xs text-slate-600 hover:text-sky-600 p-1 rounded-md w-1/4">
+                 <button onClick={() => onOpenRescheduleModal(patient)} title="Remarcar Consulta" className="flex flex-col items-center text-xs text-slate-600 hover:text-sky-600 p-1 rounded-md w-1/5">
                     <CalendarPlus size={20} />
                     <span>Remarcar</span>
                 </button>
-                 <button onClick={() => handleLogContact('Ligação')} className="flex flex-col items-center text-xs text-slate-600 hover:text-purple-600 p-1 rounded-md w-1/4">
+                 <button onClick={() => handleLogContact('Ligação')} title="Registrar Ligação" className="flex flex-col items-center text-xs text-slate-600 hover:text-purple-600 p-1 rounded-md w-1/5">
                     <Phone size={20} />
-                    <span>Registrar</span>
+                    <span>Ligação</span>
                 </button>
-                 <button onClick={() => onOpenObservationModal(patient)} className="flex flex-col items-center text-xs text-slate-600 hover:text-amber-600 p-1 rounded-md w-1/4">
+                 <button onClick={() => onOpenObservationModal(patient)} title="Adicionar Observação" className="flex flex-col items-center text-xs text-slate-600 hover:text-amber-600 p-1 rounded-md w-1/5">
                     <StickyNote size={20} />
-                    <span>Observação</span>
+                    <span>Nota</span>
                 </button>
             </div>
         </div>

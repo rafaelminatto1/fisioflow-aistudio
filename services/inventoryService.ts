@@ -1,5 +1,6 @@
+
 // services/inventoryService.ts
-import { InventoryItem, Supplier, InventoryCategory, StockMovement, MovementType, ItemStatus, InventoryMetrics, AlertType, InventoryAlert } from '../types';
+import { InventoryItem, Supplier, InventoryCategory, StockMovement, MovementType, ItemStatus, InventoryMetrics, InventoryAlertType, InventoryAlert } from '../types';
 import { mockInventoryItems, mockSuppliers, mockInventoryCategories, mockStockMovements, mockUsers } from '../data/mockData';
 
 let items: InventoryItem[] = [...mockInventoryItems];
@@ -112,7 +113,7 @@ export const getDashboardMetrics = async (): Promise<InventoryMetrics> => {
             lowStockCount++;
             criticalAlerts.push({
                 id: `alert-low-${item.id}`,
-                type: item.currentStock === 0 ? AlertType.OutOfStock : AlertType.LowStock,
+                type: item.currentStock === 0 ? InventoryAlertType.OutOfStock : InventoryAlertType.LowStock,
                 itemId: item.id,
                 itemName: item.name,
                 message: item.currentStock === 0 ? 'Item sem estoque!' : `Estoque baixo: ${item.currentStock}/${item.minStock}`,
@@ -128,7 +129,7 @@ export const getDashboardMetrics = async (): Promise<InventoryMetrics> => {
                 if (daysUntilExpiry <= 7) {
                      criticalAlerts.push({
                         id: `alert-exp-${item.id}`,
-                        type: daysUntilExpiry < 0 ? AlertType.Expired : AlertType.Expiring,
+                        type: daysUntilExpiry < 0 ? InventoryAlertType.Expired : InventoryAlertType.Expiring,
                         itemId: item.id,
                         itemName: item.name,
                         message: daysUntilExpiry < 0 ? 'Vencido!' : `Vence em ${daysUntilExpiry} dias.`,

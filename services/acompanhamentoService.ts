@@ -1,10 +1,13 @@
+
 // services/acompanhamentoService.ts
-import { Patient, Appointment, AppointmentStatus } from '../types';
+import { Patient, Appointment, AppointmentStatus, AlertPatient } from '../types';
+import { mockPatients } from '../data/mockData';
+import * as treatmentService from './treatmentService';
 
 interface CategorizedPatients {
-    abandonment: Patient[];
-    highRisk: Patient[];
-    attention: Patient[];
+    abandonment: AlertPatient[];
+    highRisk: AlertPatient[];
+    attention: AlertPatient[];
     regular: Patient[];
 }
 
@@ -37,6 +40,7 @@ export const getCategorizedPatients = async (
     };
 
     const patientIdsInAlerts = new Set<string>();
+    const treatmentPlans = new Map<string, any>();
 
     for (const patient of allPatients) {
         if (patient.status !== 'Active') continue;
@@ -47,48 +51,55 @@ export const getCategorizedPatients = async (
         // 1. Check for Abandonment (highest priority)
         const daysSinceLastVisit = getDaysSince(patient.lastVisit);
         if (daysSinceLastVisit > 7 && !hasFutureAppointment(patient.id, allAppointments)) {
-            categorized.abandonment.push(patient);
+            categorized.abandonment.push({
+                ...patient,
+                alertType: 'abandonment',
+                alertReason: `Última visita há ${daysSinceLastVisit} dias, sem novo agendamento.`
+            });
             patientIdsInAlerts.add(patient.id);
             continue; 
         }
 
-        // 2. Check for Consecutive Absences
+        // 2. Check for High Risk
         const recentScheduled = patientAppointments
-            .filter(app => app.startTime < new Date()) // only past/today appointments
-            .slice(0, 3);
+            .filter(app => app.startTime < new Date())
+            .slice(0, 2);
             
         if (recentScheduled.length >= 2 && recentScheduled.every(app => app.status === AppointmentStatus.NoShow)) {
-            categorized.highRisk.push(patient);
+            categorized.highRisk.push({
+                ...patient,
+                alertType: 'highRisk',
+                alertReason: `Faltou às últimas ${recentScheduled.length} consultas. Contato urgente.`
+            });
             patientIdsInAlerts.add(patient.id);
             continue;
         }
-        
-        // Mock logic for "Nearing Discharge" and "Missed Discharge"
-        if (patient.id === '1') { // Ana Beatriz Costa - Nearing discharge
-             categorized.attention.push(patient);
-             patientIdsInAlerts.add(patient.id);
-             continue;
+
+        // 3. Check for Attention Points
+        if (!treatmentPlans.has(patient.id)) {
+            treatmentPlans.set(patient.id, await treatmentService.getPlanByPatientId(patient.id));
         }
-        if (patient.id === '8') { // Júlia Pereira - Missed discharge
-             categorized.highRisk.push(patient);
-             patientIdsInAlerts.add(patient.id);
-             continue;
+        const plan = treatmentPlans.get(patient.id);
+        
+        if (plan) {
+            const totalSessions = plan.durationWeeks * plan.frequencyPerWeek;
+            const completedSessions = patientAppointments.filter(a => a.status === AppointmentStatus.Completed).length;
+            
+            if (completedSessions >= totalSessions * 0.8 && completedSessions < totalSessions) { // Between 80% and 100% of plan
+                 categorized.attention.push({
+                    ...patient,
+                    alertType: 'attention',
+                    alertReason: `Próximo da alta (${completedSessions}/${totalSessions} sessões). Planejar próximos passos.`
+                 });
+                 patientIdsInAlerts.add(patient.id);
+                 continue;
+            }
         }
     }
     
-    // 4. Regular Patients (active and have appointment in next 7 days)
-    const sevenDaysFromNow = new Date();
-    sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
-
-    const regularPatientIds = new Set<string>();
-    allAppointments.forEach(app => {
-        if (app.startTime > new Date() && app.startTime <= sevenDaysFromNow && app.status === AppointmentStatus.Scheduled) {
-            regularPatientIds.add(app.patientId);
-        }
-    });
-
+    // 4. Regular Patients (everyone else active)
     allPatients.forEach(patient => {
-        if (patient.status === 'Active' && !patientIdsInAlerts.has(patient.id) && regularPatientIds.has(patient.id)) {
+        if (patient.status === 'Active' && !patientIdsInAlerts.has(patient.id)) {
             categorized.regular.push(patient);
         }
     });

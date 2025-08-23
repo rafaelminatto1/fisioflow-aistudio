@@ -1,4 +1,3 @@
-
 // pages/TeleconsultaPage.tsx
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
