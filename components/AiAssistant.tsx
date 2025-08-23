@@ -2,8 +2,8 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Bot, X, Send, Sparkles, Loader, HardDrive, Library } from 'lucide-react';
-import { aiService } from '../services/ai-economica/aiService.ts';
-import { AIResponse, PremiumProvider, QueryType, ResponseSource } from '../services/ai-economica/types/ai-economica.types.ts';
+import { aiService } from '../services/ai-economica/aiService';
+import { AIResponse, PremiumProvider, QueryType, ResponseSource } from '../services/ai-economica/types/ai-economica.types';
 
 interface Message {
   id: number;

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Calendar, Clock } from 'lucide-react';
 import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary, RecurrenceRule } from '../types';
@@ -8,6 +9,7 @@ import { ptBR } from 'date-fns/locale/pt-BR';
 import RecurrenceSelector from './RecurrenceSelector';
 import { findConflict } from '../services/scheduling/conflictDetection';
 import { generateRecurrences } from '../services/scheduling/recurrenceService';
+import { schedulingSettingsService } from '../services/schedulingSettingsService';
 
 interface AppointmentFormModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
   const [notes, setNotes] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [recurrenceRule, setRecurrenceRule] = useState<RecurrenceRule | undefined>(undefined);
+  const [isTeleconsultaEnabled, setIsTeleconsultaEnabled] = useState(false);
   
   const { showToast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -38,6 +41,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
   
   useEffect(() => {
     if (isOpen) {
+        setIsTeleconsultaEnabled(schedulingSettingsService.getSettings().teleconsultaEnabled);
         if (appointmentToEdit) {
             const patient = patients.find(p => p.id === appointmentToEdit.patientId);
             setSelectedPatient(patient || null);
@@ -174,7 +178,9 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
               onChange={(e) => setAppointmentType(e.target.value as AppointmentType)}
               className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-sky-500 focus:border-sky-500 text-sm"
             >
-              {Object.values(AppointmentType).map(type => <option key={type} value={type}>{type}</option>)}
+              {Object.values(AppointmentType)
+                  .filter(type => isTeleconsultaEnabled || type !== AppointmentType.Teleconsulta)
+                  .map(type => <option key={type} value={type}>{type}</option>)}
             </select>
           </div>
           

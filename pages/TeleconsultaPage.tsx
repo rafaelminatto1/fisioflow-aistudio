@@ -12,22 +12,12 @@ import SharedContentDisplay from '../components/teleconsulta/SharedContentDispla
 import TeleconsultaToolbar from '../components/teleconsulta/TeleconsultaToolbar';
 import * as soapNoteService from '../services/soapNoteService';
 import { useDebounce } from '../hooks/useDebounce';
+import { schedulingSettingsService } from '../services/schedulingSettingsService';
 
 type SharedContent = 
     | { type: 'exercise'; data: Exercise }
     | { type: 'painMap'; data: PainPoint[] | undefined }
     | null;
-
-const APP_SETTINGS_KEY = 'fisioflow_app_settings';
-const getTeleconsultaEnabled = () => {
-    try {
-        const stored = localStorage.getItem(APP_SETTINGS_KEY);
-        if (stored) {
-            return JSON.parse(stored).teleconsultaEnabled === true;
-        }
-    } catch (e) { /* ignore */ }
-    return false; // Default to false
-};
 
 
 const TeleconsultaPage: React.FC = () => {
@@ -110,7 +100,7 @@ const TeleconsultaPage: React.FC = () => {
       }
     };
     
-    if (getTeleconsultaEnabled()) {
+    if (schedulingSettingsService.getSettings().teleconsultaEnabled) {
         startMedia();
     } else {
         showToast('O módulo de Teleconsulta está desativado.', 'error');

@@ -1,3 +1,4 @@
+
 // pages/AgendaSettingsPage.tsx
 import React, { useState } from 'react';
 import { Plus, Save, Trash2 } from 'lucide-react';
@@ -146,6 +147,25 @@ const AgendaSettingsPage: React.FC = () => {
                             className="w-full max-w-xs p-2 border border-slate-300 rounded-lg"
                          />
                      </div>
+                </div>
+
+                <div className="bg-white p-6 rounded-2xl shadow-sm">
+                    <h3 className="text-lg font-semibold text-slate-800 mb-2">Módulos Adicionais</h3>
+                    <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                        <div>
+                            <h4 className="font-semibold text-slate-800">Módulo de Teleconsulta</h4>
+                            <p className="text-sm text-slate-500">Permite realizar atendimentos por vídeo diretamente na plataforma.</p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                            <input 
+                                type="checkbox"
+                                checked={settings.teleconsultaEnabled}
+                                onChange={e => setSettings(s => ({ ...s, teleconsultaEnabled: e.target.checked }))}
+                                className="sr-only peer"
+                            />
+                            <div className="w-11 h-6 bg-slate-200 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-500"></div>
+                        </label>
+                    </div>
                 </div>
             </div>
         </>

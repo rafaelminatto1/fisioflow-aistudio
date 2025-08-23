@@ -134,7 +134,8 @@ export enum AppointmentType {
     Session = 'Sessão',
     Return = 'Retorno',
     Pilates = 'Pilates',
-    Urgent = 'Urgente'
+    Urgent = 'Urgente',
+    Teleconsulta = 'Teleconsulta',
 }
 
 export const AppointmentTypeColors: Record<string, string> = {
@@ -143,6 +144,7 @@ export const AppointmentTypeColors: Record<string, string> = {
     [AppointmentType.Return]: 'blue',
     [AppointmentType.Pilates]: 'amber',
     [AppointmentType.Urgent]: 'red',
+    [AppointmentType.Teleconsulta]: 'cyan',
 };
 
 
@@ -211,6 +213,7 @@ export interface DayLimits {
 export interface SchedulingSettings {
   limits: DayLimits;
   maxEvaluationsPerSlot: number;
+  teleconsultaEnabled: boolean;
 }
 
 

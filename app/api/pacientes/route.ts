@@ -115,7 +115,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[API_PACIENTES_POST]', error);
     if (error instanceof z.ZodError) {
-      return new NextResponse(JSON.stringify(error.issues), { status: 400 });
+      return new NextResponse(JSON.stringify(error.errors), { status: 400 });
     }
     return new NextResponse('Internal Server Error', { status: 500 });
   }

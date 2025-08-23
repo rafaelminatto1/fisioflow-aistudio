@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import { format } from 'date-fns/format';
 import { addDays } from 'date-fns/addDays';
@@ -10,15 +9,15 @@ import { setMinutes } from 'date-fns/setMinutes';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
-import { useAppointments } from '../hooks/useAppointments.ts';
-import { EnrichedAppointment, Appointment, AppointmentStatus, Therapist } from '../types.ts';
-import { useToast } from '../contexts/ToastContext.tsx';
-import * as appointmentService from '../services/appointmentService.ts';
-import { useData } from '../contexts/DataContext.tsx';
-import AppointmentCard from '../components/AppointmentCard.tsx';
-import AppointmentDetailModal from '../components/AppointmentDetailModal.tsx';
-import AppointmentFormModal from '../components/AppointmentFormModal.tsx';
-import { cn } from '../lib/utils.ts';
+import { useAppointments } from '../hooks/useAppointments';
+import { EnrichedAppointment, Appointment, AppointmentStatus, Therapist } from '../types';
+import { useToast } from '../contexts/ToastContext';
+import * as appointmentService from '../services/appointmentService';
+import { useData } from '../contexts/DataContext';
+import AppointmentCard from '../components/AppointmentCard';
+import AppointmentDetailModal from '../components/AppointmentDetailModal';
+import AppointmentFormModal from '../components/AppointmentFormModal';
+import { cn } from '../lib/utils';
 
 const START_HOUR = 7;
 const END_HOUR = 21;

@@ -2,8 +2,8 @@
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { LayoutGrid, Users, Calendar, Stethoscope, ChevronLeft, ChevronRight, BarChart3, ShieldCheck, Cog, Library, AreaChart, LogOut, FilePlus, FileClock, Dumbbell, AlertTriangle, Activity, Users2, Mail, BookMarked, ClipboardList, PieChart, DollarSign, SlidersHorizontal, FilePenLine, Bell, BrainCircuit, MessageSquare, Handshake, Package, Ticket } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext.tsx';
-import { useNotifications } from '../hooks/useNotifications.ts';
+import { useAuth } from '../contexts/AuthContext';
+import { useNotifications } from '../hooks/useNotifications';
 
 const NavLinkComponent = ({ to, icon: Icon, label, isCollapsed, badgeCount }: { to: string, icon: React.ElementType, label: string, isCollapsed: boolean, badgeCount?: number }) => (
     <ReactRouterDOM.NavLink

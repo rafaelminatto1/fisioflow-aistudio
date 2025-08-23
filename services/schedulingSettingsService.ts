@@ -15,6 +15,7 @@ const DEFAULT_SETTINGS: SchedulingSettings = {
         ],
     },
     maxEvaluationsPerSlot: 1,
+    teleconsultaEnabled: false,
 };
 
 class SchedulingSettingsService {
@@ -22,7 +23,9 @@ class SchedulingSettingsService {
         try {
             const stored = localStorage.getItem(SETTINGS_KEY);
             if (stored) {
-                return JSON.parse(stored);
+                const parsed = JSON.parse(stored);
+                // Ensure default for new properties if not present in localStorage
+                return { ...DEFAULT_SETTINGS, ...parsed };
             }
         } catch (error) {
             console.error("Failed to parse scheduling settings from localStorage", error);

@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import { X, Edit, Trash2, Play, ChevronDown, DollarSign, Save, Repeat } from 'lucide-react';
+import { X, Edit, Trash2, Play, ChevronDown, DollarSign, Save, Repeat, Video } from 'lucide-react';
 import { Appointment, Patient, Therapist, AppointmentStatus, AppointmentType, EnrichedAppointment } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
@@ -43,10 +44,17 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
     
     const handleStartSession = () => {
         onClose();
-        navigate(`/atendimento/${appointment.id}`);
+        if (appointment.type === AppointmentType.Teleconsulta) {
+            navigate(`/teleconsulta/${appointment.id}`);
+        } else {
+            navigate(`/atendimento/${appointment.id}`);
+        }
     };
     
-    const sessionButtonText = 'Iniciar Atendimento';
+    const isTeleconsulta = appointment.type === AppointmentType.Teleconsulta;
+    const sessionButtonText = isTeleconsulta ? 'Iniciar Teleconsulta' : 'Iniciar Atendimento';
+    const SessionIcon = isTeleconsulta ? Video : Play;
+
 
     return (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4" onClick={onClose}>
@@ -161,7 +169,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
                              onClick={handleStartSession}
                             className="flex-1 flex items-center justify-center bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg"
                         >
-                            <Play className="w-4 h-4 mr-2" />
+                            <SessionIcon className="w-4 h-4 mr-2" />
                             {sessionButtonText}
                         </button>
                         <button
