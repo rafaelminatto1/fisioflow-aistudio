@@ -66,13 +66,16 @@ const DashboardPage: React.FC = () => {
         const therapistMap = new Map(therapists.map(t => [t.id, t]));
         const patientMap = new Map(patients.map(p => [p.id, p]));
 
-        return todays.map(app => ({
-            ...app,
-            therapistColor: therapistMap.get(app.therapistId)?.color || 'slate',
-            typeColor: AppointmentTypeColors[app.type] || 'slate',
-            patientPhone: patientMap.get(app.patientId)?.phone || '',
-            patientMedicalAlerts: patientMap.get(app.patientId)?.medicalAlerts,
-        }));
+        return todays.map(app => {
+            const patient = patientMap.get(app.patientId);
+            return {
+                ...app,
+                therapistColor: therapistMap.get(app.therapistId)?.color || 'slate',
+                typeColor: AppointmentTypeColors[app.type] || 'slate',
+                patientPhone: patient?.phone || '',
+                patientMedicalAlerts: patient?.medicalAlerts,
+            };
+        });
     }, [appointments, patients, therapists]);
 
     const { stats } = useDashboardStats({ patients, appointments });

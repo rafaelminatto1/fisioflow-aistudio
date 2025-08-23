@@ -1,3 +1,4 @@
+
 // pages/AiSettingsPage.tsx
 import React, { useState, useEffect } from 'react';
 import PageHeader from '../components/PageHeader';
@@ -104,7 +105,7 @@ const AiSettingsPage: React.FC = () => {
                         onChange={(e) => setDefaultProvider(e.target.value as PremiumProvider)}
                         className="w-full max-w-sm p-2 border border-slate-300 rounded-lg bg-white"
                      >
-                         {Object.entries(providerConfigs).map(([key, config]) => (
+                         {Object.entries(providerConfigs).map(([key, config]: [string, ProviderSettings]) => (
                              config.enabled && <option key={key} value={key}>{config.name}</option>
                          ))}
                      </select>

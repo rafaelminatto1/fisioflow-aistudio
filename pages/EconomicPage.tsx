@@ -1,11 +1,11 @@
 
 
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Cell } from 'recharts';
 import PageHeader from '../components/PageHeader';
 import { useEconomicAiAnalytics, ProviderStatus } from '../hooks/useEconomicAiAnalytics';
 import { EconomicAiLog, ResponseSource, PremiumProvider } from '../services/ai-economica/types/ai-economica.types';
-import { DollarSign, BrainCircuit, HardDrive, Library, Sparkles, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
+import { DollarSign, BrainCircuit, HardDrive, Library, Sparkles, CheckCircle, AlertTriangle, XCircle, Search } from 'lucide-react';
 import PageLoader from '../components/ui/PageLoader';
 
 const StatCard: React.FC<{ title: string; value: string; icon: React.ReactNode }> = ({ title, value, icon }) => (
@@ -85,6 +85,16 @@ const QueryLogRow: React.FC<{ log: EconomicAiLog }> = ({ log }) => {
 
 const EconomicPage: React.FC = () => {
     const { stats, logs, providerStatus, isLoading } = useEconomicAiAnalytics();
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const filteredLogs = useMemo(() => {
+        if (!searchTerm.trim()) {
+            return logs;
+        }
+        return logs.filter(log => 
+            log.query.text.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [logs, searchTerm]);
 
     if (isLoading || !stats) {
         return <PageLoader />;
@@ -146,7 +156,19 @@ const EconomicPage: React.FC = () => {
                 </div>
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm">
-                    <h3 className="text-lg font-semibold text-slate-800 mb-4">Log de Consultas Recentes</h3>
+                    <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-lg font-semibold text-slate-800">Log de Consultas Recentes</h3>
+                         <div className="relative w-full max-w-xs">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                            <input
+                                type="text"
+                                placeholder="Buscar por prompt..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+                            />
+                        </div>
+                    </div>
                     <div className="overflow-y-auto max-h-96">
                         <table className="min-w-full divide-y divide-slate-200">
                              <thead className="bg-slate-50 sticky top-0 z-10">
@@ -157,8 +179,12 @@ const EconomicPage: React.FC = () => {
                                 </tr>
                             </thead>
                              <tbody className="bg-white divide-y divide-slate-200">
-                                {logs.length > 0 ? logs.map(log => <QueryLogRow key={log.id} log={log} />) : (
-                                    <tr><td colSpan={3} className="text-center p-8 text-slate-500">Nenhum log de consulta ainda.</td></tr>
+                                {filteredLogs.length > 0 ? filteredLogs.map(log => <QueryLogRow key={log.id} log={log} />) : (
+                                    <tr>
+                                        <td colSpan={3} className="text-center p-8 text-slate-500">
+                                            {logs.length === 0 ? "Nenhum log de consulta ainda." : "Nenhum log encontrado para sua busca."}
+                                        </td>
+                                    </tr>
                                 )}
                             </tbody>
                         </table>

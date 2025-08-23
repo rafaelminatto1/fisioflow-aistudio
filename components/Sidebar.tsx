@@ -91,7 +91,7 @@ const Sidebar: React.FC = () => {
       </div>
       
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {topNavItems.map((item) => <NavLinkComponent key={item.to} to={item.to} icon={item.icon} label={item.label} isCollapsed={isCollapsed} badgeCount={(item as any).badgeCount} />)}
+        {topNavItems.map((item) => <NavLinkComponent key={item.to} to={item.to} icon={item.icon} label={item.label} isCollapsed={isCollapsed} badgeCount={item.badgeCount} />)}
         
         {!isCollapsed && (
             <div className="pt-2 pb-1 px-3">

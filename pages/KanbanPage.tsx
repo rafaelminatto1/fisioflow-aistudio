@@ -1,3 +1,4 @@
+
 // pages/KanbanPage.tsx
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import PageHeader from '../components/PageHeader';
@@ -150,7 +151,7 @@ const KanbanPage: React.FC = () => {
             setTasks(updatedTasks);
 
             try {
-                const { actorUserId, ...taskDataToSave } = { ...taskToMove, status: newStatus };
+                const { actorUserId, ...taskDataToSave } = { ...taskToMove!, status: newStatus };
                 await taskService.saveTask(taskDataToSave, user.id);
                 showToast(`Tarefa movida para "${newStatus}"`, 'success');
             } catch {

@@ -1,3 +1,4 @@
+
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
@@ -16,16 +17,16 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`font-sans ${inter.variable} bg-slate-50 antialiased`}>
         <AuthProvider>
           {children}
-          <Toaster />
         </AuthProvider>
+        <Toaster />
       </body>
     </html>
   );

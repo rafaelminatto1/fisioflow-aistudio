@@ -1,4 +1,5 @@
-// components/pacientes/PatientDetailClient.tsx
+
+// src/components/pacientes/PatientDetailClient.tsx
 'use client';
 
 import React, { useState } from 'react';
@@ -11,6 +12,8 @@ import NewSoapNoteModal from './NewSoapNoteModal';
 type PatientWithRelations = Patient & {
   soapNotes: SoapNote[];
   treatmentPlan: TreatmentPlan | null;
+  emergencyContactName?: string | null;
+  emergencyContactPhone?: string | null;
   // Add other relations as needed
 };
 
@@ -39,6 +42,7 @@ const TabButton = ({
     {label}
   </button>
 );
+
 
 const InfoPill: React.FC<{ label: string; value: React.ReactNode }> = ({ label, value }) => (
     <div>
@@ -75,7 +79,8 @@ export default function PatientDetailClient({ patient: initialPatient }: Patient
             {tabs.map(tab => (
                 <TabButton
                     key={tab.id}
-                    {...tab}
+                    label={tab.label}
+                    icon={tab.icon}
                     isActive={activeTab === tab.id}
                     onClick={() => setActiveTab(tab.id)}
                 />
@@ -96,8 +101,8 @@ export default function PatientDetailClient({ patient: initialPatient }: Patient
              </InfoCard>
              <InfoCard title="Contato de Emergência">
                  <div className="space-y-4">
-                     <InfoPill label="Nome" value={patient.emergencyContact.name} />
-                     <InfoPill label="Telefone" value={patient.emergencyContact.phone} />
+                     <InfoPill label="Nome" value={patient.emergencyContactName || 'N/A'} />
+                     <InfoPill label="Telefone" value={patient.emergencyContactPhone || 'N/A'} />
                  </div>
              </InfoCard>
           </div>

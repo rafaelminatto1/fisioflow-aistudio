@@ -1,3 +1,4 @@
+
 // src/components/layout/Sidebar.tsx
 'use client';
 
@@ -35,7 +36,7 @@ const NavLink = ({ href, icon: Icon, label, isCollapsed }: { href: string, icon:
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
-  const user = session?.user;
+  const user = session?.user as any; // Cast to access custom properties like role/avatar
 
   const topNavItems = [
     { href: '/dashboard', icon: LayoutGrid, label: 'Dashboard' },
@@ -62,7 +63,7 @@ export default function Sidebar() {
       </div>
       
       <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
-        {topNavItems.map((item) => <NavLink key={item.href} {...item} isCollapsed={isCollapsed} />)}
+        {topNavItems.map((item) => <NavLink key={item.href} href={item.href} icon={item.icon} label={item.label} isCollapsed={isCollapsed} />)}
         
         {!isCollapsed && (
             <div className="pt-2 pb-1 px-3">
@@ -70,7 +71,7 @@ export default function Sidebar() {
             </div>
         )}
 
-        {bottomNavItems.map((item) => <NavLink key={item.href} {...item} isCollapsed={isCollapsed} />)}
+        {bottomNavItems.map((item) => <NavLink key={item.href} href={item.href} icon={item.icon} label={item.label} isCollapsed={isCollapsed} />)}
       </nav>
 
       {user && (

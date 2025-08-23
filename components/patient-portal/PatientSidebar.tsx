@@ -56,13 +56,13 @@ const PatientSidebar: React.FC = () => {
         <span className="text-xl font-bold text-slate-800 ml-2">Fisio<span className="text-teal-500">Flow</span></span>
       </div>
       <nav className="flex-1 px-2 py-4 space-y-2">
-        {navItems.map((item) => (
+        {navItems.map(({ to, icon, label, badgeCount }) => (
           <NavLinkComponent
-            key={item.to}
-            to={item.to}
-            icon={item.icon}
-            label={item.label}
-            badgeCount={item.badgeCount}
+            key={to}
+            to={to}
+            icon={icon}
+            label={label}
+            badgeCount={badgeCount}
           />
         ))}
       </nav>
