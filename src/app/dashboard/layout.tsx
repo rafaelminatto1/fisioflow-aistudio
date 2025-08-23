@@ -1,24 +1,8 @@
 // src/app/dashboard/layout.tsx
 import React from 'react';
-// Note: Sidebar and other components would need to be created/migrated.
-// This serves as the structural foundation.
-
-const Sidebar = () => {
-    // Placeholder Sidebar
-    return (
-        <div className="w-64 bg-slate-900 text-white p-4">
-            <h2 className="text-2xl font-bold mb-8">FisioFlow</h2>
-            <nav>
-                <ul>
-                    <li className="mb-2"><a href="/dashboard" className="block p-2 rounded hover:bg-slate-800">Dashboard</a></li>
-                    <li className="mb-2"><a href="/dashboard/pacientes" className="block p-2 rounded hover:bg-slate-800">Pacientes</a></li>
-                    <li className="mb-2"><a href="/dashboard/agenda" className="block p-2 rounded hover:bg-slate-800">Agenda</a></li>
-                </ul>
-            </nav>
-        </div>
-    );
-};
-
+import Sidebar from '@/components/layout/Sidebar';
+import AiAssistant from '@/components/AiAssistant'; // Assuming migration
+import MedicalDisclaimerModal from '@/components/MedicalDisclaimerModal'; // Assuming migration
 
 export default function DashboardLayout({
   children,
@@ -28,8 +12,13 @@ export default function DashboardLayout({
   return (
     <div className="flex h-screen bg-slate-100">
       <Sidebar />
-      <main className="flex-1 p-8 overflow-y-auto">
-        {children}
+      <main className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 overflow-x-hidden overflow-y-auto p-4 sm:p-6 lg:p-8">
+            {children}
+        </div>
+        {/* These components would also need to be migrated/adapted to client components */}
+        {/* <AiAssistant /> */}
+        {/* <MedicalDisclaimerModal isOpen={true} onAgree={() => {}} /> */}
       </main>
     </div>
   );
