@@ -1,71 +1,65 @@
 import React from 'react';
 import { EnrichedAppointment, AppointmentStatus } from '../types';
-import { Repeat, DollarSign } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { Repeat } from 'lucide-react';
 
 interface AppointmentCardProps {
   appointment: EnrichedAppointment;
-  onSelect: () => void;
-  onDragStart: (e: React.DragEvent<HTMLDivElement>, appointment: EnrichedAppointment) => void;
+  startHour: number;
+  pixelsPerMinute: number;
+  isBeingDragged: boolean;
+  onClick: () => void;
+  onDragStart: (e: React.DragEvent<HTMLDivElement>) => void;
   onDragEnd: (e: React.DragEvent<HTMLDivElement>) => void;
-  onResizeStart: (e: React.MouseEvent<HTMLDivElement>, appointment: EnrichedAppointment) => void;
-  onContextMenu: (e: React.MouseEvent<HTMLDivElement>, appointment: EnrichedAppointment) => void;
-  onMouseEnter: (e: React.MouseEvent<HTMLDivElement>, appointment: EnrichedAppointment) => void;
-  onMouseLeave: () => void;
 }
-
-const SLOT_HEIGHT = 40; // Corresponds to AgendaPage
-const START_HOUR = 7;   // Corresponds to AgendaPage
 
 const getAppointmentStyle = (color: string) => {
     switch (color) {
-        case 'purple': return 'from-purple-500 to-purple-600 shadow-purple-200';
-        case 'emerald': return 'from-emerald-500 to-emerald-600 shadow-emerald-200';
-        case 'blue': return 'from-blue-500 to-blue-600 shadow-blue-200';
-        case 'amber': return 'from-amber-500 to-amber-600 shadow-amber-200';
-        case 'red': return 'from-red-500 to-red-600 shadow-red-200';
-        case 'indigo': return 'from-indigo-500 to-indigo-600 shadow-indigo-200';
-        default: return 'from-slate-500 to-slate-600 shadow-slate-200';
+        case 'purple': return 'bg-purple-500 border-purple-700';
+        case 'emerald': return 'bg-emerald-500 border-emerald-700';
+        case 'blue': return 'bg-blue-500 border-blue-700';
+        case 'amber': return 'bg-amber-500 border-amber-700';
+        case 'red': return 'bg-red-500 border-red-700';
+        case 'indigo': return 'bg-indigo-500 border-indigo-700';
+        case 'teal': return 'bg-teal-500 border-teal-700';
+        case 'sky': return 'bg-sky-500 border-sky-700';
+        default: return 'bg-slate-500 border-slate-700';
     }
-}
+};
 
-const AppointmentCard: React.FC<AppointmentCardProps> = ({ appointment, onSelect, onDragStart, onDragEnd, onResizeStart, onContextMenu, onMouseEnter, onMouseLeave }) => {
-  const top = ((appointment.startTime.getHours() - START_HOUR) * 60 + appointment.startTime.getMinutes()) * (SLOT_HEIGHT / 30);
+const AppointmentCard: React.FC<AppointmentCardProps> = ({ appointment, startHour, pixelsPerMinute, isBeingDragged, onClick, onDragStart, onDragEnd }) => {
+  const top = ((appointment.startTime.getHours() - startHour) * 60 + appointment.startTime.getMinutes()) * pixelsPerMinute;
   const durationInMinutes = (appointment.endTime.getTime() - appointment.startTime.getTime()) / (60 * 1000);
-  const height = durationInMinutes * (SLOT_HEIGHT / 30);
+  const height = durationInMinutes * pixelsPerMinute;
   
   const isCompleted = appointment.status === AppointmentStatus.Completed;
   const isCancelled = appointment.status === AppointmentStatus.Canceled || appointment.status === AppointmentStatus.NoShow;
 
+  const style = getAppointmentStyle(appointment.therapistColor);
+
   return (
     <div
-      onClick={onSelect}
-      onContextMenu={(e) => onContextMenu(e, appointment)}
-      onMouseEnter={(e) => onMouseEnter(e, appointment)}
-      onMouseLeave={onMouseLeave}
+      onClick={(e) => { e.stopPropagation(); onClick(); }}
       draggable="true"
-      onDragStart={(e) => onDragStart(e, appointment)}
+      onDragStart={onDragStart}
       onDragEnd={onDragEnd}
       className={cn(
-          "absolute left-1 right-1 p-2 rounded-lg text-white text-xs z-10 cursor-pointer active:cursor-grabbing transition-all overflow-hidden flex flex-col group shadow-lg",
-          `bg-gradient-to-r ${getAppointmentStyle(appointment.typeColor)}`,
-          (isCompleted || isCancelled) && 'opacity-60 hover:opacity-100'
+          "absolute left-1 right-1 p-2 rounded-lg text-white text-xs z-10 cursor-pointer transition-all overflow-hidden flex flex-col group border-l-4",
+          style,
+          (isCompleted || isCancelled) && 'opacity-60 hover:opacity-100',
+          isBeingDragged && 'opacity-50 ring-2 ring-sky-400'
       )}
       style={{ top: `${top}px`, height: `${height}px`, minHeight: '20px' }}
-      data-id={appointment.id}
     >
-      <div className="flex justify-between items-start flex-grow min-h-0">
-        <div className="overflow-hidden">
-          <p className={cn("font-bold truncate", isCancelled && "line-through")}>{appointment.patientName}</p>
-          <p className="truncate text-xs opacity-90">{appointment.type}</p>
-        </div>
+      <div className="flex-grow min-h-0">
+        <p className={cn("font-bold truncate", isCancelled && "line-through")}>{appointment.patientName}</p>
+        <p className="truncate text-xs opacity-90">{appointment.type}</p>
       </div>
-       <div 
-          onMouseDown={(e) => onResizeStart(e, appointment)}
-          className="absolute bottom-0 left-0 w-full h-2.5 cursor-ns-resize opacity-0 group-hover:opacity-100 flex items-center justify-center"
-        >
-            <div className="h-[3px] w-8 bg-white/50 rounded-full"></div>
+      {appointment.seriesId && (
+        <div className="flex-shrink-0 mt-auto text-right">
+            <Repeat className="w-3 h-3 text-white/70" />
         </div>
+      )}
     </div>
   );
 };

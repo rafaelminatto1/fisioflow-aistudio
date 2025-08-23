@@ -1,14 +1,14 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { Plus, Search, Filter } from 'lucide-react';
-import PageHeader from '../components/PageHeader';
-import { Patient, PatientSummary } from '../types';
+import PageHeader from '../components/PageHeader.tsx';
+import { Patient, PatientSummary } from '../types.ts';
 import * as ReactRouterDOM from 'react-router-dom';
-import PatientFormModal from '../components/PatientFormModal';
-import Skeleton from '../components/ui/Skeleton';
-import { useToast } from '../contexts/ToastContext';
-import { usePatients } from '../hooks/usePatients';
-import { useDebounce } from '../hooks/useDebounce';
+import PatientFormModal from '../components/PatientFormModal.tsx';
+import Skeleton from '../components/ui/Skeleton.tsx';
+import { useToast } from '../contexts/ToastContext.tsx';
+import { usePatients } from '../hooks/usePatients.ts';
+import { useDebounce } from '../hooks/useDebounce.ts';
 
 
 const PatientRow: React.FC<{ patient: PatientSummary }> = ({ patient }) => {

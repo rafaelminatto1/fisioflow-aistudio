@@ -1,17 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import { X, Edit, Trash2, Play, ChevronDown, DollarSign, Save } from 'lucide-react';
-import { Appointment, Patient, Therapist, AppointmentStatus, AppointmentType } from '../types';
+import { X, Edit, Trash2, Play, ChevronDown, DollarSign, Save, Repeat } from 'lucide-react';
+import { Appointment, Patient, Therapist, AppointmentStatus, AppointmentType, EnrichedAppointment } from '../types';
 import { useToast } from '../contexts/ToastContext';
 
 interface AppointmentDetailModalProps {
-  appointment: Appointment | null;
+  appointment: EnrichedAppointment | null;
   patient: Patient | undefined;
   therapist: Therapist | undefined;
   onClose: () => void;
-  onEdit: (appointment: Appointment) => void;
-  onDelete: (appointmentId: string) => void;
+  onEdit: (appointment: EnrichedAppointment) => void;
+  onDelete: (appointmentId: string, seriesId?: string) => void;
   onStatusChange: (appointment: Appointment, newStatus: AppointmentStatus) => void;
   onPaymentStatusChange: (appointment: Appointment, newStatus: 'paid' | 'pending') => void;
   onPackagePayment: (appointment: Appointment) => void;
@@ -70,6 +69,10 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
                         <div className="flex text-sm"><span className="w-24 text-slate-500 shrink-0">Sessão:</span><span className="font-semibold text-slate-800">{appointment.sessionNumber} de {appointment.totalSessions}</span></div>
                     )}
                     
+                    {appointment.seriesId && (
+                         <div className="flex text-sm items-center"><span className="w-24 text-slate-500 shrink-0">Recorrência:</span><span className="font-semibold text-slate-800 flex items-center gap-1.5 text-indigo-600"><Repeat size={14}/>Sessão recorrente</span></div>
+                    )}
+
                     <div className="flex text-sm items-center">
                         <span className="w-24 text-slate-500 shrink-0">Valor:</span>
                         {isEditingValue ? (
@@ -169,7 +172,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({ appoint
                             <Edit className="w-5 h-5" />
                         </button>
                         <button
-                            onClick={() => onDelete(appointment.id)}
+                            onClick={() => onDelete(appointment.id, appointment.seriesId)}
                             className="p-2 bg-red-500 hover:bg-red-600 text-white rounded-lg"
                             title="Excluir Agendamento"
                         >

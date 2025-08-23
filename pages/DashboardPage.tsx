@@ -1,20 +1,20 @@
 
 import React, { useMemo, useState, useEffect, useCallback } from 'react';
-import PageHeader from '../components/PageHeader';
-import KPICards from '../components/dashboard/KPICards';
-import RevenueChart from '../components/dashboard/RevenueChart';
-import PatientFlowChart from '../components/dashboard/PatientFlowChart';
-import TeamProductivityChart from '../components/dashboard/TeamProductivityChart';
-import AppointmentHeatmap from '../components/dashboard/AppointmentHeatmap';
+import PageHeader from '../components/PageHeader.tsx';
+import KPICards from '../components/dashboard/KPICards.tsx';
+import RevenueChart from '../components/dashboard/RevenueChart.tsx';
+import PatientFlowChart from '../components/dashboard/PatientFlowChart.tsx';
+import TeamProductivityChart from '../components/dashboard/TeamProductivityChart.tsx';
+import AppointmentHeatmap from '../components/dashboard/AppointmentHeatmap.tsx';
 import { Activity, Users } from 'lucide-react';
-import { useData } from '../contexts/DataContext';
-import TodaysAppointments from '../components/dashboard/glance/TodaysAppointments';
-import PendingTasks from '../components/dashboard/glance/PendingTasks';
-import RecentActivity from '../components/dashboard/glance/RecentActivity';
-import useDashboardStats from '../hooks/useDashboardStats';
-import { Patient, AppointmentTypeColors } from '../types';
-import * as patientService from '../services/patientService';
-import { eventService } from '../services/eventService';
+import { useData } from '../contexts/DataContext.tsx';
+import TodaysAppointments from '../components/dashboard/glance/TodaysAppointments.tsx';
+import PendingTasks from '../components/dashboard/glance/PendingTasks.tsx';
+import RecentActivity from '../components/dashboard/glance/RecentActivity.tsx';
+import useDashboardStats from '../hooks/useDashboardStats.ts';
+import { Patient, AppointmentTypeColors } from '../types.ts';
+import * as patientService from '../services/patientService.ts';
+import { eventService } from '../services/eventService.ts';
 
 const isToday = (someDate: Date) => {
     const today = new Date();

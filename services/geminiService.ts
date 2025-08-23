@@ -1,7 +1,7 @@
 
 
 import { GoogleGenAI, Type } from "@google/genai";
-import { ClinicalMaterialData, Patient, SoapNote } from "../types";
+import { ClinicalMaterialData, Patient, SoapNote } from "../types.ts";
 
 if (!process.env.API_KEY) {
   throw new Error("API_KEY is not set in environment variables.");
