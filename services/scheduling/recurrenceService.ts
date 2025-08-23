@@ -1,4 +1,3 @@
-
 import { Appointment } from '../../types';
 
 /**
@@ -11,7 +10,10 @@ export const generateRecurrences = (initialAppointment: Appointment): Appointmen
     const { recurrenceRule } = initialAppointment;
 
     if (!recurrenceRule || recurrenceRule.days.length === 0) {
-        return [initialAppointment];
+        // Ensure even single appointments have the right structure if they become recurring later
+        const singleAppointment = { ...initialAppointment };
+        delete singleAppointment.recurrenceRule; // Not part of a series
+        return [singleAppointment];
     }
     
     const seriesId = initialAppointment.seriesId || `series_${Date.now()}`;
@@ -20,28 +22,26 @@ export const generateRecurrences = (initialAppointment: Appointment): Appointmen
     const untilDate = new Date(recurrenceRule.until);
     untilDate.setHours(23, 59, 59, 999); // Ensure we include the whole 'until' day
     
-    const initialDate = new Date(initialAppointment.startTime);
-    // Set to midnight to avoid time-related issues in date looping
-    initialDate.setHours(0, 0, 0, 0);
+    let currentDate = new Date(initialAppointment.startTime);
+    currentDate.setHours(0, 0, 0, 0); // Start iterating from the beginning of the day
 
-    let currentDate = new Date(initialDate);
+    const duration = initialAppointment.endTime.getTime() - initialAppointment.startTime.getTime();
 
     while (currentDate <= untilDate) {
         if (recurrenceRule.days.includes(currentDate.getDay())) {
-            // Check if we are creating an appointment on or after the initial date
-            if (currentDate >= initialDate) {
+            // Create appointment only if it's on or after the intended start date
+            if (currentDate.getTime() >= new Date(initialAppointment.startTime).setHours(0,0,0,0)) {
                 const startTime = new Date(currentDate);
                 startTime.setHours(initialAppointment.startTime.getHours(), initialAppointment.startTime.getMinutes());
     
-                const endTime = new Date(currentDate);
-                endTime.setHours(initialAppointment.endTime.getHours(), initialAppointment.endTime.getMinutes());
+                const endTime = new Date(startTime.getTime() + duration);
     
                 appointments.push({
                     ...initialAppointment,
-                    id: `app_${seriesId}_${startTime.getTime()}`,
+                    id: `app_recurr_${seriesId}_${startTime.getTime()}`, // Unique ID for each instance
                     startTime,
                     endTime,
-                    seriesId: seriesId, // Ensure all have the same series ID
+                    seriesId: seriesId,
                 });
             }
         }

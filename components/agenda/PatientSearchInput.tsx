@@ -1,4 +1,3 @@
-// components/agenda/PatientSearchInput.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, UserPlus, Check, Loader2 } from 'lucide-react';
@@ -13,7 +12,7 @@ interface PatientSearchInputProps {
   selectedPatient: Patient | PatientSummary | null;
 }
 
-export default function PatientSearchInput({ onSelectPatient, selectedPatient }: PatientSearchInputProps) {
+export const PatientSearchInput: React.FC<PatientSearchInputProps> = ({ onSelectPatient, selectedPatient }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<PatientSummary[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -54,9 +53,7 @@ export default function PatientSearchInput({ onSelectPatient, selectedPatient }:
         
         setIsSearching(true);
         try {
-          const res = await fetch(`/api/pacientes/search?term=${debouncedSearchTerm}`);
-          if (!res.ok) throw new Error("Search failed");
-          const data: PatientSummary[] = await res.json();
+          const data = await patientService.searchPatients(debouncedSearchTerm);
           setSearchResults(data || []);
           setShowDropdown(true);
           setShowQuickRegister(data.length === 0 && debouncedSearchTerm.length >= 3);
@@ -73,14 +70,15 @@ export default function PatientSearchInput({ onSelectPatient, selectedPatient }:
     if (!searchTerm || searchTerm.length < 3) return;
     setIsRegistering(true);
     try {
-      // In Next.js, this would ideally be a server action
       const newPatient = await patientService.quickAddPatient(searchTerm.trim());
       onSelectPatient(newPatient);
       setSearchTerm(newPatient.name);
       setShowDropdown(false);
       showToast(`Paciente "${newPatient.name}" cadastrado!`, 'success');
-      inputRef.current?.classList.add('animate-pulse-green');
-      setTimeout(() => inputRef.current?.classList.remove('animate-pulse-green'), 1000);
+      if (inputRef.current) {
+        inputRef.current.classList.add('animate-pulse-green');
+        setTimeout(() => inputRef.current?.classList.remove('animate-pulse-green'), 1000);
+      }
     } catch (error) {
       showToast('Erro ao cadastrar paciente.', 'error');
     } finally {
@@ -152,4 +150,4 @@ export default function PatientSearchInput({ onSelectPatient, selectedPatient }:
       </AnimatePresence>
     </div>
   );
-}
+};

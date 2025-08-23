@@ -1,4 +1,3 @@
-
 import { Appointment } from '../../types';
 
 /**

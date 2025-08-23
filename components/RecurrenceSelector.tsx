@@ -1,5 +1,3 @@
-
-
 import React, { useState } from 'react';
 import { Repeat } from 'lucide-react';
 import { RecurrenceRule } from '../types';
@@ -56,7 +54,7 @@ const RecurrenceSelector: React.FC<RecurrenceSelectorProps> = ({ recurrenceRule,
     return (
         <div className="p-3 bg-slate-50 rounded-lg">
             <div className="flex items-center justify-between">
-                <label htmlFor="recurring-toggle" className="flex items-center text-sm font-medium text-slate-700">
+                <label htmlFor="recurring-toggle" className="flex items-center text-sm font-medium text-slate-700 cursor-pointer">
                     <Repeat className="w-4 h-4 mr-2 text-slate-400" /> Repetir Consulta
                 </label>
                 <input

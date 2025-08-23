@@ -1,9 +1,10 @@
 
+
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { X, Save, Calendar, Clock } from 'lucide-react';
 import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary, RecurrenceRule } from '../types';
 import { useToast } from '../contexts/ToastContext';
-import PatientSearchInput from './agenda/PatientSearchInput';
+import { PatientSearchInput } from './agenda/PatientSearchInput';
 import { format } from 'date-fns/format';
 import { ptBR } from 'date-fns/locale/pt-BR';
 import RecurrenceSelector from './RecurrenceSelector';

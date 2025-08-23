@@ -2,8 +2,9 @@
 import React from 'react';
 import prisma from '@/lib/prisma';
 import AgendaClient from '@/components/agenda/AgendaClient';
-import { startOfWeek, endOfWeek } from 'date-fns';
-import PageHeader from '@/components/PageHeader';
+import { startOfWeek } from 'date-fns/startOfWeek';
+import { endOfWeek } from 'date-fns/endOfWeek';
+import PageHeader from '@/components/ui/PageHeader';
 
 export default async function AgendaPage() {
     

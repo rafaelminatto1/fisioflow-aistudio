@@ -7,7 +7,7 @@ import {
   DollarSign, Check, ChevronRight,
   Stethoscope, Activity, Heart, Brain
 } from 'lucide-react';
-import PatientSearchInput from './PatientSearchInput';
+import { PatientSearchInput } from './PatientSearchInput';
 import { cn } from '../../lib/utils';
 import { Patient, PatientSummary, Appointment, AppointmentType, AppointmentStatus } from '../../types';
 import * as appointmentService from '../../services/appointmentService';
