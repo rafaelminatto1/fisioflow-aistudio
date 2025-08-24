@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Patient, AppointmentStatus } from '../types';
 import * as patientService from '../services/patientService';
 import * as appointmentService from '../services/appointmentService';
@@ -6,7 +6,7 @@ import * as soapNoteService from '../services/soapNoteService';
 import * as treatmentService from '../services/treatmentService';
 import { generateRiskAnalysis, RiskAnalysisFormData } from '../services/geminiService';
 import PageHeader from '../components/PageHeader';
-import { Loader, Sparkles, Clipboard, Check, CheckCircle, ListChecks, XCircle, RotateCcw, Activity } from 'lucide-react';
+import { Loader, Sparkles, Clipboard, Check, CheckCircle, ListChecks, XCircle, RotateCcw, Activity, Search } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import Skeleton from '../components/ui/Skeleton';
 import MarkdownRenderer from '../components/ui/MarkdownRenderer';
@@ -22,8 +22,8 @@ const initialFormData: RiskAnalysisFormData = {
 };
 
 const MetricDisplay: React.FC<{ label: string; value: string; icon: React.ReactNode }> = ({ label, value, icon }) => (
-    <div className="bg-slate-100 p-3 rounded-lg flex items-start">
-        <div className="flex-shrink-0 p-2 bg-teal-100 text-teal-600 rounded-lg mr-3">
+    <div className="bg-slate-50 p-3 rounded-lg flex items-start border border-slate-200">
+        <div className="flex-shrink-0 p-2 text-sky-600 mr-3">
             {icon}
         </div>
         <div>
@@ -54,6 +54,9 @@ const RiskAnalysisPage: React.FC = () => {
     const [formData, setFormData] = useState<RiskAnalysisFormData>(initialFormData);
     const [patients, setPatients] = useState<Patient[]>([]);
     const [selectedPatientId, setSelectedPatientId] = useState<string>('');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [showDropdown, setShowDropdown] = useState(false);
+    const searchRef = useRef<HTMLDivElement>(null);
     
     const [isLoading, setIsLoading] = useState(false);
     const [isFetchingData, setIsFetchingData] = useState(false);
@@ -105,10 +108,34 @@ const RiskAnalysisPage: React.FC = () => {
                 setIsFetchingData(false);
             } else {
                  setFormData(initialFormData);
+                 setAnalysisResult('');
+                 setRiskLevel(null);
             }
         };
         updatePatientData();
     }, [selectedPatientId, patients]);
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+                setShowDropdown(false);
+            }
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    const filteredPatients = useMemo(() => {
+        if (!searchTerm) {
+            return [];
+        }
+        return patients.filter(p =>
+            p.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+    }, [searchTerm, patients]);
+
 
     const handleInputChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const { name, value } = e.target;
@@ -167,22 +194,51 @@ const RiskAnalysisPage: React.FC = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
                 <div className="bg-white p-6 rounded-2xl shadow-sm space-y-6">
-                    <div>
-                        <label htmlFor="patient-select" className="block text-sm font-medium text-slate-700 mb-1">Selecionar Paciente*</label>
-                        <select
-                            id="patient-select"
-                            value={selectedPatientId}
-                            onChange={(e) => setSelectedPatientId(e.target.value)}
-                            className="w-full p-2 border border-slate-300 rounded-lg bg-white"
-                        >
-                            <option value="">-- Selecione um paciente --</option>
-                            {patients.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                        </select>
+                    <div className="relative" ref={searchRef}>
+                        <label htmlFor="patient-search" className="block text-sm font-medium text-slate-700 mb-1">Selecionar Paciente*</label>
+                         <div className="relative">
+                            <input
+                                id="patient-search"
+                                type="text"
+                                value={searchTerm}
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    if (selectedPatientId) setSelectedPatientId('');
+                                    setShowDropdown(true);
+                                }}
+                                onFocus={() => setShowDropdown(true)}
+                                placeholder="-- Selecione um paciente --"
+                                className="w-full p-2 pl-10 border border-slate-300 rounded-lg bg-white"
+                                autoComplete="off"
+                            />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 pointer-events-none" />
+                        </div>
+                        {showDropdown && (
+                            <div className="absolute z-10 w-full mt-1 bg-white border border-slate-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                                {filteredPatients.length > 0 ? (
+                                    filteredPatients.map(p => (
+                                        <div
+                                            key={p.id}
+                                            onClick={() => {
+                                                setSelectedPatientId(p.id);
+                                                setSearchTerm(p.name);
+                                                setShowDropdown(false);
+                                            }}
+                                            className="px-4 py-2 text-slate-800 hover:bg-sky-100 cursor-pointer"
+                                        >
+                                            {p.name}
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="px-4 py-2 text-slate-500">Nenhum paciente encontrado.</div>
+                                )}
+                            </div>
+                        )}
                     </div>
 
                     { isFetchingData ? <Skeleton className="h-64 w-full" /> : selectedPatientId && (
                          <div className="space-y-4 animate-fade-in-fast">
-                             <h3 className="text-md font-semibold text-teal-700 border-b pb-2">Ficha de Análise de Risco</h3>
+                             <h3 className="text-md font-semibold text-sky-700 border-b pb-2">Ficha de Análise de Risco</h3>
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <MetricDisplay label="Sessões Realizadas" value={formData.sessoes_realizadas} icon={<CheckCircle className="w-5 h-5"/>} />
                                 <MetricDisplay label="Sessões Prescritas" value={formData.sessoes_prescritas} icon={<ListChecks className="w-5 h-5"/>} />
@@ -211,10 +267,10 @@ const RiskAnalysisPage: React.FC = () => {
                         onClick={handleSubmit}
                         disabled={isSubmitDisabled}
                         title={isSubmitDisabled && !isLoading ? 'Selecione um paciente para gerar a análise' : undefined}
-                        className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-teal-500 hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:bg-teal-300 disabled:cursor-not-allowed"
+                        className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent text-base font-semibold rounded-md shadow-sm text-white bg-sky-500 hover:bg-sky-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-sky-500 disabled:bg-sky-300 disabled:cursor-not-allowed"
                     >
-                        {isLoading ? <Loader className="w-5 h-5 mr-3 -ml-1 animate-spin" /> : <Sparkles className="w-5 h-5 mr-3 -ml-1"/>}
-                        {isLoading ? 'Analisando...' : 'Gerar Análise com IA'}
+                        {isLoading || isFetchingData ? <Loader className="w-5 h-5 mr-3 -ml-1 animate-spin" /> : <Sparkles className="w-5 h-5 mr-3 -ml-1"/>}
+                        {isLoading ? 'Analisando...' : (isFetchingData ? 'Carregando...' : 'Gerar Análise com IA')}
                     </button>
                 </div>
                 

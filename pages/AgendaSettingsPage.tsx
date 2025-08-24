@@ -45,26 +45,52 @@ const AgendaSettingsPage: React.FC = () => {
     const { showToast } = useToast();
 
     const handleUpdateSlot = (dayType: DayType, index: number, field: keyof TimeSlotLimit, value: string | number) => {
-        const newSettings = { ...settings };
-        (newSettings.limits[dayType][index] as any)[field] = value;
-        setSettings(newSettings);
+        setSettings(prevSettings => {
+            const newLimits = [...prevSettings.limits[dayType]];
+            const updatedSlot = { ...newLimits[index] };
+
+            if (field === 'limit') {
+                updatedSlot.limit = Number(value);
+            } else if (field === 'startTime' || field === 'endTime' || field === 'id') {
+                updatedSlot[field] = String(value);
+            }
+            
+            newLimits[index] = updatedSlot;
+
+            return {
+                ...prevSettings,
+                limits: {
+                    ...prevSettings.limits,
+                    [dayType]: newLimits,
+                },
+            };
+        });
     };
 
     const handleRemoveSlot = (dayType: DayType, index: number) => {
-        const newSettings = { ...settings };
-        newSettings.limits[dayType].splice(index, 1);
-        setSettings(newSettings);
+        setSettings(prevSettings => ({
+            ...prevSettings,
+            limits: {
+                ...prevSettings.limits,
+                [dayType]: prevSettings.limits[dayType].filter((_, i) => i !== index),
+            },
+        }));
     };
 
     const handleAddSlot = (dayType: DayType) => {
-        const newSettings = { ...settings };
-        newSettings.limits[dayType].push({
+        const newSlot: TimeSlotLimit = {
             id: `new_${Date.now()}`,
             startTime: '08:00',
             endTime: '12:00',
             limit: 3,
-        });
-        setSettings(newSettings);
+        };
+        setSettings(prevSettings => ({
+            ...prevSettings,
+            limits: {
+                ...prevSettings.limits,
+                [dayType]: [...prevSettings.limits[dayType], newSlot],
+            },
+        }));
     };
 
     const handleSave = () => {
