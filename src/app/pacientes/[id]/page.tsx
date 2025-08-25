@@ -1,8 +1,8 @@
 // app/pacientes/[id]/page.tsx
-import prisma from '@/lib/prisma';
+import prisma from '../../../../lib/prisma';
 import { notFound } from 'next/navigation';
-import PageHeader from '@/components/layout/PageHeader';
-import PatientDetailClient from '@/components/pacientes/PatientDetailClient';
+import PageHeader from '@/components/ui/PageHeader';
+import PatientDetailClient from '../../../../components/pacientes/PatientDetailClient';
 
 type PatientDetailPageProps = {
   params: {
@@ -15,23 +15,22 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
 
   // Fetch the patient and all related data in a single query
   const patient = await prisma.patient.findUnique({
-    where: { id, deletedAt: null },
+    where: { id },
     include: {
-      conditions: true,
-      surgeries: true,
-      attachments: true,
-      trackedMetrics: true,
       painPoints: true,
       appointments: {
         orderBy: { startTime: 'desc' },
-      },
-      soapNotes: {
-        orderBy: { createdAt: 'desc' }, // Assumes createdAt exists for sorting
-      },
-      treatmentPlan: {
         include: {
-          exercises: true,
+          soapNotes: {
+            orderBy: { createdAt: 'desc' },
+          },
         },
+      },
+      metricResults: {
+        orderBy: { measuredAt: 'desc' },
+      },
+      communicationLogs: {
+        orderBy: { createdAt: 'desc' },
       },
     },
   });
@@ -44,7 +43,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
     <>
       <PageHeader
         title={patient.name}
-        subtitle={`Prontuário, histórico e agendamentos do paciente.`}
+        description={`Prontuário, histórico e agendamentos do paciente.`}
       />
       
       {/* Client component handles interactivity. Data is passed after serialization. */}

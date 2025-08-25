@@ -3,9 +3,9 @@
 
 import React, { useState, useRef, useTransition } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import PainScale from '@/components/ui/PainScale';
-import { saveSoapNoteAction } from '@/lib/actions/soap.actions';
+import { useToast } from '../../ui/use-toast';
+import PainScale from '../../ui/PainScale';
+import { saveSoapNoteAction } from '../../../lib/actions/soap.actions';
 
 interface NewSoapNoteModalProps {
   isOpen: boolean;

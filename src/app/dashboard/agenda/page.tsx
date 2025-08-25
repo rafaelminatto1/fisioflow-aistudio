@@ -1,9 +1,9 @@
 // src/app/dashboard/agenda/page.tsx
 import React from 'react';
-import prisma from '@/lib/prisma';
-import AgendaClient from '@/components/agenda/AgendaClient';
-import { startOfWeek } from 'date-fns/startOfWeek';
-import { endOfWeek } from 'date-fns/endOfWeek';
+import prisma from '../../../../lib/prisma';
+import AgendaClient from '../../../components/agenda/AgendaClient';
+import startOfWeek from 'date-fns/startOfWeek';
+import endOfWeek from 'date-fns/endOfWeek';
 import PageHeader from '@/components/ui/PageHeader';
 
 export default async function AgendaPage() {
@@ -14,20 +14,19 @@ export default async function AgendaPage() {
     const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
     const [therapists, initialAppointments, patients] = await Promise.all([
-        prisma.therapist.findMany(),
+        prisma.user.findMany({ where: { role: 'Fisioterapeuta' } }),
         prisma.appointment.findMany({
             where: {
                 startTime: { gte: weekStart },
                 endTime: { lte: weekEnd },
-                deletedAt: null,
             },
             include: {
-                patient: { select: { name: true, avatarUrl: true, phone: true, medicalAlerts: true } }
+                patient: { select: { name: true, phone: true, medicalAlerts: true } }
             }
         }),
         prisma.patient.findMany({ 
             where: { status: 'Active' },
-            select: { id: true, name: true, cpf: true, avatarUrl: true }
+            select: { id: true, name: true, cpf: true }
         })
     ]);
 
@@ -35,7 +34,7 @@ export default async function AgendaPage() {
         <div className="flex flex-col h-full">
             <PageHeader
                 title="Agenda da Clínica"
-                subtitle="Visualize e gerencie todos os agendamentos da equipe."
+                description="Visualize e gerencie todos os agendamentos da equipe."
             />
             <AgendaClient 
                 initialAppointments={JSON.parse(JSON.stringify(initialAppointments))}

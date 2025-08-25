@@ -1,7 +1,7 @@
 
 // components/acompanhamento/AlertCard.tsx
 import React, { useMemo } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Patient, AppointmentStatus, AlertPatient } from '../../types';
 import { Phone, MessageSquare, CalendarPlus, StickyNote, CheckCircle, XCircle, BrainCircuit, AlertTriangle } from 'lucide-react';
 import { useData } from '../../contexts/DataContext';
@@ -21,7 +21,7 @@ const AlertCard: React.FC<AlertCardProps> = ({ patient, onOpenObservationModal, 
     const { appointments } = useData();
     const { showToast } = useToast();
     const { user } = useAuth();
-    const navigate = ReactRouterDOM.useNavigate();
+    const router = useRouter();
 
     const patientData = useMemo(() => {
         const patientAppointments = appointments
@@ -67,7 +67,7 @@ const AlertCard: React.FC<AlertCardProps> = ({ patient, onOpenObservationModal, 
     return (
         <div className={`bg-white rounded-2xl shadow-sm border-t-4 ${currentTypeInfo.borderColor} overflow-hidden flex flex-col h-full`}>
             <div className="p-4 flex-grow">
-                <div className="flex items-start justify-between cursor-pointer" onClick={() => navigate(`/patients/${patient.id}`)}>
+                <div className="flex items-start justify-between cursor-pointer" onClick={() => router.push(`/pacientes/${patient.id}`)}>
                     <div className="flex items-center">
                         <img src={patient.avatarUrl} alt={patient.name} className="w-12 h-12 rounded-full" />
                         <div className="ml-3">

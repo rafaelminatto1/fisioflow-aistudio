@@ -36,7 +36,7 @@ const MetricTrackerCard: React.FC<MetricTrackerCardProps> = ({ metrics, onUpdate
     };
 
     return (
-        <InfoCard title="Métricas de Acompanhamento" icon={<BarChart />}>
+        <InfoCard title="Métricas de Acompanhamento">
             <div className="space-y-3">
                 {metrics.length > 0 ? (
                     metrics.map(metric => (

@@ -1,8 +1,8 @@
 // app/pacientes/[id]/page.tsx
-import prisma from '@/lib/prisma';
+import prisma from '../../../lib/prisma';
 import { notFound } from 'next/navigation';
-import PageHeader from '@/components/ui/PageHeader'; // Supondo que o PageHeader foi movido para ui
-import PatientDetailClient from '@/components/pacientes/PatientDetailClient';
+import PageHeader from '../../../components/ui/PageHeader';
+import PatientDetailClient from '../../../components/pacientes/PatientDetailClient';
 
 type PatientDetailPageProps = {
   params: {
@@ -15,13 +15,39 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
 
   const patient = await prisma.patient.findUnique({
     where: { id },
-    include: {
-      conditions: true,
-      surgeries: true,
-    },
   });
   
-  if (!patient) {
+  // Transform Prisma Patient to match types.ts Patient interface
+  const patientWithRelations = patient ? {
+    id: patient.id,
+    name: patient.name,
+    cpf: patient.cpf,
+    birthDate: patient.birthDate?.toISOString().split('T')[0] || '',
+    phone: patient.phone || '',
+    email: patient.email || '',
+    emergencyContact: {
+      name: (patient.emergencyContact as any)?.name || '',
+      phone: (patient.emergencyContact as any)?.phone || '',
+    },
+    address: {
+      street: (patient.address as any)?.street || '',
+      city: (patient.address as any)?.city || '',
+      state: (patient.address as any)?.state || '',
+      zip: (patient.address as any)?.zip || '',
+    },
+    status: patient.status as 'Active' | 'Inactive' | 'Discharged',
+    lastVisit: patient.lastVisit?.toISOString().split('T')[0] || '',
+    registrationDate: patient.createdAt.toISOString().split('T')[0],
+    avatarUrl: '',
+    consentGiven: patient.consentGiven,
+    whatsappConsent: patient.whatsappConsent === 'opt_in' ? 'opt-in' as const : 'opt-out' as const,
+    allergies: patient.allergies || undefined,
+     medicalAlerts: patient.medicalAlerts || undefined,
+    soapNotes: [],
+    treatmentPlan: null,
+  } : null;
+  
+  if (!patientWithRelations) {
     notFound();
   }
   
@@ -31,12 +57,12 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   return (
     <>
       <PageHeader
-        title={patient.name}
-        subtitle={`Prontuário, histórico e agendamentos do paciente.`}
+        title={patientWithRelations.name}
+        description={`Prontuário, histórico e agendamentos do paciente.`}
       />
       
       {/* O componente cliente gerencia a interatividade das abas */}
-      <PatientDetailClient patient={patient} />
+      <PatientDetailClient patient={patientWithRelations} />
     </>
   );
 }

@@ -2,7 +2,7 @@
 import React from 'react';
 import { Event, EventStatus } from '../../types';
 import { MapPin, Users, Edit } from 'lucide-react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 
 interface EventCardProps {
     event: Event;
@@ -20,10 +20,10 @@ const statusStyles: Record<EventStatus, { text: string; bg: string; dot: string;
 const EventCard: React.FC<EventCardProps> = ({ event, onEdit }) => {
     const { text, bg, dot } = statusStyles[event.status];
     const registeredCount = event.registrations?.length || 0;
-    const navigate = ReactRouterDOM.useNavigate();
+    const router = useRouter();
 
     const handleCardClick = () => {
-        navigate(`/events/${event.id}`);
+        router.push(`/events/${event.id}`);
     };
     
     const handleEditClick = (e: React.MouseEvent) => {

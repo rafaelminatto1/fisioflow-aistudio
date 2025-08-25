@@ -1,6 +1,6 @@
 // src/app/dashboard/layout.tsx
 import React from 'react';
-import Sidebar from '@/components/layout/Sidebar';
+import Sidebar from '@/components/Sidebar';
 import AiAssistant from '@/components/AiAssistant'; // Assuming migration
 import MedicalDisclaimerModal from '@/components/MedicalDisclaimerModal'; // Assuming migration
 

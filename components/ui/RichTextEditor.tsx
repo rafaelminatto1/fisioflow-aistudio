@@ -25,7 +25,7 @@ const RichTextEditor: React.FC<RichTextEditorProps> = ({ value, onChange, rows =
     // For list, we need to handle multi-line selection
     if (format === 'list') {
         // Find the start of the line(s) containing the selection
-        let lineStart = value.lastIndexOf('\n', start - 1) + 1;
+        const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         
         const textBefore = value.substring(0, lineStart);
         const selectedLines = value.substring(lineStart, end);

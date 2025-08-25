@@ -1,5 +1,6 @@
 // components/SpecialtyAssessmentGallery.tsx
 import React from 'react';
+import Image from 'next/image';
 import useAssessmentSpecialties from '../hooks/useAssessmentSpecialties';
 import { Specialty } from '../types';
 import Skeleton from './ui/Skeleton';
@@ -35,7 +36,7 @@ const SpecialtyAssessmentGallery: React.FC<SpecialtyAssessmentGalleryProps> = ({
             aria-label={`Iniciar avaliação de ${specialty.name}`}
             onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelectSpecialty(specialty)}
           >
-            <img src={specialty.imageUrl} alt={specialty.name} className="w-full h-full object-cover" />
+            <Image src={specialty.imageUrl} alt={specialty.name} fill className="w-full h-full object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
               <h3 className="text-white font-bold text-lg">{specialty.name}</h3>
             </div>

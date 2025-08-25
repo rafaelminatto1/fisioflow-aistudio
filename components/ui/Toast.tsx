@@ -1,4 +1,6 @@
 
+'use client';
+
 import React, { useEffect, useState } from 'react';
 import { useInternalToast } from '../../contexts/ToastContext';
 import { ToastMessage } from '../../types';

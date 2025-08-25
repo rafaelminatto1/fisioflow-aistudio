@@ -99,7 +99,7 @@ const PatientClinicalDashboard: React.FC<PatientClinicalDashboardProps> = ({ pat
                 <KpiCard title="Próxima Consulta" value={kpis.nextAppointment} icon={<CalendarCheck size={20} />} />
             </div>
 
-            <InfoCard title="Mapa de Dor Interativo" icon={<MapPin />}>
+            <InfoCard title="Mapa de Dor Interativo">
                 <p className="text-xs text-slate-500 mb-2 -mt-2">Clique no mapa para adicionar um ponto de dor ou em um ponto existente para editar.</p>
                 <PainMap 
                     points={patient.painPoints || []}

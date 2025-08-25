@@ -1,8 +1,8 @@
 // services/reportService.ts
 import { MedicalReport, Patient } from '../types';
 import { mockMedicalReports, mockUsers, mockPatients, mockSoapNotes, mockClinicInfo, mockTherapists } from '../data/mockData';
-import { GoogleGenAI } from "@google/genai";
-import html2pdf from 'html2pdf.js/';
+import { GoogleGenerativeAI } from "@google/generative-ai";
+import html2pdf from 'html2pdf.js';
 
 if (!process.env.API_KEY) {
   // In a real app, you might have a fallback or a more user-friendly error.
@@ -10,7 +10,7 @@ if (!process.env.API_KEY) {
   console.error("API_KEY is not set in environment variables.");
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+const ai = new GoogleGenerativeAI(process.env.API_KEY!);
 
 
 let reports: MedicalReport[] = [...mockMedicalReports];
@@ -72,18 +72,16 @@ export const generateReport = async (patientId: string, recipientDoctor: string,
     `;
     
     try {
-         const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: prompt,
-        });
+         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
+         const response = await model.generateContent(prompt);
 
         const newReport: MedicalReport = {
             id: Date.now(),
             patientId,
             therapistId: mockUsers.find(u => u.role === 'Fisioterapeuta')?.id || 'user_1',
             title: `Relatório Médico - ${patient.name}`,
-            aiGeneratedContent: response.text,
-            content: response.text.replace(/\*\*(.*?)\*\*/g, '<h3>$1</h3>').replace(/\n/g, '<br>'),
+            aiGeneratedContent: response.response.text(),
+            content: response.response.text().replace(/\*\*(.*?)\*\*/g, '<h3>$1</h3>').replace(/\n/g, '<br>'),
             status: 'draft',
             recipientDoctor,
             recipientCrm,

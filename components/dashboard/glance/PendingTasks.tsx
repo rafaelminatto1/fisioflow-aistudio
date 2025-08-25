@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { Task, TaskStatus, TaskPriority } from '../../../types';
 import * as taskService from '../../../services/taskService';
 import { ClipboardList, ChevronsUp, ChevronUp, ChevronsDown } from 'lucide-react';
@@ -9,7 +9,7 @@ import Skeleton from '../../ui/Skeleton';
 const PendingTasks: React.FC = () => {
     const [tasks, setTasks] = useState<Task[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const navigate = ReactRouterDOM.useNavigate();
+    const router = useRouter();
 
     useEffect(() => {
         const fetchTasks = async () => {
@@ -44,9 +44,9 @@ const PendingTasks: React.FC = () => {
                     <ClipboardList className="w-5 h-5 mr-2 text-sky-500" />
                     Tarefas Pendentes
                 </h3>
-                <a href="#/tasks" onClick={(e) => { e.preventDefault(); navigate('/tasks'); }} className="text-sm font-semibold text-sky-600 hover:underline">
+                <button onClick={() => router.push('/tasks')} className="text-sm font-semibold text-sky-600 hover:underline">
                     Ver todas
-                </a>
+                </button>
             </div>
              {isLoading ? (
                 <div className="space-y-3">
@@ -57,7 +57,7 @@ const PendingTasks: React.FC = () => {
             ) : tasks.length > 0 ? (
                 <div className="space-y-2 overflow-y-auto flex-1 -mr-2 pr-2">
                     {tasks.map(task => (
-                        <div key={task.id} onClick={() => navigate('/tasks')} className="p-2.5 rounded-lg flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors">
+                        <div key={task.id} onClick={() => router.push('/tasks')} className="p-2.5 rounded-lg flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors">
                             <div className="flex items-center gap-3">
                                 <div title={`Prioridade ${task.priority}`}>{priorityIcons[task.priority]}</div>
                                 <p className="font-medium text-sm text-slate-800">{task.title}</p>

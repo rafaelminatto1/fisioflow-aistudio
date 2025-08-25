@@ -32,7 +32,7 @@ const calculateStreak = (dates: Date[]): number => {
         .map(d => new Date(d.toDateString())) // Normalize to midnight
         .sort((a, b) => b.getTime() - a.getTime());
 
-    const uniqueDates = [...new Set(sortedDates.map(d => d.getTime()))].map(t => new Date(t));
+    const uniqueDates = Array.from(new Set(sortedDates.map(d => d.getTime()))).map(t => new Date(t));
 
     const today = new Date(new Date().toDateString());
     const yesterday = new Date(today);

@@ -1,39 +1,44 @@
 
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import { LayoutGrid, NotebookText, LogOut, Stethoscope, TrendingUp, ShoppingCart, Ticket, Calendar, FileText, Dumbbell, Bell, Flame } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useNotifications } from '../../hooks/useNotifications';
 
-const NavLinkComponent = ({ to, icon: Icon, label, badgeCount }: { to: string, icon: React.ElementType, label: string, badgeCount?: number }) => (
-    <ReactRouterDOM.NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center p-3 rounded-lg transition-colors duration-200 ${
-          isActive
-            ? 'bg-teal-50 text-teal-600 font-semibold'
-            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-        }`
-      }
-    >
-        <Icon className="w-6 h-6 mr-3" />
-        <span className="flex-1">{label}</span>
-        {badgeCount && badgeCount > 0 ? (
-            <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-                {badgeCount > 9 ? '9+' : badgeCount}
-            </span>
-        ) : null}
-    </ReactRouterDOM.NavLink>
-);
+const NavLinkComponent = ({ to, icon: Icon, label, badgeCount }: { to: string, icon: React.ElementType, label: string, badgeCount?: number }) => {
+    const pathname = usePathname();
+    const isActive = pathname === to;
+    
+    return (
+        <Link
+          href={to}
+          className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${
+            isActive
+              ? 'bg-teal-50 text-teal-600 font-semibold'
+              : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
+          }`}
+        >
+            <Icon className="w-6 h-6 mr-3" />
+            <span className="flex-1">{label}</span>
+            {badgeCount && badgeCount > 0 ? (
+                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                    {badgeCount > 9 ? '9+' : badgeCount}
+                </span>
+            ) : null}
+        </Link>
+    );
+};
 
 const PatientSidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = ReactRouterDOM.useNavigate();
+  const router = useRouter();
   const { unreadCount } = useNotifications(user?.id);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    router.push('/login');
   };
   
   const navItems = [
@@ -70,7 +75,7 @@ const PatientSidebar: React.FC = () => {
          <div className="p-4 border-t border-slate-200">
             <div className="p-3 rounded-lg bg-slate-100">
                 <div className="flex items-center">
-                    <img src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" />
+                    <Image src={user.avatarUrl} alt={user.name} className="w-10 h-10 rounded-full" width={40} height={40} />
                     <div className="ml-3">
                         <p className="text-sm font-semibold text-slate-700">{user.name}</p>
                         <p className="text-xs text-slate-500">{user.role}</p>

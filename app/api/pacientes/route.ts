@@ -1,7 +1,7 @@
 // app/api/pacientes/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import redis from '@/lib/redis';
+import redisPromise from '@/lib/redis';
 import { patientFormSchema } from '@/lib/validations/patient';
 import { z } from 'zod';
 
@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
 
   try {
     // 1. Tenta buscar do cache
+    const redis = await redisPromise;
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
       return NextResponse.json(JSON.parse(cachedData));
@@ -51,7 +52,6 @@ export async function GET(request: NextRequest) {
         cpf: true,
         phone: true,
         status: true,
-        avatarUrl: true,
       },
       orderBy: {
         createdAt: 'desc',
@@ -91,13 +91,17 @@ export async function POST(request: NextRequest) {
         birthDate: validatedData.birthDate ? new Date(validatedData.birthDate) : null,
         phone: validatedData.phone,
         email: validatedData.email,
-        addressZip: validatedData.addressZip,
-        addressStreet: validatedData.addressStreet,
-        addressNumber: validatedData.addressNumber,
-        addressCity: validatedData.addressCity,
-        addressState: validatedData.addressState,
-        emergencyContactName: validatedData.emergencyContactName,
-        emergencyContactPhone: validatedData.emergencyContactPhone,
+        address: validatedData.addressZip || validatedData.addressStreet || validatedData.addressNumber || validatedData.addressCity || validatedData.addressState ? {
+          zip: validatedData.addressZip,
+          street: validatedData.addressStreet,
+          number: validatedData.addressNumber,
+          city: validatedData.addressCity,
+          state: validatedData.addressState,
+        } : undefined,
+        emergencyContact: validatedData.emergencyContactName || validatedData.emergencyContactPhone ? {
+          name: validatedData.emergencyContactName,
+          phone: validatedData.emergencyContactPhone,
+        } : undefined,
         allergies: validatedData.allergies,
         medicalAlerts: validatedData.medicalAlerts,
         consentGiven: validatedData.consentGiven,
@@ -106,10 +110,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Invalida todo o cache de lista de pacientes (abordagem simples)
-    const keys = await redis.keys(`${CACHE_KEY_PREFIX}*`);
-    if (keys.length > 0) {
-      await redis.del(keys);
-    }
+    const redis = await redisPromise;
+    // Como não temos keys() na interface, vamos usar flushAll() ou implementar uma estratégia diferente
+    // Por enquanto, vamos limpar todo o cache para simplicidade
+    await redis.flushAll();
     
     return NextResponse.json(newPatient, { status: 201 });
   } catch (error) {

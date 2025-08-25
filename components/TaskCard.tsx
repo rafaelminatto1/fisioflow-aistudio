@@ -1,5 +1,6 @@
 // components/TaskCard.tsx
 import React from 'react';
+import Image from 'next/image';
 import { Task, Therapist, TaskPriority } from '../types';
 import { Calendar, ChevronsUp, ChevronUp, ChevronsDown } from 'lucide-react';
 
@@ -41,10 +42,12 @@ const TaskCard: React.FC<TaskCardProps> = ({ task, therapist, onClick, onDragSta
                     </div>
                 </div>
                 {therapist && (
-                     <img
+                     <Image
                         src={therapist.avatarUrl}
                         alt={therapist.name}
                         title={`Responsável: ${therapist.name}`}
+                        width={28}
+                        height={28}
                         className="w-7 h-7 rounded-full ring-2 ring-white"
                     />
                 )}

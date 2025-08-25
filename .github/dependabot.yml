@@ -1,0 +1,188 @@
+version: 2
+updates:
+  # =============================================================================
+  # NPM DEPENDENCIES
+  # =============================================================================
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "America/Sao_Paulo"
+    
+    # Dependency update configuration
+    open-pull-requests-limit: 5
+    
+    # Reviewers and assignees
+    reviewers:
+      - "@fisioflow-team"
+    assignees:
+      - "@fisioflow-team"
+    
+    # Commit message configuration
+    commit-message:
+      prefix: "deps"
+      prefix-development: "deps-dev"
+      include: "scope"
+    
+    # Labels for PRs
+    labels:
+      - "dependencies"
+      - "automated"
+    
+    # Version update strategy
+    versioning-strategy: "increase"
+    
+    # Group updates
+    groups:
+      # Group all Next.js related updates
+      nextjs:
+        patterns:
+          - "next"
+          - "@next/*"
+          - "eslint-config-next"
+        
+      # Group all React related updates
+      react:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+          - "react-*"
+        
+      # Group all Prisma related updates
+      prisma:
+        patterns:
+          - "prisma"
+          - "@prisma/*"
+        
+      # Group all testing related updates
+      testing:
+        patterns:
+          - "jest"
+          - "@testing-library/*"
+          - "@jest/*"
+          - "vitest"
+          - "@vitest/*"
+        
+      # Group all TypeScript related updates
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+          - "ts-*"
+        
+      # Group all ESLint related updates
+      eslint:
+        patterns:
+          - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
+          - "@typescript-eslint/*"
+        
+      # Group all Tailwind related updates
+      tailwind:
+        patterns:
+          - "tailwindcss"
+          - "@tailwindcss/*"
+          - "tailwind-*"
+    
+    # Ignore specific dependencies
+    ignore:
+      # Ignore major version updates for critical dependencies
+      - dependency-name: "next"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      
+      # Ignore specific packages that require manual updates
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+    
+    # Allow specific dependency types
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    
+    # Rebase strategy
+    rebase-strategy: "auto"
+    
+    # Target branch
+    target-branch: "develop"
+
+  # =============================================================================
+  # GITHUB ACTIONS
+  # =============================================================================
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:00"
+      timezone: "America/Sao_Paulo"
+    
+    open-pull-requests-limit: 3
+    
+    reviewers:
+      - "@fisioflow-team"
+    assignees:
+      - "@fisioflow-team"
+    
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    
+    labels:
+      - "github-actions"
+      - "ci/cd"
+      - "automated"
+    
+    # Group all GitHub Actions updates
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    
+    target-branch: "develop"
+
+  # =============================================================================
+  # DOCKER (if using Docker)
+  # =============================================================================
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "wednesday"
+      time: "11:00"
+      timezone: "America/Sao_Paulo"
+    
+    open-pull-requests-limit: 2
+    
+    reviewers:
+      - "@fisioflow-team"
+    assignees:
+      - "@fisioflow-team"
+    
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    
+    labels:
+      - "docker"
+      - "infrastructure"
+      - "automated"
+    
+    # Ignore major version updates for base images
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "alpine"
+        update-types: ["version-update:semver-major"]
+    
+    target-branch: "develop"

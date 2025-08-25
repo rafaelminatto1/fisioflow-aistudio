@@ -1,16 +1,18 @@
 
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
 import { LayoutGrid, Users, LogOut, Stethoscope, Activity, DollarSign } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const PartnerSidebar: React.FC = () => {
   const { user, logout } = useAuth();
-  const navigate = ReactRouterDOM.useNavigate();
+  const router = useRouter();
+  const pathname = usePathname();
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    router.push('/login');
   };
   
   const navItems = [
@@ -30,22 +32,24 @@ const PartnerSidebar: React.FC = () => {
         <h3 className="text-sm font-semibold text-slate-500 uppercase">Portal do Parceiro</h3>
       </div>
       <nav className="flex-1 px-2 py-4 space-y-2">
-        {navItems.map((item) => (
-          <ReactRouterDOM.NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `flex items-center p-3 rounded-lg transition-colors duration-200 ${
+        {navItems.map((item) => {
+          const isActive = pathname === item.to;
+          
+          return (
+            <Link
+              key={item.to}
+              href={item.to}
+              className={`flex items-center p-3 rounded-lg transition-colors duration-200 ${
                 isActive
                   ? 'bg-teal-50 text-teal-600 font-semibold'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
-              }`
-            }
-          >
-            <item.icon className="w-6 h-6 mr-3" />
-            <span>{item.label}</span>
-          </ReactRouterDOM.NavLink>
-        ))}
+              }`}
+            >
+              <item.icon className="w-6 h-6 mr-3" />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
       </nav>
       {user && (
          <div className="p-4 border-t border-slate-200">

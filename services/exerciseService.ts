@@ -5,7 +5,7 @@ import { mockExercises } from '../data/mockData';
 
 let exercises: Exercise[] = [...mockExercises];
 // Derive initial categories from the data, ensuring uniqueness and sorting
-let categories: string[] = [...new Set(mockExercises.map(ex => ex.category))].sort();
+let categories: string[] = Array.from(new Set(mockExercises.map(ex => ex.category))).sort();
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 

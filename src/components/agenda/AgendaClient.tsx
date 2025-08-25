@@ -2,21 +2,22 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { format } from 'date-fns/format';
-import { addDays } from 'date-fns/addDays';
-import { startOfWeek } from 'date-fns/startOfWeek';
-import { isSameDay } from 'date-fns/isSameDay';
-import { isToday } from 'date-fns/isToday';
-import { ptBR } from 'date-fns/locale/pt-BR';
+import { format } from 'date-fns';
+import addDays from 'date-fns/addDays';
+import startOfWeek from 'date-fns/startOfWeek';
+import isSameDay from 'date-fns/isSameDay';
+import isToday from 'date-fns/isToday';
+import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
-import { EnrichedAppointment, Appointment, AppointmentStatus, Therapist, Patient, PatientSummary } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import type { User as PrismaUser } from '@prisma/client';
+import { EnrichedAppointment, Appointment, AppointmentStatus, Patient, PatientSummary, Therapist } from '../../../types';
+import { useToast } from '../../ui/use-toast';
 import AppointmentCard from './AppointmentCard';
 import AppointmentDetailModal from './AppointmentDetailModal';
 import AppointmentFormModal from './AppointmentFormModal';
-import { cn } from '@/lib/utils';
-import { saveAppointmentAction, deleteAppointmentAction, deleteAppointmentSeriesAction } from '@/lib/actions/appointment.actions';
+import { cn } from '../../../lib/utils';
+import { saveAppointmentAction, deleteAppointmentAction, deleteAppointmentSeriesAction } from '../../../lib/actions/appointment.actions';
 
 const START_HOUR = 7;
 const END_HOUR = 21;
@@ -32,7 +33,7 @@ const timeSlots = Array.from({ length: (END_HOUR - START_HOUR) * (60 / SLOT_DURA
 
 interface AgendaClientProps {
     initialAppointments: any[];
-    therapists: Therapist[];
+    therapists: PrismaUser[];
     patients: PatientSummary[];
 }
 

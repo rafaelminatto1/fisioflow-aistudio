@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { format } from 'date-fns/format';
-import { ptBR } from 'date-fns/locale/pt-BR';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 import { 
   X, Calendar, Clock, User, FileText, 
   DollarSign, Check, ChevronRight,

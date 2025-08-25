@@ -4,8 +4,8 @@
 import React from 'react';
 import { useRouter } from 'next/navigation';
 import { X, Edit, Trash2, Play, DollarSign, Repeat, Video } from 'lucide-react';
-import { Appointment, Patient, Therapist, AppointmentStatus, AppointmentType, EnrichedAppointment, PatientSummary } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import { Appointment, Patient, Therapist, AppointmentStatus, AppointmentType, EnrichedAppointment, PatientSummary } from '../../../types';
+import { useToast } from '../../ui/use-toast';
 
 interface AppointmentDetailModalProps {
   appointment: EnrichedAppointment | null;

@@ -1,7 +1,8 @@
 // src/lib/auth.ts
-import { AuthOptions, getServerSession } from 'next-auth';
+import type { AuthOptions } from 'next-auth';
+import { getServerSession } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { PrismaAdapter } from '@auth/prisma-adapter';
 import prisma from './prisma';
 import bcrypt from 'bcryptjs';
 import redis from './redis';

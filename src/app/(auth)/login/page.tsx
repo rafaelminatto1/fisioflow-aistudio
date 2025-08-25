@@ -8,7 +8,7 @@ import { z } from 'zod';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Stethoscope, Loader2 } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "../../../components/ui/use-toast";
 
 // Esquema de validação com Zod
 const loginSchema = z.object({
@@ -83,7 +83,7 @@ export default function LoginPage() {
         </div>
         
         <div className="bg-white rounded-2xl shadow-lg p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700">Email</label>
               <input
@@ -96,7 +96,7 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label htmlFor="password"className="block text-sm font-medium text-slate-700">Senha</label>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700">Senha</label>
               <input
                 id="password"
                 type="password"

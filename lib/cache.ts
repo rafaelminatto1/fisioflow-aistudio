@@ -1,88 +1,239 @@
-// lib/cache.ts
+// lib/cache.ts - Enhanced Multi-Layer Cache System
 import redis from './redis';
+import { railwayLogger } from './railway-logger';
 
 export interface CacheOptions {
   ttl?: number; // Time to live in seconds
   tags?: string[]; // Cache tags for invalidation
+  layer?: 'memory' | 'redis' | 'both'; // Cache layer strategy
+  compress?: boolean; // Compress large values
+  serialize?: 'json' | 'msgpack'; // Serialization method
+}
+
+export interface CacheMetrics {
+  hits: number;
+  misses: number;
+  hitRate: number;
+  memoryHits: number;
+  redisHits: number;
+  operations: number;
+  errors: number;
+  avgResponseTime: number;
+  totalSize: number;
+}
+
+export interface CacheKey {
+  key: string;
+  hash?: string;
+  version?: string;
 }
 
 export class CacheManager {
   private prefix: string;
+  private memoryCache: Map<string, { value: any; expiry?: number; size: number }> = new Map();
+  private metrics: CacheMetrics;
+  private maxMemorySize: number;
+  private currentMemorySize: number = 0;
+  private responseTimes: number[] = [];
   
-  constructor(prefix = 'fisioflow') {
+  constructor(prefix = 'fisioflow', maxMemorySize = 100 * 1024 * 1024) { // 100MB default
     this.prefix = prefix;
+    this.maxMemorySize = maxMemorySize;
+    this.metrics = {
+      hits: 0,
+      misses: 0,
+      hitRate: 0,
+      memoryHits: 0,
+      redisHits: 0,
+      operations: 0,
+      errors: 0,
+      avgResponseTime: 0,
+      totalSize: 0,
+    };
+    
+    // Cleanup expired memory cache periodically
+    setInterval(() => this.cleanupMemoryCache(), 60000); // Every minute
   }
 
   private getKey(key: string): string {
     return `${this.prefix}:${key}`;
   }
 
-  async get<T>(key: string): Promise<T | null> {
+  async get<T>(key: string, options: Partial<CacheOptions> = {}): Promise<T | null> {
+    const startTime = Date.now();
+    this.metrics.operations++;
+    
     try {
-      const value = await redis.get(this.getKey(key));
-      return value ? JSON.parse(value) : null;
+      const cacheKey = this.getKey(key);
+      const layer = options.layer || 'both';
+      
+      // Try memory cache first (L1)
+      if (layer === 'memory' || layer === 'both') {
+        const memoryResult = this.getFromMemory<T>(cacheKey);
+        if (memoryResult !== null) {
+          this.metrics.hits++;
+          this.metrics.memoryHits++;
+          this.updateMetrics(Date.now() - startTime);
+          return memoryResult;
+        }
+      }
+      
+      // Try Redis cache (L2)
+      if (layer === 'redis' || layer === 'both') {
+        const redisClient = await redis;
+        const value = await redisClient.get(cacheKey);
+        
+        if (value) {
+          const parsed = this.deserialize<T>(value, options.serialize);
+          
+          // Store in memory for faster future access
+          if (layer === 'both') {
+            this.setInMemory(cacheKey, parsed, options.ttl);
+          }
+          
+          this.metrics.hits++;
+          this.metrics.redisHits++;
+          this.updateMetrics(Date.now() - startTime);
+          return parsed;
+        }
+      }
+      
+      this.metrics.misses++;
+      this.updateMetrics(Date.now() - startTime);
+      return null;
+      
     } catch (error) {
-      console.error('Cache get error:', error);
+      this.metrics.errors++;
+      railwayLogger.error('Cache get error', error, { key, prefix: this.prefix });
       return null;
     }
   }
 
   async set<T>(key: string, value: T, options: CacheOptions = {}): Promise<void> {
+    const startTime = Date.now();
+    this.metrics.operations++;
+    
     try {
       const cacheKey = this.getKey(key);
-      const serialized = JSON.stringify(value);
+      const layer = options.layer || 'both';
+      const serialized = this.serialize(value, options.serialize, options.compress);
       
-      if (options.ttl) {
-        await redis.set(cacheKey, serialized, { EX: options.ttl });
-      } else {
-        await redis.set(cacheKey, serialized);
+      // Set in memory cache (L1)
+      if (layer === 'memory' || layer === 'both') {
+        this.setInMemory(cacheKey, value, options.ttl);
       }
+      
+      // Set in Redis cache (L2)
+      if (layer === 'redis' || layer === 'both') {
+        const redisClient = await redis;
+        
+        if (options.ttl) {
+          await redisClient.set(cacheKey, serialized, { EX: options.ttl });
+        } else {
+          await redisClient.set(cacheKey, serialized);
+        }
 
-      // Store tags for later invalidation
-      if (options.tags) {
-        for (const tag of options.tags) {
-          const tagKey = this.getKey(`tag:${tag}`);
-          await redis.sadd(tagKey, cacheKey);
-          if (options.ttl) {
-            await redis.expire(tagKey, options.ttl + 300); // Tag lives 5 minutes longer
+        // Store tags for later invalidation
+        if (options.tags) {
+          for (const tag of options.tags) {
+            const tagKey = this.getKey(`tag:${tag}`);
+            await redisClient.sadd(tagKey, cacheKey);
+            if (options.ttl) {
+              await redisClient.expire(tagKey, options.ttl + 300); // Tag lives 5 minutes longer
+            }
           }
         }
       }
+      
+      this.updateMetrics(Date.now() - startTime);
+      
     } catch (error) {
-      console.error('Cache set error:', error);
+      this.metrics.errors++;
+      railwayLogger.error('Cache set error', error, { key, prefix: this.prefix });
     }
   }
 
   async del(key: string): Promise<void> {
+    const startTime = Date.now();
+    this.metrics.operations++;
+    
     try {
-      await redis.del(this.getKey(key));
+      const cacheKey = this.getKey(key);
+      
+      // Delete from memory
+      const memoryItem = this.memoryCache.get(cacheKey);
+      if (memoryItem) {
+        this.currentMemorySize -= memoryItem.size;
+        this.memoryCache.delete(cacheKey);
+      }
+      
+      // Delete from Redis
+      const redisClient = await redis;
+      await redisClient.del(cacheKey);
+      
+      this.updateMetrics(Date.now() - startTime);
+      
     } catch (error) {
-      console.error('Cache delete error:', error);
+      this.metrics.errors++;
+      railwayLogger.error('Cache delete error', error, { key, prefix: this.prefix });
     }
   }
 
   async invalidateTag(tag: string): Promise<void> {
+    const startTime = Date.now();
+    this.metrics.operations++;
+    
     try {
+      const redisClient = await redis;
       const tagKey = this.getKey(`tag:${tag}`);
-      const keys = await redis.smembers(tagKey);
+      const keys = await redisClient.smembers(tagKey);
       
       if (keys.length > 0) {
-        await redis.del(...keys);
-        await redis.del(tagKey);
+        // Delete from memory cache
+        keys.forEach(key => {
+          const memoryItem = this.memoryCache.get(key);
+          if (memoryItem) {
+            this.currentMemorySize -= memoryItem.size;
+            this.memoryCache.delete(key);
+          }
+        });
+        
+        // Delete from Redis
+        await redisClient.del(...keys);
+        await redisClient.del(tagKey);
       }
+      
+      this.updateMetrics(Date.now() - startTime);
+      railwayLogger.info('Cache tag invalidated', { tag, keysCount: keys.length });
+      
     } catch (error) {
-      console.error('Cache tag invalidation error:', error);
+      this.metrics.errors++;
+      railwayLogger.error('Cache tag invalidation error', error, { tag });
     }
   }
 
   async clear(): Promise<void> {
+    const startTime = Date.now();
+    this.metrics.operations++;
+    
     try {
-      const keys = await redis.keys(`${this.prefix}:*`);
+      // Clear memory cache
+      this.memoryCache.clear();
+      this.currentMemorySize = 0;
+      
+      // Clear Redis cache
+      const redisClient = await redis;
+      const keys = await redisClient.keys(`${this.prefix}:*`);
       if (keys.length > 0) {
-        await redis.del(...keys);
+        await redisClient.del(...keys);
       }
+      
+      this.updateMetrics(Date.now() - startTime);
+      railwayLogger.info('Cache cleared', { prefix: this.prefix, keysCount: keys.length });
+      
     } catch (error) {
-      console.error('Cache clear error:', error);
+      this.metrics.errors++;
+      railwayLogger.error('Cache clear error', error, { prefix: this.prefix });
     }
   }
 
@@ -92,7 +243,7 @@ export class CacheManager {
     callback: () => Promise<T>, 
     options: CacheOptions = {}
   ): Promise<T> {
-    let cached = await this.get<T>(key);
+    const cached = await this.get<T>(key);
     
     if (cached !== null) {
       return cached;
@@ -103,24 +254,26 @@ export class CacheManager {
     return result;
   }
 
-  // Cache with automatic refresh
+  // Cache with automatic refresh - Enhanced
   async rememberForever<T>(
     key: string,
     callback: () => Promise<T>,
-    refreshInterval = 3600 // 1 hour
+    refreshInterval = 3600, // 1 hour
+    options: CacheOptions = {}
   ): Promise<T> {
     const refreshKey = `${key}:refresh`;
-    const lastRefresh = await redis.get(this.getKey(refreshKey));
+    const redisClient = await redis;
+    const lastRefresh = await redisClient.get(this.getKey(refreshKey));
     const now = Date.now();
     
-    let cached = await this.get<T>(key);
+    const cached = await this.get<T>(key, options);
     
     // If no cache or refresh needed
     if (!cached || !lastRefresh || now - parseInt(lastRefresh) > refreshInterval * 1000) {
       try {
         const result = await callback();
-        await this.set(key, result);
-        await redis.set(this.getKey(refreshKey), now.toString());
+        await this.set(key, result, options);
+        await redisClient.set(this.getKey(refreshKey), now.toString());
         return result;
       } catch (error) {
         // If callback fails, return cached value if available
@@ -131,14 +284,212 @@ export class CacheManager {
 
     return cached;
   }
+
+  // New methods for enhanced cache management
+  
+  private getFromMemory<T>(key: string): T | null {
+    const item = this.memoryCache.get(key);
+    if (!item) return null;
+    
+    // Check expiry
+    if (item.expiry && Date.now() > item.expiry) {
+      this.currentMemorySize -= item.size;
+      this.memoryCache.delete(key);
+      return null;
+    }
+    
+    return item.value;
+  }
+  
+  private setInMemory<T>(key: string, value: T, ttl?: number): void {
+    const serialized = JSON.stringify(value);
+    const size = new Blob([serialized]).size;
+    
+    // Check memory limit
+    if (this.currentMemorySize + size > this.maxMemorySize) {
+      this.evictMemoryCache(size);
+    }
+    
+    const expiry = ttl ? Date.now() + (ttl * 1000) : undefined;
+    this.memoryCache.set(key, { value, expiry, size });
+    this.currentMemorySize += size;
+  }
+  
+  private evictMemoryCache(neededSize: number): void {
+    const entries = Array.from(this.memoryCache.entries());
+    
+    // Sort by expiry (oldest first)
+    entries.sort((a, b) => {
+      const aExpiry = a[1].expiry || Infinity;
+      const bExpiry = b[1].expiry || Infinity;
+      return aExpiry - bExpiry;
+    });
+    
+    let freedSpace = 0;
+    for (const [key, item] of entries) {
+      this.memoryCache.delete(key);
+      freedSpace += item.size;
+      this.currentMemorySize -= item.size;
+      
+      if (freedSpace >= neededSize) break;
+    }
+    
+    railwayLogger.info('Memory cache evicted', { freedSpace, neededSize });
+  }
+  
+  private cleanupMemoryCache(): void {
+    const now = Date.now();
+    let cleanedSize = 0;
+    let cleanedCount = 0;
+    
+    for (const [key, item] of this.memoryCache.entries()) {
+      if (item.expiry && now > item.expiry) {
+        cleanedSize += item.size;
+        cleanedCount++;
+        this.memoryCache.delete(key);
+      }
+    }
+    
+    this.currentMemorySize -= cleanedSize;
+    
+    if (cleanedCount > 0) {
+      railwayLogger.debug('Memory cache cleanup', { cleanedCount, cleanedSize });
+    }
+  }
+  
+  private serialize(value: any, method: 'json' | 'msgpack' = 'json', compress = false): string {
+    let serialized = JSON.stringify(value); // Default to JSON for now
+    
+    // TODO: Add msgpack and compression support
+    if (method === 'msgpack') {
+      // Placeholder for msgpack serialization
+      serialized = JSON.stringify(value);
+    }
+    
+    if (compress && serialized.length > 1024) {
+      // TODO: Add compression support (gzip/brotli)
+      // For now, just return as-is
+    }
+    
+    return serialized;
+  }
+  
+  private deserialize<T>(value: string, method: 'json' | 'msgpack' = 'json'): T {
+    // TODO: Add proper deserialization logic
+    return JSON.parse(value);
+  }
+  
+  private updateMetrics(responseTime: number): void {
+    this.responseTimes.push(responseTime);
+    
+    // Keep only last 1000 response times
+    if (this.responseTimes.length > 1000) {
+      this.responseTimes = this.responseTimes.slice(-1000);
+    }
+    
+    this.metrics.avgResponseTime = this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length;
+    
+    const totalOperations = this.metrics.hits + this.metrics.misses;
+    this.metrics.hitRate = totalOperations > 0 ? (this.metrics.hits / totalOperations) * 100 : 0;
+    this.metrics.totalSize = this.currentMemorySize;
+  }
+  
+  // Public methods for monitoring
+  getMetrics(): CacheMetrics {
+    return { ...this.metrics };
+  }
+  
+  async getRedisStats() {
+    try {
+      const redisClient = await redis;
+      return redisClient.getStats();
+    } catch (error) {
+      railwayLogger.error('Failed to get Redis stats', error);
+      return null;
+    }
+  }
+  
+  // Batch operations for better performance
+  async mget<T>(keys: string[], options: Partial<CacheOptions> = {}): Promise<(T | null)[]> {
+    return Promise.all(keys.map(key => this.get<T>(key, options)));
+  }
+  
+  async mset<T>(entries: Array<{key: string, value: T}>, options: CacheOptions = {}): Promise<void> {
+    await Promise.all(entries.map(entry => this.set(entry.key, entry.value, options)));
+  }
 }
 
-// Pre-configured cache managers for different data types
-export const patientCache = new CacheManager('patients');
-export const appointmentCache = new CacheManager('appointments');
-export const reportCache = new CacheManager('reports');
-export const analyticsCache = new CacheManager('analytics');
+// Pre-configured cache managers for different data types - Enhanced
+export const patientCache = new CacheManager('patients', 50 * 1024 * 1024); // 50MB for patients
+export const appointmentCache = new CacheManager('appointments', 30 * 1024 * 1024); // 30MB for appointments
+export const reportCache = new CacheManager('reports', 100 * 1024 * 1024); // 100MB for reports
+export const analyticsCache = new CacheManager('analytics', 200 * 1024 * 1024); // 200MB for analytics
+export const sessionCache = new CacheManager('sessions', 20 * 1024 * 1024); // 20MB for sessions
+export const queryCache = new CacheManager('queries', 150 * 1024 * 1024); // 150MB for database queries
 
-export const cache = new CacheManager();
+export const cache = new CacheManager('default', 100 * 1024 * 1024);
+
+// Cache warming and preloading utilities
+export class CacheWarmer {
+  static async warmPatientCache(): Promise<void> {
+    railwayLogger.info('Starting patient cache warming');
+    // TODO: Implement cache warming logic
+  }
+  
+  static async warmAppointmentCache(): Promise<void> {
+    railwayLogger.info('Starting appointment cache warming');
+    // TODO: Implement cache warming logic
+  }
+  
+  static async getSystemCacheStats(): Promise<any> {
+    return {
+      patients: patientCache.getMetrics(),
+      appointments: appointmentCache.getMetrics(),
+      reports: reportCache.getMetrics(),
+      analytics: analyticsCache.getMetrics(),
+      sessions: sessionCache.getMetrics(),
+      queries: queryCache.getMetrics(),
+      default: cache.getMetrics(),
+      redis: await cache.getRedisStats(),
+    };
+  }
+}
+
+// Smart cache invalidation patterns
+export const CachePatterns = {
+  // Patient-related cache keys
+  patient: (id: string) => ({ 
+    key: `patient:${id}`,
+    tags: ['patients', `patient:${id}`]
+  }),
+  
+  patientAppointments: (patientId: string) => ({
+    key: `patient:${patientId}:appointments`,
+    tags: ['appointments', 'patients', `patient:${patientId}`]
+  }),
+  
+  // Appointment-related cache keys
+  appointment: (id: string) => ({
+    key: `appointment:${id}`,
+    tags: ['appointments', `appointment:${id}`]
+  }),
+  
+  dailyAppointments: (date: string) => ({
+    key: `appointments:daily:${date}`,
+    tags: ['appointments', 'daily-schedule']
+  }),
+  
+  // Report-related cache keys
+  patientReport: (patientId: string, reportType: string) => ({
+    key: `report:${patientId}:${reportType}`,
+    tags: ['reports', `patient:${patientId}`, reportType]
+  }),
+  
+  // Analytics cache keys
+  dashboardMetrics: (timeframe: string) => ({
+    key: `analytics:dashboard:${timeframe}`,
+    tags: ['analytics', 'dashboard']
+  }),
+};
 
 export default cache;

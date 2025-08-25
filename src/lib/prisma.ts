@@ -2,7 +2,7 @@
 import { PrismaClient } from '@prisma/client';
 
 declare global {
-  var prisma: PrismaClient | undefined;
+  let prisma: PrismaClient | undefined;
 }
 
 const prisma = globalThis.prisma || new PrismaClient({
@@ -26,7 +26,7 @@ prisma.$use(async (params, next) => {
     }
     if (params.action === 'deleteMany') {
       params.action = 'updateMany';
-      if (params.args.data != undefined) {
+      if (params.args.data !== undefined) {
         params.args.data['deletedAt'] = new Date();
       } else {
         params.args['data'] = { deletedAt: new Date() };

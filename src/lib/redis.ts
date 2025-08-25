@@ -2,7 +2,7 @@
 import { createClient } from 'redis';
 
 declare global {
-  var redis: ReturnType<typeof createClient> | undefined;
+  let redis: ReturnType<typeof createClient> | undefined;
 }
 
 const redisClientSingleton = () => {

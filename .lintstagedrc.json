@@ -1,0 +1,19 @@
+{
+  "*.{js,jsx,ts,tsx}": [
+    "eslint --fix",
+    "prettier --write"
+  ],
+  "*.{json,css,md,yml,yaml}": [
+    "prettier --write"
+  ],
+  "*.{ts,tsx}": [
+    "tsc --noEmit --skipLibCheck"
+  ],
+  "package.json": [
+    "npm audit --audit-level=moderate"
+  ],
+  "prisma/schema.prisma": [
+    "npx prisma format",
+    "npx prisma validate"
+  ]
+}

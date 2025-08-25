@@ -1,12 +1,15 @@
-import { Pool, neonConfig } from '@neondatabase/serverless';
+import { Pool, neonConfig as neonConfigImport } from '@neondatabase/serverless';
 import { PrismaNeon } from '@prisma/adapter-neon';
 import { PrismaClient } from '@prisma/client';
 import ws from 'ws';
 
 // Configure Neon for serverless environments
-neonConfig.webSocketConstructor = ws;
-neonConfig.useSecureWebSocket = true;
-neonConfig.pipelineConnect = false;
+neonConfigImport.webSocketConstructor = ws;
+neonConfigImport.useSecureWebSocket = true;
+neonConfigImport.pipelineConnect = false;
+
+// Export neonConfig for use in other modules
+export const neonConfig = neonConfigImport;
 
 // Connection pool configuration
 const connectionString = process.env.DATABASE_URL!;
@@ -57,6 +60,21 @@ export async function checkNeonHealth(): Promise<{
     
     const latency = Date.now() - startTime;
     
+    // Log health check results for monitoring
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Neon health check completed:', {
+        status: 'healthy',
+        timestamp: new Date().toISOString(),
+        latency: `${latency}ms`,
+        connectionPool: {
+          active: pool.totalCount,
+          idle: pool.idleCount,
+          waiting: pool.waitingCount,
+        },
+      });
+    }
+
     return {
       status: 'healthy',
       latency,
@@ -68,7 +86,9 @@ export async function checkNeonHealth(): Promise<{
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error('Neon health check failed:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Neon health check failed:', error);
+    }
     
     return {
       status: 'unhealthy',
@@ -122,7 +142,9 @@ export async function getNeonMetrics() {
       timestamp: new Date().toISOString(),
     };
   } catch (error) {
-    console.error('Failed to get Neon metrics:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Failed to get Neon metrics:', error);
+    }
     throw error;
   }
 }
@@ -132,9 +154,14 @@ export async function closeNeonConnection() {
   try {
     await prisma.$disconnect();
     await pool.end();
-    console.log('Neon connections closed gracefully');
+    if (process.env.NODE_ENV === 'development') {
+      // eslint-disable-next-line no-console
+      console.log('Neon connections closed gracefully');
+    }
   } catch (error) {
-    console.error('Error closing Neon connections:', error);
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error closing Neon connections:', error);
+    }
   }
 }
 

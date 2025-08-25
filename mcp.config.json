@@ -1,0 +1,142 @@
+{
+  "version": "1.0.0",
+  "name": "FisioFlow MCP Configuration",
+  "description": "Model Context Protocol configuration for FisioFlow AI providers",
+  "providers": {
+    "openai": {
+      "name": "OpenAI",
+      "type": "openai",
+      "enabled": true,
+      "apiKey": "${OPENAI_API_KEY}",
+      "baseUrl": "https://api.openai.com/v1",
+      "models": {
+        "gpt-4": {
+          "name": "GPT-4",
+          "maxTokens": 8192,
+          "temperature": 0.7,
+          "topP": 1.0,
+          "frequencyPenalty": 0.0,
+          "presencePenalty": 0.0
+        },
+        "gpt-3.5-turbo": {
+          "name": "GPT-3.5 Turbo",
+          "maxTokens": 4096,
+          "temperature": 0.7,
+          "topP": 1.0,
+          "frequencyPenalty": 0.0,
+          "presencePenalty": 0.0
+        }
+      },
+      "rateLimits": {
+        "requestsPerMinute": 60,
+        "tokensPerMinute": 90000
+      },
+      "timeout": 30000,
+      "retries": 3
+    },
+    "anthropic": {
+      "name": "Anthropic Claude",
+      "type": "anthropic",
+      "enabled": true,
+      "apiKey": "${ANTHROPIC_API_KEY}",
+      "baseUrl": "https://api.anthropic.com",
+      "models": {
+        "claude-3-opus": {
+          "name": "Claude 3 Opus",
+          "maxTokens": 4096,
+          "temperature": 0.7,
+          "topP": 1.0
+        },
+        "claude-3-sonnet": {
+          "name": "Claude 3 Sonnet",
+          "maxTokens": 4096,
+          "temperature": 0.7,
+          "topP": 1.0
+        },
+        "claude-3-haiku": {
+          "name": "Claude 3 Haiku",
+          "maxTokens": 4096,
+          "temperature": 0.7,
+          "topP": 1.0
+        }
+      },
+      "rateLimits": {
+        "requestsPerMinute": 50,
+        "tokensPerMinute": 40000
+      },
+      "timeout": 30000,
+      "retries": 3
+    },
+    "google": {
+      "name": "Google Gemini",
+      "type": "google",
+      "enabled": true,
+      "apiKey": "${GEMINI_API_KEY}",
+      "baseUrl": "https://generativelanguage.googleapis.com",
+      "models": {
+        "gemini-pro": {
+          "name": "Gemini Pro",
+          "maxTokens": 8192,
+          "temperature": 0.7,
+          "topP": 1.0,
+          "topK": 40
+        },
+        "gemini-pro-vision": {
+          "name": "Gemini Pro Vision",
+          "maxTokens": 4096,
+          "temperature": 0.4,
+          "topP": 1.0,
+          "topK": 32
+        }
+      },
+      "rateLimits": {
+        "requestsPerMinute": 60,
+        "tokensPerMinute": 32000
+      },
+      "timeout": 30000,
+      "retries": 3
+    }
+  },
+  "routing": {
+    "defaultProvider": "google",
+    "fallbackProvider": "openai",
+    "queryTypeRouting": {
+      "protocol_suggestion": ["anthropic", "openai", "google"],
+      "diagnosis_help": ["openai", "anthropic", "google"],
+      "exercise_recommendation": ["google", "openai", "anthropic"],
+      "case_analysis": ["anthropic", "openai", "google"],
+      "research_query": ["openai", "anthropic", "google"],
+      "document_analysis": ["anthropic", "google", "openai"],
+      "general_question": ["google", "openai", "anthropic"]
+    }
+  },
+  "cache": {
+    "enabled": true,
+    "ttl": {
+      "protocol_suggestion": 3600,
+      "diagnosis_help": 1800,
+      "exercise_recommendation": 7200,
+      "case_analysis": 1800,
+      "research_query": 3600,
+      "document_analysis": 7200,
+      "general_question": 1800
+    },
+    "maxSize": 1000
+  },
+  "monitoring": {
+    "enabled": true,
+    "logLevel": "info",
+    "metrics": {
+      "enabled": true,
+      "collectUsage": true,
+      "collectLatency": true,
+      "collectErrors": true
+    }
+  },
+  "security": {
+    "validateApiKeys": true,
+    "encryptCache": false,
+    "rateLimitByUser": true,
+    "maxRequestsPerUser": 100
+  }
+}

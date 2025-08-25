@@ -57,7 +57,7 @@ const GroupFormModal: React.FC<GroupFormModalProps> = ({ isOpen, onClose, onSave
               required
               autoFocus
             />
-            {mode === 'copy' && <p className="text-xs text-slate-500 mt-2">Uma cópia de todos os exercícios do grupo "{initialName}" será criada neste novo grupo.</p>}
+            {mode === 'copy' && <p className="text-xs text-slate-500 mt-2">Uma cópia de todos os exercícios do grupo &ldquo;{initialName}&rdquo; será criada neste novo grupo.</p>}
           </main>
           <footer className="flex justify-end items-center p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl">
             <button type="button" onClick={onClose} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 mr-2">

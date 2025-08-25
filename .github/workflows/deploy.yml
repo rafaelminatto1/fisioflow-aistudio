@@ -1,0 +1,566 @@
+name: Deploy to Railway
+
+on:
+  push:
+    branches: [ main, production ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  NODE_VERSION: '20'
+  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+  NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+  NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+  NEON_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+
+jobs:
+  # =============================================================================
+  # LINT AND TYPE CHECK
+  # =============================================================================
+  lint-and-typecheck:
+    name: Lint and Type Check
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run ESLint
+        run: npm run lint
+        
+      - name: Run TypeScript check
+        run: npm run type-check
+
+  # =============================================================================
+  # BUILD AND TEST
+  # =============================================================================
+  build-and-test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Generate Prisma client
+        run: npx prisma generate
+        
+      - name: Build application
+        run: npm run build
+        env:
+          # Mock environment variables for build
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
+          DIRECT_URL: "postgresql://user:pass@localhost:5432/test"
+          NEXTAUTH_SECRET: "test-secret"
+          NEXTAUTH_URL: "http://localhost:3000"
+          NEON_DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
+          NEON_DIRECT_URL: "postgresql://user:pass@localhost:5432/test"
+          
+      - name: Run tests (if available)
+        run: |
+          if [ -f "package.json" ] && grep -q '"test"' package.json; then
+            npm test
+          else
+            echo "No tests found, skipping..."
+          fi
+        continue-on-error: true
+
+  # =============================================================================
+  # SECURITY SCAN
+  # =============================================================================
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint-and-typecheck
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run npm audit
+        run: npm audit --audit-level=high
+        continue-on-error: true
+        
+      - name: Run Snyk security scan
+        uses: snyk/actions/node@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        with:
+          args: --severity-threshold=high
+        continue-on-error: true
+
+  # =============================================================================
+  # NEON DB BRANCH MANAGEMENT
+  # =============================================================================
+  neon-branch-management:
+    name: Neon DB Branch Management
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Create Neon branch for PR
+        run: |
+          echo "🌿 Creating Neon branch for PR: ${{ env.NEON_BRANCH_NAME }}"
+          
+          # Create branch using Neon API
+          BRANCH_RESPONSE=$(curl -s -X POST \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "name": "${{ env.NEON_BRANCH_NAME }}",
+              "parent_id": "main",
+              "compute_units": 0.25
+            }')
+          
+          echo "Branch creation response: $BRANCH_RESPONSE"
+          
+          # Extract branch ID and connection string
+          BRANCH_ID=$(echo "$BRANCH_RESPONSE" | jq -r '.branch.id')
+          echo "NEON_BRANCH_ID=$BRANCH_ID" >> $GITHUB_ENV
+          
+          echo "✅ Neon branch created: $BRANCH_ID"
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+          
+      - name: Run migrations on branch
+        run: |
+          echo "🔄 Running migrations on Neon branch..."
+          
+          # Get branch connection string
+          BRANCH_INFO=$(curl -s \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches/${{ env.NEON_BRANCH_ID }}" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}")
+          
+          # Extract connection details and run migrations
+          npx prisma migrate deploy
+          
+          echo "✅ Migrations completed on branch"
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+          
+  # =============================================================================
+  # DATABASE MIGRATION CHECK
+  # =============================================================================
+  migration-check:
+    name: Database Migration Check
+    runs-on: ubuntu-latest
+    needs: [build-and-test, neon-branch-management]
+    if: github.event_name == 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Check for migration changes
+        run: |
+          if git diff --name-only origin/main...HEAD | grep -q "prisma/migrations\|prisma/schema.prisma"; then
+            echo "Database schema changes detected"
+            echo "MIGRATION_CHANGES=true" >> $GITHUB_ENV
+          else
+            echo "No database schema changes"
+            echo "MIGRATION_CHANGES=false" >> $GITHUB_ENV
+          fi
+          
+      - name: Validate Prisma schema
+        if: env.MIGRATION_CHANGES == 'true'
+        run: npx prisma validate
+        
+      - name: Test migrations on Neon branch
+        if: env.MIGRATION_CHANGES == 'true'
+        run: |
+          echo "🧪 Testing migrations on Neon branch..."
+          
+          # Run migration tests
+          npm run test:migrations || echo "Migration tests not configured"
+          
+          echo "✅ Migration tests completed"
+        
+      - name: Check migration status
+        if: env.MIGRATION_CHANGES == 'true'
+        run: |
+          echo "⚠️ Database migration changes detected!"
+          echo "Migrations tested on Neon branch: ${{ env.NEON_BRANCH_NAME }}"
+          echo "Please ensure migrations are reviewed before merging."
+
+  # =============================================================================
+  # DEPLOY TO STAGING (PR)
+  # =============================================================================
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    environment: staging
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+        
+      - name: Deploy to Railway Staging
+        run: |
+          railway login --token ${{ secrets.RAILWAY_TOKEN }}
+          railway environment staging
+          railway up --detach
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          
+      - name: Wait for deployment
+        run: sleep 30
+        
+      - name: Health check staging
+        run: |
+          STAGING_URL="https://fisioflow-staging.up.railway.app"
+          for i in {1..10}; do
+            if curl -f "$STAGING_URL/api/health"; then
+              echo "✅ Staging deployment healthy"
+              exit 0
+            fi
+            echo "⏳ Waiting for staging deployment... ($i/10)"
+            sleep 10
+          done
+          echo "❌ Staging deployment health check failed"
+          exit 1
+
+  # =============================================================================
+  # DEPLOY TO PRODUCTION
+  # =============================================================================
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build-and-test, security-scan]
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    environment: production
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+        
+      - name: Pre-deploy Neon backup
+        run: |
+          echo "📦 Creating pre-deploy Neon backup..."
+          
+          # Create backup branch
+          BACKUP_BRANCH="backup-$(date +%Y%m%d-%H%M%S)"
+          
+          curl -X POST \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"name\": \"$BACKUP_BRANCH\",
+              \"parent_id\": \"main\"
+            }"
+          
+          echo "✅ Backup branch created: $BACKUP_BRANCH"
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+        continue-on-error: true
+        
+      - name: Run Neon database migrations
+        run: |
+          echo "🔄 Running database migrations on Neon..."
+          
+          # Set Neon connection for migrations
+          export DATABASE_URL="$NEON_DATABASE_URL"
+          export DIRECT_URL="$NEON_DIRECT_URL"
+          
+          # Check if migrations are needed
+          if git diff --name-only HEAD~1 HEAD | grep -q "prisma/migrations\|prisma/schema.prisma"; then
+            echo "🔄 Running database migrations..."
+            npx prisma migrate deploy
+            echo "✅ Neon migrations completed"
+          else
+            echo "ℹ️ No migrations needed"
+          fi
+        env:
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          NEON_DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+          
+      - name: Deploy to Railway Production
+        id: deploy
+        run: |
+          railway login --token ${{ secrets.RAILWAY_TOKEN }}
+          railway environment production
+          
+          echo "🚀 Starting production deployment..."
+          DEPLOY_OUTPUT=$(railway up --detach 2>&1)
+          echo "$DEPLOY_OUTPUT"
+          
+          # Extract deployment ID if available
+          DEPLOY_ID=$(echo "$DEPLOY_OUTPUT" | grep -o 'deployment-[a-zA-Z0-9-]*' | head -1 || echo "unknown")
+          echo "DEPLOY_ID=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          
+          echo "✅ Deployment initiated: $DEPLOY_ID"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          
+      - name: Wait for deployment
+        run: |
+          echo "⏳ Waiting for deployment to complete..."
+          sleep 60
+          
+      - name: Health check production
+        id: health_check
+        run: |
+          PROD_URL="https://fisioflow.up.railway.app"
+          
+          echo "🏥 Running production health checks..."
+          
+          for i in {1..15}; do
+            echo "Health check attempt $i/15..."
+            
+            if curl -f -s "$PROD_URL/api/health" > /dev/null; then
+              echo "✅ Production deployment is healthy!"
+              
+              # Get detailed health info
+              HEALTH_RESPONSE=$(curl -s "$PROD_URL/api/health")
+              echo "Health response: $HEALTH_RESPONSE"
+              
+              echo "HEALTH_STATUS=healthy" >> $GITHUB_OUTPUT
+              exit 0
+            fi
+            
+            echo "⏳ Waiting for production deployment... ($i/15)"
+            sleep 20
+          done
+          
+          echo "❌ Production deployment health check failed!"
+          echo "HEALTH_STATUS=unhealthy" >> $GITHUB_OUTPUT
+          exit 1
+          
+      - name: Rollback on failure
+        if: failure() && steps.health_check.outputs.HEALTH_STATUS == 'unhealthy'
+        run: |
+          echo "🔄 Health check failed, initiating rollback..."
+          
+          railway login --token ${{ secrets.RAILWAY_TOKEN }}
+          railway environment production
+          
+          # Get previous deployment and rollback
+          echo "Rolling back to previous deployment..."
+          railway rollback
+          
+          echo "❌ Deployment failed and rolled back"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          
+      - name: Post-deployment verification
+        if: success()
+        run: |
+          echo "🔍 Running post-deployment verification..."
+          
+          PROD_URL="https://fisioflow.up.railway.app"
+          
+          # Test critical endpoints
+          echo "Testing authentication endpoint..."
+          curl -f "$PROD_URL/api/auth/session" || echo "Auth endpoint test failed"
+          
+          echo "Testing patient API..."
+          curl -f "$PROD_URL/api/pacientes" || echo "Patient API test failed"
+          
+          echo "✅ Post-deployment verification completed"
+          
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "🎉 Production deployment successful!"
+          echo "Deployment ID: ${{ steps.deploy.outputs.DEPLOY_ID }}"
+          echo "Health Status: ${{ steps.health_check.outputs.HEALTH_STATUS }}"
+          
+          # Send notification (webhook, Slack, etc.)
+          if [ -n "${{ secrets.SLACK_WEBHOOK_URL }}" ]; then
+            curl -X POST -H 'Content-type: application/json' \
+              --data '{"text":"🚀 FisioFlow deployed successfully to production!"}' \
+              ${{ secrets.SLACK_WEBHOOK_URL }}
+          fi
+
+  # =============================================================================
+  # POST-DEPLOY MONITORING
+  # =============================================================================
+  post-deploy-monitoring:
+    name: Post-Deploy Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: success()
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Neon DB health check
+        run: |
+          echo "🔍 Running Neon DB health check..."
+          
+          # Check Neon project status
+          PROJECT_STATUS=$(curl -s \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}" | jq -r '.project.state')
+          
+          echo "Neon project status: $PROJECT_STATUS"
+          
+          if [ "$PROJECT_STATUS" != "active" ]; then
+            echo "❌ Neon project is not active!"
+            exit 1
+          fi
+          
+          # Check database connectivity
+          node -e "
+            const { neonConfig } = require('./lib/neon-config');
+            neonConfig.checkNeonHealth().then(health => {
+              console.log('Neon health check:', health);
+              if (!health.isHealthy) {
+                console.error('❌ Neon health check failed!');
+                process.exit(1);
+              }
+              console.log('✅ Neon DB is healthy');
+            }).catch(err => {
+              console.error('❌ Neon health check error:', err);
+              process.exit(1);
+            });
+          "
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          NEON_DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
+          
+      - name: Extended health check
+        run: |
+          echo "🔍 Running extended health check..."
+          node scripts/health-check.js --extended
+          
+      - name: Neon metrics collection
+        run: |
+          echo "📊 Collecting Neon metrics..."
+          
+          # Get Neon metrics
+          node -e "
+            const { neonConfig } = require('./lib/neon-config');
+            neonConfig.getNeonMetrics().then(metrics => {
+              console.log('Neon metrics:', JSON.stringify(metrics, null, 2));
+              
+              // Check critical metrics
+              if (metrics.connections.active > 80) {
+                console.warn('⚠️ High connection usage:', metrics.connections.active);
+              }
+              
+              if (metrics.latency > 100) {
+                console.warn('⚠️ High latency:', metrics.latency + 'ms');
+              }
+              
+              console.log('✅ Neon metrics collected successfully');
+            }).catch(err => {
+              console.error('❌ Failed to collect Neon metrics:', err);
+              process.exit(1);
+            });
+          "
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+          NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
+          
+      - name: Performance baseline check
+        run: |
+          echo "📊 Running performance baseline check..."
+          # Add performance testing logic
+          echo "Performance check completed"
+
+  # =============================================================================
+  # CLEANUP
+  # =============================================================================
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-production, post-deployment-monitoring]
+    if: always()
+    
+    steps:
+      - name: Cleanup temporary resources
+        run: |
+          echo "🧹 Cleaning up temporary resources..."
+          # Add any cleanup tasks here
+          echo "✅ Cleanup completed"

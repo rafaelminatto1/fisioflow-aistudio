@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useRouter, usePathname } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import { 
     LayoutGrid, Users, Calendar, Stethoscope, ChevronLeft, ChevronRight, BarChart3, 
     ShieldCheck, Cog, Library, AreaChart, LogOut, FilePlus, FileClock, Dumbbell, 
@@ -9,34 +11,37 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 
-const NavLinkComponent = ({ to, icon: Icon, label, isCollapsed, badgeCount }: { to: string, icon: React.ElementType, label: string, isCollapsed: boolean, badgeCount?: number }) => (
-    <ReactRouterDOM.NavLink
-      to={to}
-      className={({ isActive }) =>
-        `flex items-center p-2.5 rounded-lg transition-colors duration-200 ${
-          isActive
-            ? 'bg-sky-500/10 text-sky-400 font-semibold'
-            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-        } ${isCollapsed ? 'justify-center' : ''}`
-      }
-      title={isCollapsed ? label : undefined}
-    >
-        <div className="relative flex items-center w-full">
-            <Icon className={`w-5 h-5 shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-            {!isCollapsed && <span className="truncate flex-1 text-sm">{label}</span>}
-            
-            {!isCollapsed && badgeCount && badgeCount > 0 ? (
-                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
-                    {badgeCount > 9 ? '9+' : badgeCount}
-                </span>
-            ) : null}
+const NavLinkComponent = ({ to, icon: Icon, label, isCollapsed, badgeCount }: { to: string, icon: React.ElementType, label: string, isCollapsed: boolean, badgeCount?: number }) => {
+    const pathname = usePathname();
+    const isActive = pathname === to;
+    
+    return (
+        <Link
+          href={to}
+          className={`flex items-center p-2.5 rounded-lg transition-colors duration-200 ${
+            isActive
+              ? 'bg-sky-500/10 text-sky-400 font-semibold'
+              : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+          } ${isCollapsed ? 'justify-center' : ''}`}
+          title={isCollapsed ? label : undefined}
+        >
+            <div className="relative flex items-center w-full">
+                <Icon className={`w-5 h-5 shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
+                {!isCollapsed && <span className="truncate flex-1 text-sm">{label}</span>}
+                
+                {!isCollapsed && badgeCount && badgeCount > 0 ? (
+                    <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white">
+                        {badgeCount > 9 ? '9+' : badgeCount}
+                    </span>
+                ) : null}
 
-             {isCollapsed && badgeCount && badgeCount > 0 ? (
-                <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-slate-900"></span>
-            ) : null}
-        </div>
-    </ReactRouterDOM.NavLink>
-);
+                 {isCollapsed && badgeCount && badgeCount > 0 ? (
+                    <span className="absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-slate-900"></span>
+                ) : null}
+            </div>
+        </Link>
+    );
+};
 
 const NavGroup: React.FC<{ title: string; isCollapsed: boolean; children: React.ReactNode }> = ({ title, isCollapsed, children }) => (
     <div>
@@ -54,12 +59,12 @@ const NavGroup: React.FC<{ title: string; isCollapsed: boolean; children: React.
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { user, logout } = useAuth();
-  const navigate = ReactRouterDOM.useNavigate();
+  const router = useRouter();
   const { unreadCount } = useNotifications(user?.id);
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    router.push('/login');
   };
   
   const mainNav = [
@@ -124,7 +129,7 @@ const Sidebar: React.FC = () => {
       {user && (
          <div className="p-3 border-t border-slate-800 shrink-0">
             <div className="flex items-center w-full p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors duration-200">
-                <img src={user.avatarUrl} alt={user.name} className="w-9 h-9 rounded-full shrink-0" />
+                <Image src={user.avatarUrl} alt={user.name} width={36} height={36} className="w-9 h-9 rounded-full shrink-0" />
                 {!isCollapsed && (
                     <div className="ml-3 text-left flex-1 overflow-hidden">
                         <p className="text-sm font-semibold text-slate-100 truncate">{user.name}</p>

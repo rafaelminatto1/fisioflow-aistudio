@@ -26,7 +26,7 @@ const PatientMetricChart: React.FC<PatientMetricChartProps> = ({ metric, notes }
     }
 
     return (
-        <InfoCard title={`Sua Evolução: ${metric.name}`} icon={<LineChartIcon />}>
+        <InfoCard title={`Sua Evolução: ${metric.name}`}>
             <div className="h-64 -ml-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>

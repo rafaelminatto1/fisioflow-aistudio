@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import { 
@@ -78,12 +79,24 @@ export default function Sidebar() {
          <div className="p-2 border-t border-slate-800 shrink-0">
             {isCollapsed ? (
                 <button onClick={() => signOut()} title="Sair" className="w-full p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors duration-200">
-                    <img src={user.avatarUrl || `https://i.pravatar.cc/150?u=${user.id}`} alt={user.name || 'Avatar'} className="w-10 h-10 rounded-full mx-auto" />
+                    <Image 
+                        src={user.avatarUrl || `https://i.pravatar.cc/150?u=${user.id}`} 
+                        alt={user.name || 'Avatar'} 
+                        width={40} 
+                        height={40} 
+                        className="w-10 h-10 rounded-full mx-auto" 
+                    />
                 </button>
             ) : (
                 <div className="p-2">
                     <div className="flex items-center">
-                        <img src={user.avatarUrl || `https://i.pravatar.cc/150?u=${user.id}`} alt={user.name || 'Avatar'} className="w-10 h-10 rounded-full" />
+                        <Image 
+                            src={user.avatarUrl || `https://i.pravatar.cc/150?u=${user.id}`} 
+                            alt={user.name || 'Avatar'} 
+                            width={40} 
+                            height={40} 
+                            className="w-10 h-10 rounded-full" 
+                        />
                         <div className="ml-3 text-left flex-1">
                             <p className="text-sm font-semibold text-slate-100 truncate">{user.name}</p>
                             <p className="text-xs text-slate-400 capitalize">{String(user.role).toLowerCase()}</p>

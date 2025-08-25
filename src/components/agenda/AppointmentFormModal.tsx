@@ -3,11 +3,11 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save, Calendar, Clock } from 'lucide-react';
-import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary, RecurrenceRule } from '@/types';
-import { useToast } from '@/components/ui/use-toast';
+import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary, RecurrenceRule } from '../../../types';
+import { useToast } from '../../ui/use-toast';
 import PatientSearchInput from './PatientSearchInput';
-import { format } from 'date-fns/format';
-import { ptBR } from 'date-fns/locale/pt-BR';
+import { format } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
 // import RecurrenceSelector from './RecurrenceSelector';
 // import { findConflict } from '@/services/scheduling/conflictDetection';
 // import { generateRecurrences } from '@/services/scheduling/recurrenceService';

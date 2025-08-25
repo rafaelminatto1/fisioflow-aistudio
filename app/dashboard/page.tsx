@@ -11,7 +11,7 @@ export default async function DashboardPage() {
     }
     
     // Redireciona o paciente se ele tentar acessar o dashboard principal
-    if (user.role === 'PACIENTE') {
+    if (user.role === 'Paciente') {
         redirect('/portal/dashboard');
     }
 

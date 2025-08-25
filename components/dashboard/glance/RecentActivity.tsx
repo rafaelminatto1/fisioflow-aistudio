@@ -1,7 +1,7 @@
 
 // components/dashboard/glance/RecentActivity.tsx
 import React, { useState, useEffect } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { useRouter } from 'next/navigation';
 import { RecentActivity as ActivityType } from '../../../types';
 import * as activityService from '../../../services/activityService';
 import { Activity, Dumbbell, NotebookText } from 'lucide-react';
@@ -27,7 +27,7 @@ const activityIcons: Record<ActivityType['type'], React.ReactNode> = {
 const RecentActivity: React.FC = () => {
     const [activities, setActivities] = useState<ActivityType[]>([]);
     const [isLoading, setIsLoading] = useState(true);
-    const navigate = ReactRouterDOM.useNavigate();
+    const router = useRouter();
 
     useEffect(() => {
         const fetchActivities = async () => {
@@ -54,7 +54,7 @@ const RecentActivity: React.FC = () => {
             ) : activities.length > 0 ? (
                 <div className="space-y-2 overflow-y-auto flex-1 -mr-2 pr-2">
                     {activities.map(act => (
-                        <div key={act.id} onClick={() => navigate(`/patients/${act.patientId}`)} className="p-2.5 rounded-lg flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors">
+                        <div key={act.id} onClick={() => router.push(`/pacientes/${act.patientId}`)} className="p-2.5 rounded-lg flex items-center gap-3 hover:bg-slate-50 cursor-pointer transition-colors">
                              <div className="p-2 bg-slate-100 rounded-full">{activityIcons[act.type]}</div>
                              <div className="flex-1">
                                 <p className="font-medium text-sm text-slate-800">{act.patientName}</p>

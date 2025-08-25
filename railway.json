@@ -1,0 +1,59 @@
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "NIXPACKS",
+    "buildCommand": "npm run build",
+    "watchPatterns": [
+      "**/*.ts",
+      "**/*.tsx",
+      "**/*.js",
+      "**/*.jsx",
+      "package.json",
+      "prisma/schema.prisma"
+    ]
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "healthcheckPath": "/api/health",
+    "healthcheckTimeout": 120,
+    "healthcheckInterval": 30,
+    "healthcheckRetries": 5,
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10,
+    "numReplicas": 1
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NODE_ENV": "production",
+        "LOG_LEVEL": "info",
+        "NEON_POOLED_CONNECTION": "true",
+        "DATABASE_POOL_SIZE": "20",
+        "DATABASE_TIMEOUT": "30000",
+        "HEALTH_CHECK_ENABLED": "true",
+        "RATE_LIMIT_ENABLED": "true",
+        "CORS_ENABLED": "true"
+      }
+    },
+    "staging": {
+      "variables": {
+        "NODE_ENV": "staging",
+        "LOG_LEVEL": "debug",
+        "NEON_POOLED_CONNECTION": "true",
+        "DATABASE_POOL_SIZE": "10",
+        "DATABASE_TIMEOUT": "30000"
+      }
+    }
+  },
+  "regions": ["us-west1"],
+  "cron": [
+    {
+      "schedule": "0 2 * * *",
+      "command": "node scripts/backup.js"
+    },
+    {
+      "schedule": "*/15 * * * *",
+      "command": "node scripts/neon-autoscaling.js --check"
+    }
+  ]
+}

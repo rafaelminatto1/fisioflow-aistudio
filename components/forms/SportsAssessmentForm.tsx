@@ -52,7 +52,7 @@ const SportsAssessmentForm: React.FC<SportsAssessmentFormProps> = ({ patientId, 
   const onSubmit = (data: SportsAssessmentFormData) => {
     return new Promise(resolve => {
         setTimeout(() => {
-            console.log("Dados da Avaliação Esportiva Salvos:", data);
+            // Dados da Avaliação Esportiva Salvos
             showToast("Avaliação esportiva salva com sucesso!", 'success');
             onBack();
             resolve(data);

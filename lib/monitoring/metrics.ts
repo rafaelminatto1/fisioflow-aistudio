@@ -1,4 +1,5 @@
 // lib/monitoring/metrics.ts
+import { structuredLogger } from './logger';
 
 export interface Metric {
   name: string;
@@ -97,26 +98,77 @@ class MetricsCollector {
 // Singleton instance
 export const metrics = new MetricsCollector();
 
-// Performance timing decorator
+// Business Metrics class for higher-level metrics
+export class BusinessMetrics {
+  static recordAPICall(endpoint: string, method: string, statusCode: number): void {
+    metrics.record('api_calls_total', 1, 'count', {
+      endpoint,
+      method,
+      status: statusCode.toString()
+    });
+
+    structuredLogger.api('API call recorded', {
+      endpoint,
+      method,
+      statusCode,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  static recordBusinessEvent(eventType: string, metadata: Record<string, any> = {}): void {
+    metrics.record('business_events', 1, 'count', {
+      eventType,
+      ...metadata
+    });
+
+    structuredLogger.info('Business event recorded', {
+      eventType,
+      metadata,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  static recordSecurityEvent(type: string, severity: string): void {
+    metrics.record('security_events', 1, 'count', {
+      type,
+      severity
+    });
+
+    structuredLogger.security('Security event recorded', {
+      type,
+      severity,
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  static recordPerformance(operation: string, duration: number, status: 'success' | 'error' = 'success'): void {
+    metrics.recordPerformance(operation, duration, status);
+    
+    structuredLogger.performance('Performance recorded', {
+      operation,
+      duration,
+      status,
+      timestamp: new Date().toISOString()
+    });
+  }
+}
+
+// Timing decorator for automatic performance tracking
 export function timed(operation: string) {
   return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
     const method = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
       const start = Date.now();
-      let status: 'success' | 'error' = 'success';
-      let error: any;
-
       try {
         const result = await method.apply(this, args);
-        return result;
-      } catch (e) {
-        status = 'error';
-        error = e;
-        throw e;
-      } finally {
         const duration = Date.now() - start;
-        metrics.recordPerformance(operation, duration, status, { error: error?.message });
+        BusinessMetrics.recordPerformance(`${operation}.${propertyName}`, duration, 'success');
+        return result;
+      } catch (error) {
+        const duration = Date.now() - start;
+        BusinessMetrics.recordPerformance(`${operation}.${propertyName}`, duration, 'error');
+        throw error;
       }
     };
 
@@ -124,65 +176,20 @@ export function timed(operation: string) {
   };
 }
 
-// API call timing utility
+// Utility function for timing async operations
 export async function timeAsyncOperation<T>(
   operation: string,
-  fn: () => Promise<T>,
-  metadata?: Record<string, any>
+  asyncFn: () => Promise<T>
 ): Promise<T> {
   const start = Date.now();
-  let status: 'success' | 'error' = 'success';
-  let error: any;
-
   try {
-    const result = await fn();
-    return result;
-  } catch (e) {
-    status = 'error';
-    error = e;
-    throw e;
-  } finally {
+    const result = await asyncFn();
     const duration = Date.now() - start;
-    metrics.recordPerformance(operation, duration, status, { 
-      ...metadata,
-      error: error?.message 
-    });
+    BusinessMetrics.recordPerformance(operation, duration, 'success');
+    return result;
+  } catch (error) {
+    const duration = Date.now() - start;
+    BusinessMetrics.recordPerformance(operation, duration, 'error');
+    throw error;
   }
 }
-
-// Business metrics helpers
-export const BusinessMetrics = {
-  recordPatientCreated(): void {
-    metrics.record('patients.created', 1);
-  },
-
-  recordAppointmentScheduled(type: string): void {
-    metrics.record('appointments.scheduled', 1, 'count', { type });
-  },
-
-  recordAppointmentCompleted(type: string): void {
-    metrics.record('appointments.completed', 1, 'count', { type });
-  },
-
-  recordReportGenerated(provider: string): void {
-    metrics.record('reports.generated', 1, 'count', { provider });
-  },
-
-  recordUserLogin(role: string): void {
-    metrics.record('users.login', 1, 'count', { role });
-  },
-
-  recordAPICall(endpoint: string, method: string, statusCode: number): void {
-    metrics.record('api.calls', 1, 'count', { endpoint, method, status: statusCode.toString() });
-  },
-
-  recordCacheHit(key: string): void {
-    metrics.record('cache.hits', 1, 'count', { key });
-  },
-
-  recordCacheMiss(key: string): void {
-    metrics.record('cache.misses', 1, 'count', { key });
-  },
-};
-
-export default metrics;

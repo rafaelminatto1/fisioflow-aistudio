@@ -2,9 +2,9 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import AuthProvider from "@/components/auth/AuthProvider";
+import AuthProvider from "../../components/auth/AuthProvider";
 import "./globals.css";
-import { Toaster } from "@/components/ui/Toaster";
+import ToastContainer from "../../components/ui/Toast";
 
 const inter = Inter({ subsets: ["latin"], variable: '--font-sans' });
 
@@ -26,7 +26,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
         </AuthProvider>
-        <Toaster />
+        <ToastContainer />
       </body>
     </html>
   );

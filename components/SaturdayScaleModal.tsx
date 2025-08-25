@@ -70,7 +70,7 @@ const SaturdayScaleModal: React.FC<SaturdayScaleModalProps> = ({ isOpen, onClose
                                 <li key={time}>
                                     <div className="px-2 py-1 bg-slate-100 rounded-md font-bold text-slate-700 text-sm mb-2">{time}</div>
                                     <ul className="space-y-1 pl-4">
-                                        {saturdaySchedule.schedule[time].map((patientName, index) => (
+                                        {(saturdaySchedule.schedule as Record<string, string[]>)[time].map((patientName, index) => (
                                             <li key={index} className="text-slate-600 list-disc list-inside">{patientName}</li>
                                         ))}
                                     </ul>

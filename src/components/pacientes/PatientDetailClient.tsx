@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { Patient, SoapNote, TreatmentPlan } from '../../types'; // Assuming types are accessible
 import { User, Stethoscope, Paperclip, History, Plus } from 'lucide-react';
-import InfoCard from '@/components/ui/InfoCard';
+import InfoCard from '../../ui/InfoCard';
 import ClinicalHistoryTimeline from './ClinicalHistoryTimeline';
 import NewSoapNoteModal from './NewSoapNoteModal';
 

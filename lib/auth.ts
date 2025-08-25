@@ -5,7 +5,7 @@ import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
 import { Role } from "@prisma/client"
 
-export const { auth, handlers, signIn, signOut } = NextAuth({
+export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
@@ -54,21 +54,21 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     })
   ],
   session: {
-    strategy: "jwt",
+    strategy: "jwt" as const,
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   jwt: {
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user }: any) {
       if (user) {
         token.role = user.role
         token.avatarUrl = user.avatarUrl
       }
       return token
     },
-    async session({ session, token }) {
+    async session({ session, token }: any) {
       if (token) {
         session.user.id = token.sub!
         session.user.role = token.role as Role
@@ -82,7 +82,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
     error: "/login"
   },
   secret: process.env.NEXTAUTH_SECRET,
-})
+}
+
+export const { auth, handlers, signIn, signOut } = NextAuth(authOptions)
 
 // Helper function to get current user
 export async function getCurrentUser() {

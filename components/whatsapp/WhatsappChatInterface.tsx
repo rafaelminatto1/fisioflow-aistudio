@@ -1,5 +1,6 @@
 // components/whatsapp/WhatsappChatInterface.tsx
 import React, { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 import { Send, Bot } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import * as treatmentService from '../../services/treatmentService';
@@ -96,7 +97,7 @@ const WhatsappChatInterface: React.FC = () => {
                 {/* Header */}
                 <div className="p-3 bg-slate-100 rounded-t-2xl flex items-center border-b">
                     <div className="relative">
-                        <img src="https://i.pravatar.cc/150?u=clinic_logo" alt="FisioFlow" className="w-10 h-10 rounded-full" />
+                        <Image src="https://i.pravatar.cc/150?u=clinic_logo" alt="FisioFlow" width={40} height={40} className="w-10 h-10 rounded-full" />
                          <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-400 ring-2 ring-white"></span>
                     </div>
                     <div className="ml-3">

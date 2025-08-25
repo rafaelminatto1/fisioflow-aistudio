@@ -23,7 +23,7 @@ const MetricEvolutionChart: React.FC<MetricEvolutionChartProps> = ({ metric, not
 
     if (chartData.length < 2) {
         return (
-            <InfoCard title={`Evolução: ${metric.name}`} icon={<LineChartIcon />}>
+            <InfoCard title={`Evolução: ${metric.name}`}>
                 <p className="text-sm text-center text-slate-500 py-8">
                     Dados insuficientes para gerar o gráfico. É necessário registrar esta métrica em pelo menos duas sessões.
                 </p>
@@ -32,7 +32,7 @@ const MetricEvolutionChart: React.FC<MetricEvolutionChartProps> = ({ metric, not
     }
 
     return (
-        <InfoCard title={`Evolução: ${metric.name}`} icon={<LineChartIcon />}>
+        <InfoCard title={`Evolução: ${metric.name}`}>
             <div className="h-64 -ml-4">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>

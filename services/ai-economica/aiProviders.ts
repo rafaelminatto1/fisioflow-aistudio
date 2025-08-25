@@ -8,6 +8,10 @@ export interface ProviderSettings {
     monthlyLimit: number;
     currentUsage: number; 
     hasCredentialsConfigured: boolean;
+    mcpEnabled?: boolean;
+    apiKeyEnvVar?: string;
+    baseUrl?: string;
+    models?: string[];
 }
 
 export const AI_PROVIDERS_CONFIG: Record<string, ProviderSettings> = {
@@ -17,6 +21,10 @@ export const AI_PROVIDERS_CONFIG: Record<string, ProviderSettings> = {
         monthlyLimit: 1000,
         currentUsage: 340,
         hasCredentialsConfigured: true,
+        mcpEnabled: true,
+        apiKeyEnvVar: 'OPENAI_API_KEY',
+        baseUrl: 'https://api.openai.com/v1',
+        models: ['gpt-4', 'gpt-3.5-turbo'],
     },
     [PremiumProvider.GEMINI_PRO]: {
         name: 'Google Gemini Pro',
@@ -24,13 +32,21 @@ export const AI_PROVIDERS_CONFIG: Record<string, ProviderSettings> = {
         monthlyLimit: 1500,
         currentUsage: 850,
         hasCredentialsConfigured: true,
+        mcpEnabled: true,
+        apiKeyEnvVar: 'GEMINI_API_KEY',
+        baseUrl: 'https://generativelanguage.googleapis.com',
+        models: ['gemini-pro', 'gemini-pro-vision'],
     },
     [PremiumProvider.CLAUDE_PRO]: {
         name: 'Claude Pro',
-        enabled: false,
+        enabled: true,
         monthlyLimit: 800,
         currentUsage: 120,
-        hasCredentialsConfigured: false,
+        hasCredentialsConfigured: true,
+        mcpEnabled: true,
+        apiKeyEnvVar: 'ANTHROPIC_API_KEY',
+        baseUrl: 'https://api.anthropic.com',
+        models: ['claude-3-opus', 'claude-3-sonnet', 'claude-3-haiku'],
     },
     [PremiumProvider.PERPLEXITY_PRO]: {
         name: 'Perplexity Pro',

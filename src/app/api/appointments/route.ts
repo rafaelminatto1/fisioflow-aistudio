@@ -17,14 +17,13 @@ export async function GET(request: NextRequest) {
             where: {
                 startTime: { gte: new Date(startDate) },
                 endTime: { lte: new Date(endDate) },
-                deletedAt: null,
             },
             include: {
                 patient: {
-                    select: { name: true, avatarUrl: true, phone: true, medicalAlerts: true }
+                    select: { name: true, phone: true, medicalAlerts: true }
                 },
                 therapist: {
-                    select: { color: true }
+                    select: { name: true }
                 }
             }
         });
@@ -34,10 +33,11 @@ export async function GET(request: NextRequest) {
             ...app,
             // Prisma returns Date objects, no need to parse on server
             patientName: app.patient.name,
-            patientAvatarUrl: app.patient.avatarUrl,
+            patientAvatarUrl: null, // Field doesn't exist in Patient model
             patientPhone: app.patient.phone,
             patientMedicalAlerts: app.patient.medicalAlerts,
-            therapistColor: app.therapist.color,
+            therapistColor: 'teal', // Default color since field doesn't exist in User model
+            therapistName: app.therapist.name,
             typeColor: AppointmentTypeColors[app.type as keyof typeof AppointmentTypeColors] || 'slate',
         }));
 

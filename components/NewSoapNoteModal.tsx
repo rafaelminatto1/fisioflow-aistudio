@@ -55,8 +55,6 @@ const NewSoapNoteModal: React.FC<NewSoapNoteModalProps> = ({ isOpen, onClose, on
   }, [isOpen, noteToDuplicate, showToast]);
 
 
-  if (!isOpen) return null;
-
   // Focus trap for accessibility
   useEffect(() => {
     if (!isOpen) return;
@@ -87,6 +85,8 @@ const NewSoapNoteModal: React.FC<NewSoapNoteModalProps> = ({ isOpen, onClose, on
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [isOpen]);
+
+  if (!isOpen) return null;
 
   const handleSave = async () => {
     setIsSaving(true);

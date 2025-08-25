@@ -1,139 +1,183 @@
-// components/pacientes/PatientForm.tsx
 'use client';
 
 import React, { useState } from 'react';
-import { useForm, SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { patientFormSchema, PatientFormData } from '@/lib/validations/patient';
-import { createPatient } from '@/lib/actions/patient.actions';
-import { usePatientForm } from '@/lib/hooks/use-patient-form';
+import { X } from 'lucide-react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
 
 interface PatientFormProps {
   isOpen: boolean;
   onClose: () => void;
+  patient?: any; // For editing existing patients
 }
 
-const StepIndicator = ({ step, setStep, currentStep }: { step: number, setStep: (s: number) => void, currentStep: number, label: string }) => {
-    const isCompleted = currentStep > step;
-    const isActive = currentStep === step;
-
-    return (
-        <button
-            type="button"
-            onClick={() => isCompleted && setStep(step)}
-            className="flex items-center space-x-2"
-        >
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold transition-colors ${
-                isCompleted ? 'bg-sky-500 text-white' : isActive ? 'bg-sky-100 text-sky-700 border-2 border-sky-500' : 'bg-slate-200 text-slate-500'
-            }`}>
-                {isCompleted ? '✓' : step}
-            </div>
-        </button>
-    )
-}
-
-
-export default function PatientForm({ isOpen, onClose }: PatientFormProps) {
-  const [step, setStep] = useState(1);
+export default function PatientForm({ isOpen, onClose, patient }: PatientFormProps) {
+  const [formData, setFormData] = useState({
+    name: patient?.name || '',
+    cpf: patient?.cpf || '',
+    email: patient?.email || '',
+    phone: patient?.phone || '',
+    birthDate: patient?.birthDate || '',
+    emergencyContactName: patient?.emergencyContact?.name || '',
+    emergencyContactPhone: patient?.emergencyContact?.phone || ''
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const form = useForm<PatientFormData>({
-    resolver: zodResolver(patientFormSchema),
-    defaultValues: {
-      name: '',
-      cpf: '',
-      email: '',
-      consentGiven: false,
-      whatsappConsent: 'opt-out',
-    },
-  });
-  
-  const { isCepLoading } = usePatientForm(form);
-  
-  const onSubmit: SubmitHandler<PatientFormData> = async (data) => {
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     setIsSubmitting(true);
+    
     try {
-        await createPatient(data);
-        alert('Paciente criado com sucesso!'); // Em um app real, usaríamos um toast
-        onClose();
-        form.reset();
-        setStep(1);
+      // TODO: Implement API call to save patient
+      // Saving patient
+      
+      // Reset form and close modal
+      setFormData({
+        name: '',
+        cpf: '',
+        email: '',
+        phone: '',
+        birthDate: '',
+        emergencyContactName: '',
+        emergencyContactPhone: ''
+      });
+      onClose();
     } catch (error) {
-        console.error(error);
-        alert('Erro ao criar paciente.'); // Tratar erro
+      console.error('Error saving patient:', error);
     } finally {
-        setIsSubmitting(false);
+      setIsSubmitting(false);
     }
   };
 
-  const nextStep = () => setStep(s => Math.min(s + 1, 3));
-  const prevStep = () => setStep(s => Math.max(s - 1, 1));
-  
+  const handleChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
-        <header className="p-4 border-b">
-          <h2 className="text-lg font-bold">Novo Paciente</h2>
-        </header>
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
+      
+      <div className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b">
+          <h2 className="text-xl font-semibold text-gray-900">
+            {patient ? 'Editar Paciente' : 'Novo Paciente'}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+        </div>
         
-        <form onSubmit={form.handleSubmit(onSubmit)} className="flex-1 overflow-y-auto">
-            <div className="p-6">
-                <div className="flex justify-around items-center mb-6">
-                    <StepIndicator step={1} currentStep={step} setStep={setStep} label="Pessoal"/>
-                    <div className="flex-1 h-px bg-slate-200 mx-4"></div>
-                    <StepIndicator step={2} currentStep={step} setStep={setStep} label="Médico"/>
-                    <div className="flex-1 h-px bg-slate-200 mx-4"></div>
-                    <StepIndicator step={3} currentStep={step} setStep={setStep} label="Consentimento"/>
-                </div>
-
-                <div className="space-y-4">
-                    {step === 1 && (
-                        <div>
-                            <h3>Dados Pessoais e Endereço</h3>
-                             <input {...form.register('name')} placeholder="Nome Completo*" />
-                             {form.formState.errors.name && <p>{form.formState.errors.name.message}</p>}
-                             <input {...form.register('cpf')} placeholder="CPF*" />
-                             {form.formState.errors.cpf && <p>{form.formState.errors.cpf.message}</p>}
-                             <input {...form.register('addressZip')} placeholder="CEP" />
-                             {isCepLoading && <p>Buscando CEP...</p>}
-                             <input {...form.register('addressStreet')} placeholder="Rua" />
-                             {/* Outros campos de endereço e contato */}
-                        </div>
-                    )}
-                    {step === 2 && (
-                        <div>
-                             <h3>Dados Médicos</h3>
-                             <input {...form.register('emergencyContactName')} placeholder="Contato de Emergência" />
-                             <textarea {...form.register('medicalAlerts')} placeholder="Alertas Médicos" />
-                             <textarea {...form.register('allergies')} placeholder="Alergias" />
-                        </div>
-                    )}
-                    {step === 3 && (
-                        <div>
-                             <h3>Consentimento</h3>
-                             <label>
-                                 <input type="checkbox" {...form.register('consentGiven')} />
-                                 Eu confirmo que o paciente deu consentimento (LGPD)*.
-                             </label>
-                             {form.formState.errors.consentGiven && <p>{form.formState.errors.consentGiven.message}</p>}
-                             {/* Radio para whatsappConsent */}
-                        </div>
-                    )}
-                </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome Completo *</Label>
+              <Input
+                id="name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                required
+                placeholder="Digite o nome completo"
+              />
             </div>
             
-            <footer className="p-4 border-t bg-slate-50 flex justify-between">
-              <div>
-                {step > 1 && <button type="button" onClick={prevStep}>Anterior</button>}
+            <div className="space-y-2">
+              <Label htmlFor="cpf">CPF *</Label>
+              <Input
+                id="cpf"
+                type="text"
+                value={formData.cpf}
+                onChange={(e) => handleChange('cpf', e.target.value)}
+                required
+                placeholder="000.000.000-00"
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                placeholder="email@exemplo.com"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="phone">Telefone</Label>
+              <Input
+                id="phone"
+                type="tel"
+                value={formData.phone}
+                onChange={(e) => handleChange('phone', e.target.value)}
+                placeholder="(11) 99999-9999"
+              />
+            </div>
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="birthDate">Data de Nascimento</Label>
+            <Input
+              id="birthDate"
+              type="date"
+              value={formData.birthDate}
+              onChange={(e) => handleChange('birthDate', e.target.value)}
+            />
+          </div>
+          
+          <div className="border-t pt-6">
+            <h3 className="text-lg font-medium text-gray-900 mb-4">Contato de Emergência</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactName">Nome</Label>
+                <Input
+                  id="emergencyContactName"
+                  type="text"
+                  value={formData.emergencyContactName}
+                  onChange={(e) => handleChange('emergencyContactName', e.target.value)}
+                  placeholder="Nome do contato de emergência"
+                />
               </div>
-              <div>
-                <button type="button" onClick={onClose} className="mr-2">Cancelar</button>
-                {step < 3 && <button type="button" onClick={nextStep}>Próximo</button>}
-                {step === 3 && <button type="submit" disabled={isSubmitting}>{isSubmitting ? 'Salvando...' : 'Salvar Paciente'}</button>}
+              
+              <div className="space-y-2">
+                <Label htmlFor="emergencyContactPhone">Telefone</Label>
+                <Input
+                  id="emergencyContactPhone"
+                  type="tel"
+                  value={formData.emergencyContactPhone}
+                  onChange={(e) => handleChange('emergencyContactPhone', e.target.value)}
+                  placeholder="(11) 99999-9999"
+                />
               </div>
-            </footer>
+            </div>
+          </div>
+          
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Salvando...' : (patient ? 'Atualizar' : 'Criar Paciente')}
+            </Button>
+          </div>
         </form>
       </div>
     </div>

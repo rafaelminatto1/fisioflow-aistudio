@@ -1,0 +1,185 @@
+name: Neon DB Branch Cleanup
+
+on:
+  pull_request:
+    types: [closed]
+  schedule:
+    # Run cleanup daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    inputs:
+      force_cleanup:
+        description: 'Force cleanup of all old branches'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
+  NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
+
+jobs:
+  cleanup-pr-branch:
+    name: Cleanup PR Branch
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    
+    steps:
+      - name: Delete Neon branch for closed PR
+        run: |
+          echo "🗑️ Cleaning up Neon branch for closed PR..."
+          
+          BRANCH_NAME="${{ github.head_ref }}"
+          
+          # Get all branches
+          BRANCHES=$(curl -s \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}")
+          
+          # Find branch ID by name
+          BRANCH_ID=$(echo "$BRANCHES" | jq -r ".branches[] | select(.name == \"$BRANCH_NAME\") | .id")
+          
+          if [ "$BRANCH_ID" != "null" ] && [ -n "$BRANCH_ID" ]; then
+            echo "Found branch to delete: $BRANCH_ID"
+            
+            # Delete the branch
+            DELETE_RESPONSE=$(curl -s -X DELETE \
+              "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches/$BRANCH_ID" \
+              -H "Authorization: Bearer ${{ env.NEON_API_KEY }}")
+            
+            echo "✅ Neon branch deleted: $BRANCH_NAME ($BRANCH_ID)"
+          else
+            echo "ℹ️ No Neon branch found for: $BRANCH_NAME"
+          fi
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+
+  cleanup-old-branches:
+    name: Cleanup Old Branches
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.force_cleanup == 'true')
+    
+    steps:
+      - name: Cleanup old Neon branches
+        run: |
+          echo "🧹 Cleaning up old Neon branches..."
+          
+          # Get all branches
+          BRANCHES=$(curl -s \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}")
+          
+          # Current timestamp
+          CURRENT_TIME=$(date +%s)
+          
+          # 7 days ago (604800 seconds)
+          CUTOFF_TIME=$((CURRENT_TIME - 604800))
+          
+          echo "Checking branches older than $(date -d @$CUTOFF_TIME)"
+          
+          # Process each branch
+          echo "$BRANCHES" | jq -r '.branches[] | select(.name != "main" and .name != "master") | "\(.id) \(.name) \(.created_at)"' | while read -r branch_id branch_name created_at; do
+            # Convert created_at to timestamp
+            BRANCH_TIME=$(date -d "$created_at" +%s 2>/dev/null || echo "0")
+            
+            if [ "$BRANCH_TIME" -lt "$CUTOFF_TIME" ] && [ "$BRANCH_TIME" -gt "0" ]; then
+              echo "🗑️ Deleting old branch: $branch_name (created: $created_at)"
+              
+              # Delete the branch
+              curl -s -X DELETE \
+                "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches/$branch_id" \
+                -H "Authorization: Bearer ${{ env.NEON_API_KEY }}"
+              
+              echo "✅ Deleted: $branch_name"
+            else
+              echo "ℹ️ Keeping recent branch: $branch_name"
+            fi
+          done
+          
+          echo "✅ Cleanup completed"
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+
+  cleanup-backup-branches:
+    name: Cleanup Backup Branches
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.force_cleanup == 'true')
+    
+    steps:
+      - name: Cleanup old backup branches
+        run: |
+          echo "🗂️ Cleaning up old backup branches..."
+          
+          # Get all branches
+          BRANCHES=$(curl -s \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}")
+          
+          # Current timestamp
+          CURRENT_TIME=$(date +%s)
+          
+          # 30 days ago for backups (2592000 seconds)
+          BACKUP_CUTOFF_TIME=$((CURRENT_TIME - 2592000))
+          
+          echo "Checking backup branches older than $(date -d @$BACKUP_CUTOFF_TIME)"
+          
+          # Process backup branches
+          echo "$BRANCHES" | jq -r '.branches[] | select(.name | startswith("backup-")) | "\(.id) \(.name) \(.created_at)"' | while read -r branch_id branch_name created_at; do
+            # Convert created_at to timestamp
+            BRANCH_TIME=$(date -d "$created_at" +%s 2>/dev/null || echo "0")
+            
+            if [ "$BRANCH_TIME" -lt "$BACKUP_CUTOFF_TIME" ] && [ "$BRANCH_TIME" -gt "0" ]; then
+              echo "🗑️ Deleting old backup: $branch_name (created: $created_at)"
+              
+              # Delete the backup branch
+              curl -s -X DELETE \
+                "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches/$branch_id" \
+                -H "Authorization: Bearer ${{ env.NEON_API_KEY }}"
+              
+              echo "✅ Deleted backup: $branch_name"
+            else
+              echo "ℹ️ Keeping recent backup: $branch_name"
+            fi
+          done
+          
+          echo "✅ Backup cleanup completed"
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+
+  report-cleanup:
+    name: Report Cleanup Results
+    runs-on: ubuntu-latest
+    needs: [cleanup-old-branches, cleanup-backup-branches]
+    if: always() && (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
+    
+    steps:
+      - name: Generate cleanup report
+        run: |
+          echo "📊 Generating Neon DB cleanup report..."
+          
+          # Get current branch count
+          BRANCHES=$(curl -s \
+            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches" \
+            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}")
+          
+          TOTAL_BRANCHES=$(echo "$BRANCHES" | jq '.branches | length')
+          BACKUP_BRANCHES=$(echo "$BRANCHES" | jq '.branches | map(select(.name | startswith("backup-"))) | length')
+          FEATURE_BRANCHES=$(echo "$BRANCHES" | jq '.branches | map(select(.name != "main" and (.name | startswith("backup-") | not))) | length')
+          
+          echo "📈 Neon DB Branch Summary:"
+          echo "  Total branches: $TOTAL_BRANCHES"
+          echo "  Feature branches: $FEATURE_BRANCHES"
+          echo "  Backup branches: $BACKUP_BRANCHES"
+          
+          # Check if cleanup was successful
+          if [ "${{ needs.cleanup-old-branches.result }}" = "success" ] && [ "${{ needs.cleanup-backup-branches.result }}" = "success" ]; then
+            echo "✅ Cleanup completed successfully"
+          else
+            echo "⚠️ Some cleanup jobs failed"
+          fi
+        env:
+          NEON_API_KEY: ${{ env.NEON_API_KEY }}
+          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}

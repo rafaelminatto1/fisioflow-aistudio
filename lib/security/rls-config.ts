@@ -279,7 +279,7 @@ export class RLSSecurityManager {
       }
 
       // Admin has access to everything
-      if (user.role === 'ADMIN') {
+  if (user.role === 'Admin') {
         return true;
       }
 
@@ -427,7 +427,7 @@ export const securityUtils = {
   /**
    * Check if user has admin role
    */
-  isAdmin: (role: string): boolean => role === 'ADMIN',
+  isAdmin: (role: string): boolean => role === 'Admin',
 
   /**
    * Check if user has physiotherapist role

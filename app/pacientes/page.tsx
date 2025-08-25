@@ -1,7 +1,7 @@
 // app/pacientes/page.tsx
-import prisma from '@/lib/prisma';
-import PatientList from '@/components/pacientes/PatientList';
-import PageHeader from '@/components/ui/PageHeader'; // Supondo que o PageHeader foi movido para ui
+import prisma from '../../lib/prisma';
+import PatientList from '../../components/pacientes/PatientList';
+import PageHeader from '../../components/ui/PageHeader';
 
 type PacientesPageProps = {
   searchParams: {
@@ -37,17 +37,32 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
       name: true,
       cpf: true,
       phone: true,
+      email: true,
       status: true,
-      avatarUrl: true,
+      lastVisit: true,
+      medicalAlerts: true,
       // lastAppointment: true // Adicionar este campo no schema e na query se necessário
     },
     orderBy: { createdAt: 'desc' },
   });
   
+  // Transform to PatientSummary format
+  const transformedPatients = initialPatients.map(patient => ({
+    id: patient.id,
+    name: patient.name,
+    email: patient.email || '',
+    phone: patient.phone || '',
+    status: patient.status as 'Active' | 'Inactive' | 'Discharged',
+    lastVisit: patient.lastVisit?.toISOString().split('T')[0] || '',
+    avatarUrl: '', // Default empty since not in Prisma model
+    medicalAlerts: patient.medicalAlerts || undefined,
+    cpf: patient.cpf,
+  }));
+  
   const nextCursor = initialPatients.length === take ? initialPatients[initialPatients.length - 1].id : null;
   
   const initialData = {
-      items: initialPatients,
+      items: transformedPatients,
       nextCursor,
   }
 
@@ -55,7 +70,7 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
     <>
       <PageHeader
         title="Gestão de Pacientes"
-        subtitle="Adicione, visualize e gerencie as informações dos seus pacientes."
+        description="Adicione, visualize e gerencie as informações dos seus pacientes."
       />
       {/* O componente cliente gerencia a interatividade */}
       <PatientList initialData={initialData} />

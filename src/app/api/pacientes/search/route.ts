@@ -17,13 +17,11 @@ export async function GET(request: NextRequest) {
           { name: { contains: term, mode: 'insensitive' } },
           { cpf: { contains: term } },
         ],
-        deletedAt: null,
       },
       select: {
         id: true,
         name: true,
         cpf: true,
-        avatarUrl: true,
         phone: true,
         email: true,
         status: true,

@@ -1,0 +1,102 @@
+[build]
+builder = "NIXPACKS"
+command = "npm run build"
+watchPatterns = [
+  "**/*.ts",
+  "**/*.tsx", 
+  "**/*.js",
+  "**/*.jsx",
+  "package.json",
+  "prisma/schema.prisma"
+]
+
+[deploy]
+command = "npm start"
+healthcheckPath = "/api/health"
+healthcheckTimeout = 120
+healthcheckInterval = 30
+healthcheckRetries = 5
+healthcheckDelay = 10
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+numReplicas = 1
+gracefulShutdownTimeout = 30
+
+# Neon DB specific configurations
+[deploy.env]
+NEON_POOLED_CONNECTION = "true"
+NEON_CONNECTION_TIMEOUT = "30000"
+NEON_IDLE_TIMEOUT = "600000"
+NEON_MAX_CONNECTIONS = "20"
+NEON_MIN_CONNECTIONS = "2"
+
+# Configurações de recursos otimizadas para Neon DB
+[resources]
+cpu = 1000  # 1 vCPU
+memory = 1024  # 1GB RAM
+disk = 2048  # 2GB disk
+networkBandwidth = 100  # 100 Mbps
+
+# Auto-scaling configuration
+[scaling]
+minReplicas = 1
+maxReplicas = 5
+targetCPUUtilization = 70
+targetMemoryUtilization = 80
+scaleUpCooldown = 300  # 5 minutes
+scaleDownCooldown = 600  # 10 minutes
+
+# Neon DB monitoring
+[monitoring]
+metricsPath = "/api/neon/metrics"
+logsRetention = "7d"
+healthCheckEnabled = true
+neonMonitoringEnabled = true
+structuredLogging = true
+logFormat = "json"
+metricsEnabled = true
+traceEnabled = true
+
+# Security configurations
+[security]
+httpOnly = true
+secure = true
+sameSite = "strict"
+corsEnabled = true
+rateLimitEnabled = true
+csrfProtection = true
+helmetsEnabled = true
+
+# Cron jobs para automação
+[[cron]]
+schedule = "0 2 * * *"  # Daily at 2 AM
+command = "node scripts/backup.js"
+description = "Daily Neon DB backup"
+
+[[cron]]
+schedule = "*/15 * * * *"  # Every 15 minutes
+command = "node scripts/neon-autoscaling.js --check"
+description = "Neon DB auto-scaling check"
+
+[[cron]]
+schedule = "0 */6 * * *"  # Every 6 hours
+command = "node scripts/health-check.js"
+description = "Comprehensive health check"
+
+# Variáveis de ambiente específicas do Railway
+[env]
+NODE_ENV = "production"
+PORT = "3000"
+HEALTH_CHECK_ENABLED = "true"
+LOG_LEVEL = "info"
+DATABASE_POOL_SIZE = "20"
+DATABASE_TIMEOUT = "30000"
+SESSION_TIMEOUT = "86400"
+RATE_LIMIT_ENABLED = "true"
+CORS_ENABLED = "true"
+GRACEFUL_SHUTDOWN_TIMEOUT = "30000"
+STRUCTURED_LOGGING = "true"
+METRICS_ENABLED = "true"
+TRACE_ENABLED = "true"
+BACKUP_ENABLED = "true"
+AUTO_SCALING_ENABLED = "true"

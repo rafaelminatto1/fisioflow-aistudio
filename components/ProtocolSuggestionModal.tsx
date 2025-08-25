@@ -82,7 +82,7 @@ const ProtocolSuggestionModal: React.FC<ProtocolSuggestionModalProps> = ({ isOpe
 
     const renderSuggestions = () => (
         <>
-            <p className="text-sm text-slate-600 mb-4">Com base no diagnóstico <strong className="text-slate-800">"{patient.conditions?.[0]?.name}"</strong>, sugerimos os seguintes protocolos:</p>
+            <p className="text-sm text-slate-600 mb-4">Com base no diagnóstico <strong className="text-slate-800">&ldquo;{patient.conditions?.[0]?.name}&rdquo;</strong>, sugerimos os seguintes protocolos:</p>
             {isLoading ? (
                 <div className="space-y-2"><Skeleton className="h-12 w-full" /><Skeleton className="h-12 w-full" /></div>
             ) : suggestions.length > 0 ? (
