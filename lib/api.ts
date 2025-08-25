@@ -1,12 +1,25 @@
 // lib/api.ts
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
+import winston from 'winston';
+
+// Configure Winston logger
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.Console(),
+  ],
+});
 
 // --- Instância Axios Configurada ---
 const api = axios.create({
   // Em um app Next.js, isso viria de process.env.NEXT_PUBLIC_API_URL
   // Para este projeto, vamos usar o valor de desenvolvimento padrão.
-  baseURL: 'http://localhost:5000', 
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000', 
   withCredentials: true, // Essencial para CORS com credenciais
   headers: {
     'Content-Type': 'application/json',
@@ -45,7 +58,7 @@ api.interceptors.response.use(
       // Calcula o tempo de espera (ex: 200ms, 400ms, 800ms)
       const delay = Math.pow(2, config.retries) * INITIAL_DELAY_MS;
       
-      console.warn(`[API Retry] Tentativa ${config.retries}/${MAX_RETRIES}. Tentando novamente em ${delay}ms...`);
+      logger.warn(`[API Retry] Tentativa ${config.retries}/${MAX_RETRIES}. Tentando novamente em ${delay}ms...`);
       
       // Espera o tempo calculado antes de tentar novamente
       await new Promise(resolve => setTimeout(resolve, delay));
@@ -94,7 +107,7 @@ export const checkApiHealth = async (): Promise<{ status: string, service: strin
     const response = await api.get('/health');
     return response.data;
   } catch (error: any) {
-    console.error('[API Health Check] Falhou:', error.message || error);
+    logger.error('[API Health Check] Falhou:', error.message || error);
     return { status: 'error', service: 'mentoria-api' };
   }
 };
@@ -108,7 +121,7 @@ export const getMentoriaSessions = async (): Promise<Session[]> => {
     return response.data;
   } catch (error: any) {
     // O erro já foi padronizado pelo interceptor
-    console.error('Erro ao buscar sessões:', error.message || error);
+    logger.error('Erro ao buscar sessões:', error.message || error);
     throw error; // Re-lança para o componente/página tratar
   }
 };

@@ -527,7 +527,7 @@ export function RLSSecurityDashboard() {
                 </TableHeader>
                 <TableBody>
                   {policies.map((policy, index) => (
-                    <TableRow key={index}>
+                    <TableRow key={policy.schemaname + policy.tablename + policy.policyname}>
                       <TableCell className="font-medium">{policy.tablename}</TableCell>
                       <TableCell>{policy.policyname}</TableCell>
                       <TableCell>
@@ -689,7 +689,7 @@ export function RLSSecurityDashboard() {
                 </TableHeader>
                 <TableBody>
                   {accessStats.map((stat, index) => (
-                    <TableRow key={index}>
+                    <TableRow key={stat.user_role + stat.table_name + stat.operation + stat.last_access}>
                       <TableCell>
                         <Badge variant="outline">{stat.user_role}</Badge>
                       </TableCell>

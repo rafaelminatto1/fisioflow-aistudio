@@ -2,7 +2,7 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import prisma from '@/lib/prisma';
+import cachedPrisma from '@/lib/prisma';
 import { patientFormSchema, PatientFormData } from '../validations/patient';
 
 /**
@@ -22,7 +22,7 @@ export async function createPatient(data: PatientFormData) {
 
   // 2. Lógica de negócio (criação no DB)
   try {
-    await prisma.patient.create({
+    await cachedPrisma.client.patient.create({
       data: {
         ...patientData,
         birthDate: patientData.birthDate ? new Date(patientData.birthDate) : null,
@@ -56,7 +56,7 @@ export async function updatePatient(id: string, data: PatientFormData) {
   const { ...patientData } = validationResult.data;
   
   try {
-    await prisma.patient.update({
+    await cachedPrisma.client.patient.update({
       where: { id },
       data: {
         ...patientData,

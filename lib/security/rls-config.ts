@@ -417,6 +417,30 @@ export class RLSSecurityManager {
       return false;
     }
   }
+
+  /**
+   * Clear old audit logs (retention policy)
+   */
+  async clearOldAuditLogs(days: number): Promise<number> {
+    try {
+      const result = await this.prisma.$executeRaw`
+        DELETE FROM "SecurityAuditLog" 
+        WHERE "createdAt" < NOW() - INTERVAL '${days} days';
+      `;
+      
+      await this.logSecurityEvent(
+        'AUDIT_LOG_CLEANUP',
+        'SecurityAuditLog',
+        undefined,
+        { daysRetention: days, deletedRecords: result }
+      );
+      
+      return Number(result);
+    } catch (error) {
+      console.error('Error clearing old audit logs:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton instance

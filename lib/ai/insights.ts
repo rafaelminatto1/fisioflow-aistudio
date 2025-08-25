@@ -2,7 +2,7 @@
 import { structuredLogger } from '../monitoring/logger';
 import { trackExternalAPICall } from '../middleware/performance';
 import { BusinessMetrics } from '../monitoring/metrics';
-import { prisma } from '../prisma';
+import cachedPrisma from '../prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { withCache } from '../prisma-performance';
 import type { Patient, Appointment, PainPoint } from '@prisma/client';
@@ -93,7 +93,7 @@ export interface ClinicInsights {
 }
 
 export class AIInsightsService {
-  private genAI: GoogleGenerativeAI;
+  private genAI!: GoogleGenerativeAI;
   private model: any;
 
   constructor() {
@@ -195,7 +195,7 @@ export class AIInsightsService {
   }
 
   private async gatherPatientData(patientId: string) {
-    const patient = await prisma.patient.findUnique({
+    const patient = await cachedPrisma.client.patient.findUnique({
       where: { id: patientId },
       include: {
         appointments: {
@@ -227,7 +227,7 @@ export class AIInsightsService {
 
   private async gatherClinicData(therapistId: string) {
     const [patients, appointments, painPoints] = await Promise.all([
-      prisma.patient.findMany({
+      cachedPrisma.client.patient.findMany({
         where: {
           appointments: {
             some: {
@@ -244,7 +244,7 @@ export class AIInsightsService {
           metricResults: true
         }
       }),
-      prisma.appointment.findMany({
+      cachedPrisma.client.appointment.findMany({
         where: {
           therapistId,
           startTime: {
@@ -257,7 +257,7 @@ export class AIInsightsService {
           }
         }
       }),
-      prisma.painPoint.findMany({
+      cachedPrisma.client.painPoint.findMany({
         where: {
           patient: {
             appointments: {
@@ -599,7 +599,7 @@ Seja estratégico e orientado por dados.
   private async storePatientInsights(patientId: string, insights: PatientInsight): Promise<void> {
     try {
       // Store in database for historical tracking
-      await prisma.$executeRaw`
+      await cachedPrisma.client.$executeRaw`
         INSERT INTO "PatientInsights" ("patientId", "riskLevel", "insights", "generatedAt")
         VALUES (${patientId}, ${insights.riskLevel}, ${JSON.stringify(insights.insights)}::jsonb, ${insights.generatedAt})
         ON CONFLICT ("patientId") 

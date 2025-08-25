@@ -1,5 +1,5 @@
 // app/pacientes/[id]/page.tsx
-import prisma from '../../../lib/prisma';
+import cachedPrisma from '../../../lib/prisma';
 import { notFound } from 'next/navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import PatientDetailClient from '../../../components/pacientes/PatientDetailClient';
@@ -13,7 +13,7 @@ type PatientDetailPageProps = {
 export default async function PatientDetailPage({ params }: PatientDetailPageProps) {
   const { id } = params;
 
-  const patient = await prisma.patient.findUnique({
+  const patient = await cachedPrisma.client.patient.findUnique({
     where: { id },
   });
   

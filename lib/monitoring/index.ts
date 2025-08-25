@@ -1,4 +1,4 @@
-import { neonConfig, neonApi } from '../neon-config';
+import { neonConfig, checkNeonHealth, getNeonMetrics } from '../neon-config';
 import { logger } from '../logger';
 
 export interface MonitoringMetrics {
@@ -58,45 +58,40 @@ export class NeonMonitoring {
 
   async collectMetrics(): Promise<MonitoringMetrics> {
     try {
-      const [projectInfo, endpoints, databases] = await Promise.all([
-        neonApi.getProject(),
-        neonApi.getEndpoints(),
-        neonApi.getDatabases()
+      const [healthCheck, neonMetrics] = await Promise.all([
+        checkNeonHealth(),
+        getNeonMetrics()
       ]);
-
-      const healthCheck = await neonConfig.checkHealth();
       
       const metrics: MonitoringMetrics = {
         timestamp: new Date(),
         database: {
           connections: {
-            active: healthCheck.connections?.active || 0,
-            idle: healthCheck.connections?.idle || 0,
-            total: healthCheck.connections?.total || 0
+            active: Number(neonMetrics.connectionStats?.active_connections) || 0,
+            idle: Number(neonMetrics.connectionStats?.idle_connections) || 0,
+            total: Number(neonMetrics.connectionStats?.total_connections) || 0
           },
           performance: {
-            avgQueryTime: healthCheck.performance?.avgQueryTime || 0,
-            slowQueries: healthCheck.performance?.slowQueries || 0,
-            errorRate: healthCheck.performance?.errorRate || 0
+            avgQueryTime: healthCheck.latency || 0,
+            slowQueries: 0, // Not available from current metrics
+            errorRate: healthCheck.status === 'unhealthy' ? 100 : 0
           },
           storage: {
-            used: projectInfo.data?.storage_used || 0,
-            available: projectInfo.data?.storage_limit || 0,
-            percentage: projectInfo.data?.storage_used && projectInfo.data?.storage_limit 
-              ? (projectInfo.data.storage_used / projectInfo.data.storage_limit) * 100 
-              : 0
+            used: 0, // Not available from current metrics
+            available: 0, // Not available from current metrics
+            percentage: 0 // Not available from current metrics
           }
         },
         compute: {
-          cpu: endpoints.data?.[0]?.compute_units || 0,
-          memory: endpoints.data?.[0]?.memory_mb || 0,
-          status: endpoints.data?.[0]?.current_state || 'idle',
-          autoscaling: endpoints.data?.[0]?.autoscaling_limit_max_cu ? true : false
+          cpu: 0, // Not available from current metrics
+          memory: 0, // Not available from current metrics
+          status: healthCheck.status === 'healthy' ? 'active' : 'idle',
+          autoscaling: false // Not available from current metrics
         },
         api: {
-          responseTime: healthCheck.responseTime || 0,
-          errorRate: healthCheck.errorRate || 0,
-          requestsPerMinute: healthCheck.requestsPerMinute || 0
+          responseTime: healthCheck.latency || 0,
+          errorRate: healthCheck.status === 'unhealthy' ? 100 : 0,
+          requestsPerMinute: 0 // Not available from current metrics
         }
       };
 

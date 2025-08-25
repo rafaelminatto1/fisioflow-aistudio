@@ -165,7 +165,7 @@ const ExerciseFormModal: React.FC<ExerciseFormModalProps> = ({ isOpen, onClose, 
                     <div>
                         <label className="text-sm font-medium text-slate-700">Instruções*</label>
                         {formData.instructions.map((inst, index) => (
-                            <div key={index} className="flex items-center gap-2 mt-1">
+                            <div key={inst + index} className="flex items-center gap-2 mt-1">
                                 <span className="text-slate-500 font-semibold">{index + 1}.</span>
                                 <input type="text" value={inst} onChange={e => handleInstructionChange(index, e.target.value)} className="w-full p-2 border border-slate-300 rounded-lg"/>
                                 <button onClick={() => removeInstruction(index)} disabled={formData.instructions.length <= 1} className="p-2 text-red-500 hover:bg-red-50 rounded-full disabled:opacity-50"><Trash2 className="w-4 h-4"/></button>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
+import cachedPrisma from '@/lib/prisma';
 import { aiInsightsService } from '@/lib/ai/insights';
 import { withPerformanceMonitoring } from '@/lib/prisma-performance';
 import { structuredLogger } from '@/lib/monitoring/logger';
@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
 async function getOverviewMetrics(userId: string, startDate: Date) {
   const [totalPatients, activePatients, completedAppointments, totalAppointments, previousMonthData] = await Promise.all([
     // Total patients for this therapist
-    prisma.patient.count({
+    cachedPrisma.client.patient.count({
       where: {
         appointments: {
           some: {
@@ -81,7 +81,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Active patients
-    prisma.patient.count({
+    cachedPrisma.client.patient.count({
       where: {
         status: 'Active',
         appointments: {
@@ -93,7 +93,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Completed appointments in range
-    prisma.appointment.count({
+    cachedPrisma.client.appointment.count({
       where: {
         therapistId: userId,
         status: 'Realizado' as any,
@@ -102,7 +102,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Total appointments in range
-    prisma.appointment.count({
+    cachedPrisma.client.appointment.count({
       where: {
         therapistId: userId,
         startTime: { gte: startDate }
@@ -110,7 +110,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Previous month for growth calculation
-    prisma.patient.count({
+    cachedPrisma.client.patient.count({
       where: {
         appointments: {
           some: {
@@ -126,7 +126,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
   ]);
 
   // Calculate sessions per patient
-  const sessionsData = await prisma.appointment.groupBy({
+  const sessionsData = await cachedPrisma.client.appointment.groupBy({
     by: ['patientId'],
     where: {
       therapistId: userId,
@@ -138,7 +138,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
   });
 
   const avgSessionsPerPatient = sessionsData.length > 0
-    ? sessionsData.reduce((sum, item) => sum + item._count.id, 0) / sessionsData.length
+    ? sessionsData.reduce((sum: number, item: any) => sum + item._count.id, 0) / sessionsData.length
     : 0;
 
   const completionRate = totalAppointments > 0 ? Math.round((completedAppointments / totalAppointments) * 100) : 0;
@@ -154,7 +154,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
 }
 
 async function getPatientInsights(userId: string) {
-  const patients = await prisma.patient.findMany({
+  const patients = await cachedPrisma.client.patient.findMany({
     where: {
       appointments: {
         some: {
@@ -177,9 +177,9 @@ async function getPatientInsights(userId: string) {
   });
 
   const patientInsights = await Promise.all(
-    patients.map(async (patient) => {
+    patients.map(async (patient: any) => {
       // Calculate recovery progress based on appointments and pain trends
-      const completedAppointments = patient.appointments.filter(apt => apt.status === 'Realizado').length;
+      const completedAppointments = patient.appointments.filter((apt: any) => apt.status === 'Realizado').length;
       const totalAppointments = patient.appointments.length;
       const attendanceRate = totalAppointments > 0 ? Math.round((completedAppointments / totalAppointments) * 100) : 0;
 
@@ -206,15 +206,15 @@ async function getPatientInsights(userId: string) {
     })
   );
 
-  return patientInsights.sort((a, b) => {
+  return patientInsights.sort((a: any, b: any) => {
     const riskOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    return riskOrder[a.riskLevel] - riskOrder[b.riskLevel];
+    return riskOrder[a.riskLevel as keyof typeof riskOrder] - riskOrder[b.riskLevel as keyof typeof riskOrder];
   });
 }
 
 async function getPerformanceMetrics(userId: string, startDate: Date) {
   // Weekly appointments data
-  const weeklyAppointments = await prisma.$queryRaw<any[]>`
+  const weeklyAppointments = await cachedPrisma.client.$queryRaw<any[]>`
     SELECT 
       DATE_TRUNC('week', "startTime") as week,
       COUNT(*) as appointments,
@@ -228,7 +228,7 @@ async function getPerformanceMetrics(userId: string, startDate: Date) {
   `;
 
   // Treatment success by type
-  const treatmentSuccess = await prisma.$queryRaw<any[]>`
+  const treatmentSuccess = await cachedPrisma.client.$queryRaw<any[]>`
     SELECT 
       type as "treatmentType",
       COUNT(*) as "patientCount",
@@ -245,13 +245,13 @@ async function getPerformanceMetrics(userId: string, startDate: Date) {
   const painReductionTrends = generatePainReductionTrends(startDate);
 
   return {
-    weeklyAppointments: weeklyAppointments.map(row => ({
+    weeklyAppointments: weeklyAppointments.map((row: any) => ({
       week: new Date(row.week).toLocaleDateString('pt-BR'),
       appointments: Number(row.appointments),
       completed: Number(row.completed),
       noShow: Number(row.noShow)
     })),
-    treatmentSuccess: treatmentSuccess.map(row => ({
+    treatmentSuccess: treatmentSuccess.map((row: any) => ({
       treatmentType: row.treatmentType,
       successRate: Math.round(Number(row.successRate)),
       avgDuration: Math.round(Number(row.avgDuration) || 0),
@@ -265,7 +265,7 @@ async function getIntelligentAlerts(userId: string) {
   const alerts = [];
 
   // Find patients with declining attendance
-  const irregularPatients = await prisma.$queryRaw<any[]>`
+  const irregularPatients = await cachedPrisma.client.$queryRaw<any[]>`
     SELECT 
       p.id,
       p.name,
@@ -280,7 +280,7 @@ async function getIntelligentAlerts(userId: string) {
     ORDER BY missed_appointments DESC;
   `;
 
-  irregularPatients.forEach(patient => {
+  irregularPatients.forEach((patient: any) => {
     alerts.push({
       type: 'patient_risk' as const,
       severity: 'high' as const,
@@ -292,7 +292,7 @@ async function getIntelligentAlerts(userId: string) {
   });
 
   // Check for capacity warnings
-  const todayAppointments = await prisma.appointment.count({
+  const todayAppointments = await cachedPrisma.client.appointment.count({
     where: {
       therapistId: userId,
       startTime: {

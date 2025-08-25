@@ -1,5 +1,5 @@
 import { Pool, neonConfig as neonConfigImport } from '@neondatabase/serverless';
-import { PrismaNeon } from '@prisma/adapter-neon';
+// import { PrismaNeon } from '@prisma/adapter-neon'; // Temporarily disabled due to version incompatibility
 import { PrismaClient } from '@prisma/client';
 import ws from 'ws';
 
@@ -11,23 +11,25 @@ neonConfigImport.pipelineConnect = false;
 // Export neonConfig for use in other modules
 export const neonConfig = neonConfigImport;
 
-// Connection pool configuration
+// Connection string for Neon
 const connectionString = process.env.DATABASE_URL!;
+
+// Connection pool configuration
 const pool = new Pool({ 
   connectionString,
   max: parseInt(process.env.DATABASE_POOL_SIZE || '20'),
   idleTimeoutMillis: parseInt(process.env.DATABASE_POOL_IDLE_TIMEOUT || '600000'),
   connectionTimeoutMillis: parseInt(process.env.DATABASE_POOL_TIMEOUT || '30000'),
-  statementTimeout: parseInt(process.env.DATABASE_STATEMENT_TIMEOUT || '60000'),
-  queryTimeout: parseInt(process.env.DATABASE_QUERY_TIMEOUT || '30000'),
+  statement_timeout: parseInt(process.env.DATABASE_STATEMENT_TIMEOUT || '60000'),
+  query_timeout: parseInt(process.env.DATABASE_QUERY_TIMEOUT || '30000'),
 });
 
-// Prisma adapter for Neon
-const adapter = new PrismaNeon(pool);
+// Prisma adapter for Neon - temporarily disabled
+// const adapter = new PrismaNeon({ connectionString });
 
-// Prisma client with Neon adapter
+// Prisma client without adapter (temporary fix for build)
 export const prisma = new PrismaClient({ 
-  adapter,
+  // adapter, // Temporarily disabled
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
   errorFormat: 'pretty',
 });

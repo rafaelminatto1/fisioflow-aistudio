@@ -1,9 +1,22 @@
 // hooks/usePatients.ts
 import { useState, useCallback, useEffect } from 'react';
+import useSWR from 'swr';
 import { Patient, PatientSummary } from '../types';
 import * as patientService from '../services/patientService';
 import { useToast } from '../contexts/ToastContext';
 import { eventService } from '../services/eventService';
+
+// Define a fetcher function for SWR
+const fetcher = async (url: string) => {
+  const params = new URLSearchParams(url.split('?')[1]);
+  const searchTerm = params.get('searchTerm') || '';
+  const statusFilter = params.get('statusFilter') || 'All';
+  const cursor = params.get('cursor') || undefined;
+  const limit = parseInt(params.get('limit') || '15', 10);
+
+  const result = await patientService.getPatients({ searchTerm, statusFilter, cursor, limit });
+  return result;
+};
 
 interface UsePatientsResult {
   patients: PatientSummary[];
@@ -17,73 +30,74 @@ interface UsePatientsResult {
 }
 
 export const usePatients = (): UsePatientsResult => {
-  const [patients, setPatients] = useState<PatientSummary[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const { showToast } = useToast();
+  const [currentFilters, setCurrentFilters] = useState({ searchTerm: '', statusFilter: 'All' });
+  const [allPatients, setAllPatients] = useState<PatientSummary[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  const [error, setError] = useState<Error | null>(null);
-  const [currentFilters, setCurrentFilters] = useState({ searchTerm: '', statusFilter: 'All' });
 
-  const { showToast } = useToast();
+  // SWR key will change when filters or cursor change
+  const swrKey = `/api/patients?searchTerm=${currentFilters.searchTerm}&statusFilter=${currentFilters.statusFilter}&limit=15${nextCursor ? `&cursor=${nextCursor}` : ''}`;
 
-  const fetchPatients = useCallback(async (filters: { searchTerm: string; statusFilter: string }, cursor?: string | null) => {
-    if (cursor) {
-      setIsLoadingMore(true);
-    } else {
-      setIsLoading(true);
-    }
-    setError(null);
-    try {
-      const result = await patientService.getPatients({ ...filters, cursor, limit: 15 });
-      setPatients(prev => cursor ? [...prev, ...result.patients] : result.patients);
-      setNextCursor(result.nextCursor);
-      setHasMore(!!result.nextCursor);
-    } catch (err) {
-      setError(err as Error);
+  const { data, error, isLoading, isValidating, mutate } = useSWR(swrKey, fetcher, {
+    revalidateOnFocus: true,
+    revalidateIfStale: false,
+    onSuccess: (newData) => {
+      if (newData.nextCursor) {
+        setNextCursor(newData.nextCursor);
+        setHasMore(true);
+      } else {
+        setHasMore(false);
+      }
+      setAllPatients(prev => {
+        const newPatients = newData.patients.filter(
+          np => !prev.some(p => p.id === np.id)
+        );
+        return nextCursor ? [...prev, ...newPatients] : newData.patients;
+      });
+    },
+    onError: (err) => {
       showToast('Falha ao carregar pacientes.', 'error');
-    } finally {
-      setIsLoading(false);
-      setIsLoadingMore(false);
     }
-  }, [showToast]);
+  });
 
   const fetchInitialPatients = useCallback((filters: { searchTerm: string; statusFilter: string }) => {
     setCurrentFilters(filters);
-    fetchPatients(filters, null);
-  }, [fetchPatients]);
+    setAllPatients([]);
+    setNextCursor(null);
+    setHasMore(true);
+    mutate();
+  }, [mutate]);
 
   const fetchMorePatients = useCallback(() => {
-    if (isLoadingMore || !hasMore) return;
-    fetchPatients(currentFilters, nextCursor);
-  }, [isLoadingMore, hasMore, nextCursor, fetchPatients, currentFilters]);
+    if (isLoading || isValidating || !hasMore || !nextCursor) return;
+    mutate();
+  }, [isLoading, isValidating, hasMore, nextCursor, mutate]);
 
   const addPatient = async (patientData: Omit<Patient, 'id' | 'lastVisit'>) => {
     try {
       await patientService.addPatient(patientData);
       showToast("Paciente adicionado com sucesso!", "success");
-      // The event listener will handle the refetch
+      mutate();
     } catch (err) {
       showToast("Falha ao adicionar paciente.", "error");
     }
   };
 
-  // Listen for global patient changes to refresh the list
   useEffect(() => {
     const handlePatientsChanged = () => {
-        fetchInitialPatients(currentFilters);
+      mutate();
     };
     eventService.on('patients:changed', handlePatientsChanged);
     return () => {
-        eventService.off('patients:changed', handlePatientsChanged);
+      eventService.off('patients:changed', handlePatientsChanged);
     };
-  }, [currentFilters, fetchInitialPatients]);
-
+  }, [mutate]);
 
   return {
-    patients,
-    isLoading,
-    isLoadingMore,
+    patients: allPatients,
+    isLoading: isLoading && allPatients.length === 0,
+    isLoadingMore: isLoading && allPatients.length > 0,
     hasMore,
     error,
     fetchInitialPatients,

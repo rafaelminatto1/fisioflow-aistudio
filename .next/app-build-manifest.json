@@ -2,62 +2,62 @@
   "pages": {
     "/_not-found/page": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/_not-found/page-68f303c1ca45a7f8.js"
     ],
     "/layout": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/css/938ad5faf0d6cccc.css",
-      "static/chunks/app/layout-c539ecef9145a4ba.js"
+      "static/chunks/app/layout-5cd909c9aef287a5.js"
     ],
     "/dashboard/page": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/dashboard/page-d068553253f65aa1.js"
     ],
     "/page": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/page-0991b9f1e8e15707.js"
     ],
     "/pacientes/[id]/page": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/pacientes/[id]/page-211eb48172408c1c.js"
     ],
     "/pacientes/layout": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/pacientes/layout-917a32923b90d2cf.js"
     ],
     "/pacientes/page": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/pacientes/page-ad52951159403dfb.js"
     ],
     "/admin/security/page": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
-      "static/chunks/app/admin/security/page-1100f202ef571a41.js"
+      "static/chunks/app/admin/security/page-2e3a950896250fd6.js"
     ],
     "/admin/layout": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/admin/layout-18f793e063107f47.js"
     ],
     "/admin/monitoring/page": [
       "static/chunks/webpack-54b1dcd6930cc389.js",
-      "static/chunks/vendors-6b7931c36f61a46a.js",
+      "static/chunks/vendors-8687afc9b14a4bfa.js",
       "static/chunks/main-app-c9dca267aee0e701.js",
       "static/chunks/app/admin/monitoring/page-80ddc93b03370cd5.js"
     ]

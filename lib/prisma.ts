@@ -206,7 +206,7 @@ class CachedPrismaClient {
   }
 
   // Prisma transaction support
-  async $transaction<T>(queries: any[]): Promise<T> {
+  async $transaction<T>(queries: any[]): Promise<any> {
     // Transactions bypass cache for consistency
     return this.prisma.$transaction(queries);
   }

@@ -53,7 +53,7 @@ const RAILWAY_LOG_CONFIG = {
 
 // Classe principal do logger
 class RailwayLogger {
-  private logger: Logger;
+  private logger!: Logger; // Using definite assignment assertion
   private startTime: number;
   private requestCount: number = 0;
   private errorCount: number = 0;

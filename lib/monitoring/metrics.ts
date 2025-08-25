@@ -107,7 +107,7 @@ export class BusinessMetrics {
       status: statusCode.toString()
     });
 
-    structuredLogger.api('API call recorded', {
+    structuredLogger.http('API call recorded', {
       endpoint,
       method,
       statusCode,
@@ -134,7 +134,7 @@ export class BusinessMetrics {
       severity
     });
 
-    structuredLogger.security('Security event recorded', {
+    structuredLogger.logSecurityEvent('Security event recorded', {
       type,
       severity,
       timestamp: new Date().toISOString()
@@ -144,7 +144,7 @@ export class BusinessMetrics {
   static recordPerformance(operation: string, duration: number, status: 'success' | 'error' = 'success'): void {
     metrics.recordPerformance(operation, duration, status);
     
-    structuredLogger.performance('Performance recorded', {
+    structuredLogger.info('Performance recorded', {
       operation,
       duration,
       status,

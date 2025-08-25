@@ -125,10 +125,10 @@ export class EmailIntegration {
     patient: Patient,
     appointment: Appointment & { therapist: { name: string } }
   ): Promise<EmailResponse> {
-    if (!patient.email || patient.emailConsent !== 'opt_in') {
+    if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has not opted in for email notifications or has no email address'
+        error: 'Patient has no email address'
       };
     }
 
@@ -236,10 +236,10 @@ Equipe FisioFlow
     patient: Patient,
     appointment: Appointment & { therapist: { name: string } }
   ): Promise<EmailResponse> {
-    if (!patient.email || patient.emailConsent !== 'opt_in') {
+    if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has not opted in for email notifications'
+        error: 'Patient has no email address'
       };
     }
 
@@ -337,10 +337,10 @@ Equipe FisioFlow
       therapistName: string;
     }
   ): Promise<EmailResponse> {
-    if (!patient.email || patient.emailConsent !== 'opt_in') {
+    if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has not opted in for email notifications'
+        error: 'Patient has no email address'
       };
     }
 
@@ -438,10 +438,10 @@ Equipe FisioFlow
   }
 
   async sendWelcomeEmail(patient: Patient): Promise<EmailResponse> {
-    if (!patient.email || patient.emailConsent !== 'opt_in') {
+    if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has not opted in for email notifications'
+        error: 'Patient has no email address'
       };
     }
 

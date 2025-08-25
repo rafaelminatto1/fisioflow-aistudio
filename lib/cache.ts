@@ -342,7 +342,7 @@ export class CacheManager {
     let cleanedSize = 0;
     let cleanedCount = 0;
     
-    for (const [key, item] of this.memoryCache.entries()) {
+    for (const [key, item] of Array.from(this.memoryCache.entries())) {
       if (item.expiry && now > item.expiry) {
         cleanedSize += item.size;
         cleanedCount++;

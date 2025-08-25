@@ -27,8 +27,8 @@ const VoucherPlanCard: React.FC<VoucherPlanCardProps> = ({ plan, onSelect }) => 
                 </div>
             </div>
             <ul className="space-y-3 text-slate-600 mb-8 flex-grow">
-                {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start">
+                {plan.features.map((feature) => (
+                    <li key={feature} className="flex items-start">
                         <CheckCircle className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
                         <span>{feature}</span>
                     </li>

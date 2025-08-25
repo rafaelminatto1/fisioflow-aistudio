@@ -295,7 +295,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
             <div className="space-y-3">
               {data.alerts.slice(0, 5).map((alert, index) => (
                 <div 
-                  key={index}
+                  key={alert.timestamp + alert.message}
                   className={`p-3 border-l-4 rounded-md ${
                     alert.severity === 'high' 
                       ? 'border-red-500 bg-red-50' 
@@ -483,7 +483,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                     .filter(patient => patient.riskLevel === 'high' || patient.riskLevel === 'critical')
                     .slice(0, 5)
                     .map((patient, index) => (
-                      <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div key={patient.patientId} className="flex items-center justify-between p-3 border rounded-lg">
                         <div>
                           <p className="font-medium">{patient.patientName}</p>
                           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
@@ -530,7 +530,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
               <CardContent>
                 <div className="space-y-3">
                   {data.predictions.dischargeCandidates.map((patient, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div key={patient.patientName + patient.expectedDate} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                       <div>
                         <p className="font-medium">{patient.patientName}</p>
                         <p className="text-sm text-muted-foreground">
@@ -563,7 +563,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
               <CardContent>
                 <div className="space-y-4">
                   {data.predictions.riskPatients.map((patient, index) => (
-                    <div key={index} className="p-3 border rounded-lg">
+                    <div key={patient.patientName + patient.riskFactors.join('-')} className="p-3 border rounded-lg">
                       <p className="font-medium mb-2">{patient.patientName}</p>
                       <div className="space-y-2">
                         <div>

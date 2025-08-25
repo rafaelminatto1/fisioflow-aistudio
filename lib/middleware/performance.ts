@@ -34,8 +34,7 @@ export function withPerformanceMonitoring(
     try {
       response = await timeAsyncOperation(
         `api.${method.toLowerCase()}.${url.split('?')[0]}`,
-        () => handler(req),
-        { method, url, userAgent, ip }
+        () => handler(req)
       );
       
       statusCode = response.status;
@@ -107,8 +106,7 @@ export async function trackDatabaseOperation<T>(
 ): Promise<T> {
   return timeAsyncOperation(
     `database.${operation}`,
-    query,
-    context
+    query
   );
 }
 
@@ -122,15 +120,20 @@ export async function trackCacheOperation<T>(
     `cache.${operation}`,
     async () => {
       const result = await cacheOperation();
-      structuredLogger.logCacheOperation(
-        operation === 'get' && result !== null ? 'hit' : 
-        operation === 'get' && result === null ? 'miss' : 
-        operation,
-        key
-      );
+      
+      // Map operation types to logger expected types
+      let logOperation: 'hit' | 'miss' | 'set' | 'delete';
+      if (operation === 'get') {
+        logOperation = result !== null ? 'hit' : 'miss';
+      } else if (operation === 'del') {
+        logOperation = 'delete';
+      } else {
+        logOperation = operation as 'set';
+      }
+      
+      structuredLogger.logCacheOperation(logOperation, key);
       return result;
-    },
-    { key }
+    }
   );
 }
 
@@ -142,8 +145,7 @@ export async function trackExternalAPICall<T>(
 ): Promise<T> {
   return timeAsyncOperation(
     `external.${service}.${endpoint}`,
-    apiCall,
-    { service, endpoint }
+    apiCall
   );
 }
 

@@ -1,6 +1,6 @@
 // app/api/pacientes/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
+import { cachedPrisma } from '@/lib/prisma';
 import redisPromise from '@/lib/redis';
 import { patientFormSchema } from '@/lib/validations/patient';
 import { z } from 'zod';
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest) {
       where.status = status;
     }
 
-    const patients = await prisma.patient.findMany({
+    const patients = await cachedPrisma.client.patient.findMany({
       take: take,
       skip: cursor ? 1 : 0,
       cursor: cursor ? { id: cursor } : undefined,
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = patientFormSchema.parse(body);
 
-    const newPatient = await prisma.patient.create({
+    const newPatient = await cachedPrisma.client.patient.create({
       data: {
         name: validatedData.name,
         cpf: validatedData.cpf,

@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error.message, endpoint: '/api/security', method: 'GET' },
+      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'GET' },
       request
     );
 
@@ -225,7 +225,7 @@ export async function POST(request: NextRequest) {
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error.message, endpoint: '/api/security', method: 'POST' },
+      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'POST' },
       request
     );
 
@@ -289,7 +289,7 @@ export async function PUT(request: NextRequest) {
         results.push({
           tableName,
           success: false,
-          error: error.message,
+          error: error instanceof Error ? error.message : String(error),
           action: enableRLS ? 'enable_failed' : 'disable_failed'
         });
       }
@@ -320,7 +320,7 @@ export async function PUT(request: NextRequest) {
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error.message, endpoint: '/api/security', method: 'PUT' },
+      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'PUT' },
       request
     );
 
@@ -360,10 +360,7 @@ export async function DELETE(request: NextRequest) {
 
     if (action === 'clear_old_logs') {
       // Clear audit logs older than specified days
-      const result = await rlsSecurityManager.prisma.$executeRaw`
-        DELETE FROM "SecurityAuditLog" 
-        WHERE "createdAt" < NOW() - INTERVAL '${days} days';
-      `;
+      const result = await rlsSecurityManager.clearOldAuditLogs(days);
 
       await rlsSecurityManager.logSecurityEvent(
         'AUDIT_LOG_CLEANUP',
@@ -395,7 +392,7 @@ export async function DELETE(request: NextRequest) {
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error.message, endpoint: '/api/security', method: 'DELETE' },
+      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'DELETE' },
       request
     );
 

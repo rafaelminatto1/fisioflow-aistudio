@@ -1,5 +1,5 @@
 // app/pacientes/page.tsx
-import prisma from '../../lib/prisma';
+import cachedPrisma from '../../lib/prisma';
 import PatientList from '../../components/pacientes/PatientList';
 import PageHeader from '../../components/ui/PageHeader';
 
@@ -27,7 +27,7 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
     where.status = status;
   }
   
-  const initialPatients = await prisma.patient.findMany({
+  const initialPatients = await cachedPrisma.client.patient.findMany({
     take,
     skip: cursor ? 1 : 0,
     cursor: cursor ? { id: cursor } : undefined,
@@ -47,7 +47,7 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
   });
   
   // Transform to PatientSummary format
-  const transformedPatients = initialPatients.map(patient => ({
+  const transformedPatients = initialPatients.map((patient: any) => ({
     id: patient.id,
     name: patient.name,
     email: patient.email || '',
