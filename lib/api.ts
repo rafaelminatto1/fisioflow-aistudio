@@ -57,7 +57,7 @@ api.interceptors.response.use(
     // --- Tratamento Padronizado de Erros ---
     
     // Se não for possível fazer retry, rejeita a promise com um erro padronizado
-    let customError = {
+    const customError = {
       message: 'Ocorreu um erro de comunicação com o servidor.',
       status: 500,
       data: null as any,

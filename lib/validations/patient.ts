@@ -72,7 +72,7 @@ export const patientFormSchema = z.object({
   consentGiven: z.boolean().refine(val => val === true, {
     message: "O consentimento LGPD é obrigatório."
   }),
-  whatsappConsent: z.enum(['opt-in', 'opt-out']),
+  whatsappConsent: z.enum(['opt_in', 'opt_out']),
 });
 
 export type PatientFormData = z.infer<typeof patientFormSchema>;

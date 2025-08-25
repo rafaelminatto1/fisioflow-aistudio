@@ -4,6 +4,7 @@
 import { useSession, signOut } from 'next-auth/react';
 import { LogOut, User, ChevronDown } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
+import Image from 'next/image';
 
 export default function UserMenu() {
   const { data: session, status } = useSession();
@@ -34,9 +35,11 @@ export default function UserMenu() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center space-x-2 p-2 rounded-lg hover:bg-slate-100 transition-colors"
       >
-        <img
+        <Image
           src={session.user.avatarUrl || `https://i.pravatar.cc/150?u=${session.user.id}`}
           alt={session.user.name || 'Avatar'}
+          width={40}
+          height={40}
           className="w-10 h-10 rounded-full"
         />
         <div className="text-left hidden md:block">
