@@ -23,7 +23,15 @@
       "Bash(node:*)",
       "Bash(bash:*)",
       "Bash(railway --version)",
-      "Bash(railway up:*)"
+      "Bash(railway up:*)",
+      "Bash(railway login:*)",
+      "Bash(railway status:*)",
+      "Bash(railway variables:*)",
+      "Bash(railway domain:*)",
+      "Bash(railway link:*)",
+      "Bash(railway environment set:*)",
+      "Bash(railway projects:*)",
+      "Bash(railway:*)"
     ],
     "deny": [],
     "ask": []
