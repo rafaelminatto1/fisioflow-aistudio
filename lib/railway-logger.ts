@@ -1,18 +1,16 @@
 /**
  * FisioFlow - Railway Structured Logging & Graceful Shutdown
+ * Edge Runtime Compatible Version
  * 
- * Sistema de logs estruturados e graceful shutdown otimizado para Railway
+ * Sistema de logs estruturados otimizado para Railway e Edge Runtime
  * - Logs em formato JSON para Railway
  * - Diferentes níveis de log
  * - Correlação de requests
- * - Graceful shutdown com cleanup
  * - Métricas de performance
+ * - Compatível com Edge Runtime
  */
 
-import { createLogger, format, transports, Logger } from 'winston';
-import { AsyncLocalStorage } from 'async_hooks';
 import { NextRequest } from 'next/server';
-// import { railwayPool } from './railway-pooling'; // Commented out temporarily
 
 // Tipos para contexto de logging
 interface LogContext {
@@ -30,212 +28,111 @@ interface LogContext {
 
 interface PerformanceMetrics {
   duration: number;
-  memoryUsage: NodeJS.MemoryUsage;
-  cpuUsage?: NodeJS.CpuUsage;
-  activeConnections?: number;
   requestCount?: number;
+  errorCount?: number;
+  errorRate?: number;
 }
 
-// AsyncLocalStorage para contexto de request
-const requestContext = new AsyncLocalStorage<LogContext>();
+type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+
+interface LogEntry {
+  level: LogLevel;
+  message: string;
+  timestamp: string;
+  context?: LogContext;
+  metadata?: Record<string, any>;
+  error?: {
+    name: string;
+    message: string;
+    stack?: string;
+  };
+}
 
 // Configuração do logger baseada no ambiente Railway
 const RAILWAY_LOG_CONFIG = {
-  level: process.env.LOG_LEVEL || 'info',
-  format: process.env.RAILWAY_STRUCTURED_LOGGING === 'true' ? 'json' : 'simple',
-  enableConsole: true,
-  enableFile: process.env.NODE_ENV === 'production',
-  maxFiles: parseInt(process.env.LOG_MAX_FILES || '5'),
-  maxSize: process.env.LOG_MAX_SIZE || '10m',
-  service: process.env.RAILWAY_SERVICE_NAME || 'fisioflow',
-  environment: process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV || 'development',
+  level: (typeof process !== 'undefined' && process.env?.LOG_LEVEL) || 'info',
+  service: (typeof process !== 'undefined' && process.env?.RAILWAY_SERVICE_NAME) || 'fisioflow',
+  environment: (typeof process !== 'undefined' && (process.env?.RAILWAY_ENVIRONMENT || process.env?.NODE_ENV)) || 'development',
 };
 
-// Classe principal do logger
+// Classe principal do logger compatível com Edge Runtime
 class RailwayLogger {
-  private logger!: Logger; // Using definite assignment assertion
   private startTime: number;
   private requestCount: number = 0;
   private errorCount: number = 0;
-  private shutdownHandlers: Array<() => Promise<void>> = [];
-  private isShuttingDown: boolean = false;
+  private currentContext: LogContext | null = null;
 
   constructor() {
     this.startTime = Date.now();
-    this.initializeLogger();
-    this.setupGracefulShutdown();
   }
 
-  private initializeLogger() {
-    // Formato customizado para Railway
-    const railwayFormat = format.combine(
-      format.timestamp({
-        format: 'YYYY-MM-DD HH:mm:ss.SSS'
-      }),
-      format.errors({ stack: true }),
-      format.json(),
-      format.printf((info) => {
-        const context = requestContext.getStore() || {};
-        
-        const logEntry = {
-          timestamp: info.timestamp,
-          level: info.level,
-          message: info.message,
-          service: RAILWAY_LOG_CONFIG.service,
-          environment: RAILWAY_LOG_CONFIG.environment,
-          ...context,
-          ...info.meta,
-        };
+  private shouldLog(level: LogLevel): boolean {
+    const levels = ['debug', 'info', 'warn', 'error'];
+    return levels.indexOf(level) >= levels.indexOf(RAILWAY_LOG_CONFIG.level as LogLevel);
+  }
 
-        // Adicionar stack trace para erros
-        if (info.stack) {
-          logEntry.stack = info.stack;
-        }
+  private formatLog(entry: LogEntry): string {
+    const logData: Record<string, any> = {
+      timestamp: entry.timestamp,
+      level: entry.level.toUpperCase(),
+      message: entry.message,
+      service: RAILWAY_LOG_CONFIG.service,
+      environment: RAILWAY_LOG_CONFIG.environment,
+      ...entry.context,
+      ...(entry.metadata && { meta: entry.metadata }),
+      ...(entry.error && { error: entry.error }),
+    };
 
-        // Adicionar Railway specific fields
-        if (process.env.RAILWAY_GIT_COMMIT_SHA) {
-          logEntry.commit = process.env.RAILWAY_GIT_COMMIT_SHA;
-        }
-
-        if (process.env.RAILWAY_DEPLOYMENT_ID) {
-          logEntry.deploymentId = process.env.RAILWAY_DEPLOYMENT_ID;
-        }
-
-        return JSON.stringify(logEntry);
-      })
-    );
-
-    // Formato simples para desenvolvimento
-    const simpleFormat = format.combine(
-      format.colorize(),
-      format.timestamp({
-        format: 'HH:mm:ss'
-      }),
-      format.printf((info) => {
-        const context = requestContext.getStore();
-        const requestInfo = context?.requestId ? `[${context.requestId}] ` : '';
-        return `${info.timestamp} ${info.level}: ${requestInfo}${info.message}`;
-      })
-    );
-
-    // Configurar transports
-    const logTransports: any[] = [];
-
-    // Console transport
-    if (RAILWAY_LOG_CONFIG.enableConsole) {
-      logTransports.push(
-        new transports.Console({
-          format: RAILWAY_LOG_CONFIG.format === 'json' ? railwayFormat : simpleFormat,
-          handleExceptions: true,
-          handleRejections: true,
-        })
-      );
+    // Adicionar Railway specific fields se disponíveis
+    if (typeof process !== 'undefined' && process.env) {
+      if (process.env.RAILWAY_GIT_COMMIT_SHA) {
+        logData.commit = process.env.RAILWAY_GIT_COMMIT_SHA;
+      }
+      if (process.env.RAILWAY_DEPLOYMENT_ID) {
+        logData.deploymentId = process.env.RAILWAY_DEPLOYMENT_ID;
+      }
     }
 
-    // File transport para produção
-    if (RAILWAY_LOG_CONFIG.enableFile) {
-      logTransports.push(
-        new transports.File({
-          filename: '/app/logs/error.log',
-          level: 'error',
-          format: railwayFormat,
-          maxsize: RAILWAY_LOG_CONFIG.maxSize,
-          maxFiles: RAILWAY_LOG_CONFIG.maxFiles,
-        }),
-        new transports.File({
-          filename: '/app/logs/combined.log',
-          format: railwayFormat,
-          maxsize: RAILWAY_LOG_CONFIG.maxSize,
-          maxFiles: RAILWAY_LOG_CONFIG.maxFiles,
-        })
-      );
-    }
-
-    this.logger = createLogger({
-      level: RAILWAY_LOG_CONFIG.level,
-      transports: logTransports,
-      exitOnError: false,
-    });
+    return JSON.stringify(logData);
   }
 
-  private setupGracefulShutdown() {
-    // Registrar handlers de shutdown
-    const signals = ['SIGTERM', 'SIGINT', 'SIGUSR2'] as const;
-    
-    signals.forEach((signal) => {
-      process.on(signal, async () => {
-        if (this.isShuttingDown) {
-          this.logger.warn('Shutdown já em progresso, forçando saída...');
-          process.exit(1);
-        }
+  private log(level: LogLevel, message: string, error?: Error, meta?: any): void {
+    if (!this.shouldLog(level)) return;
 
-        this.isShuttingDown = true;
-        this.logger.info(`Recebido sinal ${signal}, iniciando graceful shutdown...`);
-        
-        await this.gracefulShutdown();
-      });
-    });
+    const entry: LogEntry = {
+      level,
+      message,
+      timestamp: new Date().toISOString(),
+      context: this.currentContext || undefined,
+      metadata: meta,
+      error: error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      } : undefined
+    };
 
-    // Handler para uncaught exceptions
-    process.on('uncaughtException', (error) => {
-      this.logger.error('Uncaught Exception:', { error: error.message, stack: error.stack });
-      this.gracefulShutdown().then(() => process.exit(1));
-    });
+    const formattedLog = this.formatLog(entry);
 
-    // Handler para unhandled rejections
-    process.on('unhandledRejection', (reason, promise) => {
-      this.logger.error('Unhandled Rejection:', { reason, promise });
-    });
-  }
-
-  // Método para adicionar handlers de shutdown
-  addShutdownHandler(handler: () => Promise<void>) {
-    this.shutdownHandlers.push(handler);
-  }
-
-  // Graceful shutdown
-  private async gracefulShutdown() {
-    const shutdownTimeout = parseInt(process.env.GRACEFUL_SHUTDOWN_TIMEOUT || '30000');
-    
-    this.logger.info('Iniciando graceful shutdown...', {
-      uptime: Date.now() - this.startTime,
-      requestCount: this.requestCount,
-      errorCount: this.errorCount,
-    });
-
-    // Timeout para forçar shutdown
-    const forceShutdownTimer = setTimeout(() => {
-      this.logger.error('Graceful shutdown timeout, forçando saída...');
-      process.exit(1);
-    }, shutdownTimeout);
-
-    try {
-      // Executar handlers de shutdown
-      await Promise.all(
-        this.shutdownHandlers.map(async (handler, index) => {
-          try {
-            await handler();
-            this.logger.debug(`Shutdown handler ${index} executado com sucesso`);
-          } catch (error) {
-            this.logger.error(`Erro no shutdown handler ${index}:`, { error });
-          }
-        })
-      );
-
-      // Fechar pool de conexões
-      // await railwayPool.gracefulShutdown(); // Commented out temporarily
-
-      this.logger.info('Graceful shutdown concluído com sucesso');
-      clearTimeout(forceShutdownTimer);
-      process.exit(0);
-    } catch (error) {
-      this.logger.error('Erro durante graceful shutdown:', { error });
-      clearTimeout(forceShutdownTimer);
-      process.exit(1);
+    // Usar console apropriado para cada nível
+    switch (level) {
+      case 'debug':
+        console.debug(formattedLog);
+        break;
+      case 'info':
+        console.info(formattedLog);
+        break;
+      case 'warn':
+        console.warn(formattedLog);
+        break;
+      case 'error':
+        console.error(formattedLog);
+        this.errorCount++;
+        break;
     }
   }
 
-  // Middleware para Next.js
+  // Middleware para Next.js compatível com Edge Runtime
   createRequestMiddleware() {
     return (req: NextRequest) => {
       const requestId = this.generateRequestId();
@@ -250,101 +147,82 @@ class RailwayLogger {
         service: RAILWAY_LOG_CONFIG.service,
       };
 
+      this.currentContext = context;
       this.requestCount++;
 
-      return requestContext.run(context, () => {
-        const startTime = Date.now();
-        
-        this.logger.info('Request iniciado', {
-          method: req.method,
-          url: req.url,
-          requestId,
-        });
-
-        // Retornar função para log de resposta
-        return (statusCode: number, error?: Error) => {
-          const duration = Date.now() - startTime;
-          
-          if (error) {
-            this.errorCount++;
-            this.logger.error('Request falhou', {
-              method: req.method,
-              url: req.url,
-              requestId,
-              statusCode,
-              duration,
-              error: error.message,
-              stack: error.stack,
-            });
-          } else {
-            this.logger.info('Request concluído', {
-              method: req.method,
-              url: req.url,
-              requestId,
-              statusCode,
-              duration,
-            });
-          }
-        };
+      const startTime = Date.now();
+      
+      this.info('Request iniciado', {
+        method: req.method,
+        url: req.url,
+        requestId,
       });
+
+      // Retornar função para log de resposta
+      return (statusCode: number, error?: Error) => {
+        const duration = Date.now() - startTime;
+        
+        if (error) {
+          this.error('Request falhou', error, {
+            method: req.method,
+            url: req.url,
+            requestId,
+            statusCode,
+            duration,
+          });
+        } else {
+          this.info('Request concluído', {
+            method: req.method,
+            url: req.url,
+            requestId,
+            statusCode,
+            duration,
+          });
+        }
+        
+        // Limpar contexto após o request
+        this.currentContext = null;
+      };
     };
   }
 
   // Métodos de logging
   info(message: string, meta?: any) {
-    this.logger.info(message, { meta });
+    this.log('info', message, undefined, meta);
   }
 
   error(message: string, error?: Error | any, meta?: any) {
-    this.errorCount++;
-    this.logger.error(message, {
-      error: error instanceof Error ? {
-        message: error.message,
-        stack: error.stack,
-        name: error.name,
-      } : error,
-      meta,
-    });
+    const errorObj = error instanceof Error ? error : new Error(String(error));
+    this.log('error', message, errorObj, meta);
   }
 
   warn(message: string, meta?: any) {
-    this.logger.warn(message, { meta });
+    this.log('warn', message, undefined, meta);
   }
 
   debug(message: string, meta?: any) {
-    this.logger.debug(message, { meta });
+    this.log('debug', message, undefined, meta);
   }
 
   // Log de performance
   performance(operation: string, metrics: PerformanceMetrics, meta?: any) {
-    this.logger.info(`Performance: ${operation}`, {
+    this.info(`Performance: ${operation}`, {
       operation,
       ...metrics,
-      meta,
+      ...meta,
     });
   }
 
-  // Log de métricas do sistema
+  // Log de métricas do sistema (simplificado para Edge Runtime)
   systemMetrics() {
-    const memUsage = process.memoryUsage();
-    const cpuUsage = process.cpuUsage();
     const uptime = Date.now() - this.startTime;
+    const errorRate = this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0;
 
-    this.logger.info('System metrics', {
-      memory: {
-        rss: Math.round(memUsage.rss / 1024 / 1024),
-        heapUsed: Math.round(memUsage.heapUsed / 1024 / 1024),
-        heapTotal: Math.round(memUsage.heapTotal / 1024 / 1024),
-        external: Math.round(memUsage.external / 1024 / 1024),
-      },
-      cpu: {
-        user: cpuUsage.user,
-        system: cpuUsage.system,
-      },
+    this.info('System metrics', {
       uptime,
       requestCount: this.requestCount,
       errorCount: this.errorCount,
-      errorRate: this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0,
+      errorRate,
     });
   }
 
@@ -360,8 +238,17 @@ class RailwayLogger {
       requestCount: this.requestCount,
       errorCount: this.errorCount,
       errorRate: this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0,
-      isShuttingDown: this.isShuttingDown,
     };
+  }
+
+  // Método para definir contexto manualmente (substitui AsyncLocalStorage)
+  setContext(context: LogContext) {
+    this.currentContext = context;
+  }
+
+  // Método para limpar contexto
+  clearContext() {
+    this.currentContext = null;
   }
 }
 
@@ -371,13 +258,6 @@ let loggerInstance: RailwayLogger;
 export function getRailwayLogger(): RailwayLogger {
   if (!loggerInstance) {
     loggerInstance = new RailwayLogger();
-    
-    // Iniciar coleta de métricas do sistema
-    if (process.env.RAILWAY_METRICS_ENABLED === 'true') {
-      setInterval(() => {
-        loggerInstance.systemMetrics();
-      }, parseInt(process.env.RAILWAY_METRICS_INTERVAL || '60000'));
-    }
   }
   return loggerInstance;
 }
@@ -389,39 +269,36 @@ export const railwayLogger = getRailwayLogger();
 export type { LogContext, PerformanceMetrics };
 export { RailwayLogger };
 
-// Utility para medir performance
+// Utility para medir performance compatível com Edge Runtime
 export function measurePerformance<T>(
   operation: string,
-  fn: () => Promise<T>
-): Promise<T> {
-  return new Promise(async (resolve, reject) => {
-    const startTime = Date.now();
-    const startMemory = process.memoryUsage();
-    const startCpu = process.cpuUsage();
+  fn: () => Promise<T> | T
+): Promise<T> | T {
+  const startTime = Date.now();
 
-    try {
-      const result = await fn();
-      
-      const endTime = Date.now();
-      const endMemory = process.memoryUsage();
-      const endCpu = process.cpuUsage(startCpu);
-
-      railwayLogger.performance(operation, {
-        duration: endTime - startTime,
-        memoryUsage: {
-          rss: endMemory.rss - startMemory.rss,
-          heapUsed: endMemory.heapUsed - startMemory.heapUsed,
-          heapTotal: endMemory.heapTotal - startMemory.heapTotal,
-          external: endMemory.external - startMemory.external,
-          arrayBuffers: endMemory.arrayBuffers - startMemory.arrayBuffers,
-        },
-        cpuUsage: endCpu,
-      });
-
-      resolve(result);
-    } catch (error) {
-      railwayLogger.error(`Performance measurement failed for ${operation}`, error);
-      reject(error);
+  try {
+    const result = fn();
+    
+    if (result instanceof Promise) {
+      return result
+        .then((value) => {
+          const duration = Date.now() - startTime;
+          railwayLogger.performance(operation, { duration });
+          return value;
+        })
+        .catch((error) => {
+          const duration = Date.now() - startTime;
+          railwayLogger.error(`Performance measurement failed for ${operation}`, error, { duration });
+          throw error;
+        });
+    } else {
+      const duration = Date.now() - startTime;
+      railwayLogger.performance(operation, { duration });
+      return result;
     }
-  });
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    railwayLogger.error(`Performance measurement failed for ${operation}`, error as Error, { duration });
+    throw error;
+  }
 }

@@ -17,7 +17,7 @@ const soapNoteSchema = z.object({
 
 export async function saveSoapNoteAction(patientId: string, formData: FormData) {
     const user = await getCurrentUser();
-    if (!user || !(user as any).role) { // Basic auth check
+    if (!user || !('role' in user)) { // Basic auth check
         return { success: false, message: 'Não autenticado.' };
     }
 
@@ -35,7 +35,7 @@ export async function saveSoapNoteAction(patientId: string, formData: FormData) 
     }
 
     try {
-        await prisma.soapNote.create({
+        await prisma.client.soapNote.create({
             data: {
                 patientId,
                 therapistName: user.name || 'Fisioterapeuta',

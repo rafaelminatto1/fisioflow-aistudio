@@ -11,13 +11,13 @@ import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import type { User as PrismaUser } from '@prisma/client';
-import { EnrichedAppointment, Appointment, AppointmentStatus, Patient, PatientSummary, Therapist } from '../../../types';
-import { useToast } from '../../ui/use-toast';
+import { EnrichedAppointment, Appointment, AppointmentStatus, Patient, PatientSummary, Therapist } from '@/types';
+import { useToast } from '../ui/use-toast';
 import AppointmentCard from './AppointmentCard';
 import AppointmentDetailModal from './AppointmentDetailModal';
 import AppointmentFormModal from './AppointmentFormModal';
 import { cn } from '../../../lib/utils';
-import { saveAppointmentAction, deleteAppointmentAction, deleteAppointmentSeriesAction } from '../../../lib/actions/appointment.actions';
+import { saveAppointmentAction, deleteAppointmentAction, deleteAppointmentSeriesAction } from '../../lib/actions/appointment.actions';
 
 const START_HOUR = 7;
 const END_HOUR = 21;
@@ -42,6 +42,20 @@ export default function AgendaClient({ initialAppointments, therapists, patients
     const [appointments, setAppointments] = useState<EnrichedAppointment[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const { toast } = useToast();
+    
+    // Convert PrismaUser to Therapist with default color
+    const convertToTherapist = (user: PrismaUser): Therapist => ({
+        id: user.id,
+        name: user.name,
+        color: 'blue', // Cor padrão, já que não existe no modelo User
+        avatarUrl: user.avatarUrl || ''
+    });
+    
+    // Convert EnrichedAppointment to Appointment
+    const convertToAppointment = (enriched: EnrichedAppointment): Appointment => {
+        const { therapistColor, typeColor, patientPhone, patientMedicalAlerts, ...appointment } = enriched;
+        return appointment;
+    };
     
     // Modal states
     const [appointmentToEdit, setAppointmentToEdit] = useState<EnrichedAppointment | null>(null);
@@ -202,7 +216,7 @@ export default function AgendaClient({ initialAppointments, therapists, patients
                 <AppointmentDetailModal
                     appointment={selectedAppointment}
                     patient={patients.find(p => p.id === selectedAppointment.patientId)}
-                    therapist={therapists.find(t => t.id === selectedAppointment.therapistId)}
+                    therapist={therapists.find(t => t.id === selectedAppointment.therapistId) ? convertToTherapist(therapists.find(t => t.id === selectedAppointment.therapistId)!) : undefined}
                     onClose={() => setSelectedAppointment(null)}
                     onEdit={() => { setSelectedAppointment(null); setAppointmentToEdit(selectedAppointment); setIsFormOpen(true); }}
                     onDelete={handleDeleteAppointment}
@@ -214,10 +228,10 @@ export default function AgendaClient({ initialAppointments, therapists, patients
                     onClose={() => { setIsFormOpen(false); setAppointmentToEdit(null); }}
                     onSave={handleSaveAppointment}
                     onDelete={handleDeleteAppointment}
-                    appointmentToEdit={appointmentToEdit}
+                    appointmentToEdit={appointmentToEdit ? convertToAppointment(appointmentToEdit) : undefined}
                     initialData={initialFormData}
                     patients={patients}
-                    therapists={therapists}
+                    therapists={therapists.map(convertToTherapist)}
                     allAppointments={appointments}
                 />
             )}

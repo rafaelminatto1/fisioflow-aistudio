@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { structuredLogger } from '../monitoring/logger';
 import { BusinessMetrics } from '../monitoring/metrics';
-import { withCache } from '../cache';
+import { cache } from '../cache';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
 
@@ -595,7 +595,7 @@ class AdvancedSecurityService {
       timestamp: new Date()
     };
     
-    structuredLogger.security('Security alert recorded', fullAlert);
+    structuredLogger.logSecurityEvent('Security alert recorded', fullAlert);
     BusinessMetrics.recordSecurityEvent(alert.type, alert.severity);
     
     // Store alert for reporting (implement persistence layer)

@@ -1,11 +1,7 @@
-import { neonConfig } from '@/lib/neon-config';
 import { PrismaClient } from '@prisma/client';
+import { prisma } from '../neon-config';
 
-/**
- * Row Level Security (RLS) Configuration for Neon DB
- * Manages security policies, audit logging, and access control
- */
-
+// Types for security policies
 export interface SecurityPolicy {
   name: string;
   table: string;
@@ -39,7 +35,7 @@ export class RLSSecurityManager {
   private prisma: PrismaClient;
 
   constructor() {
-    this.prisma = neonConfig.prisma;
+    this.prisma = prisma;
   }
 
   /**
@@ -279,7 +275,7 @@ export class RLSSecurityManager {
       }
 
       // Admin has access to everything
-  if (user.role === 'Admin') {
+      if (user.role === 'Admin') {
         return true;
       }
 
@@ -308,7 +304,7 @@ export class RLSSecurityManager {
         'PERMISSION_ERROR',
         tableName,
         recordId,
-        { error: error.message, operation }
+        { error: error instanceof Error ? error.message : String(error), operation }
       );
       return false;
     }
@@ -326,34 +322,34 @@ export class RLSSecurityManager {
   ): Promise<boolean> {
     switch (tableName) {
       case 'Patient':
-        if (role === 'PHYSIOTHERAPIST') {
-          // Check if physiotherapist owns the patient
+        if (role === 'Fisioterapeuta') {
+          // Check if physiotherapist has appointments with the patient
           if (recordId) {
-            const patient = await this.prisma.patient.findFirst({
+            const appointment = await this.prisma.appointment.findFirst({
               where: {
-                id: recordId,
-                physiotherapistId: userId
+                patientId: recordId,
+                therapistId: userId
               }
             });
-            return !!patient;
+            return !!appointment;
           }
           return operation === 'SELECT' || operation === 'INSERT';
         }
-        if (role === 'PATIENT') {
+        if (role === 'Paciente') {
           // Patients can only view/update their own data
           return recordId === userId && (operation === 'SELECT' || operation === 'UPDATE');
         }
         break;
 
       case 'Appointment':
-        if (role === 'PHYSIOTHERAPIST' || role === 'PATIENT') {
+        if (role === 'Fisioterapeuta' || role === 'Paciente') {
           // Check if user is related to the appointment
           if (recordId) {
             const appointment = await this.prisma.appointment.findFirst({
               where: {
                 id: recordId,
                 OR: [
-                  { patient: { physiotherapistId: userId } },
+                  { therapistId: userId },
                   { patientId: userId }
                 ]
               }
@@ -421,7 +417,7 @@ export class RLSSecurityManager {
   /**
    * Clear old audit logs (retention policy)
    */
-  async clearOldAuditLogs(days: number): Promise<number> {
+  async clearOldAuditLogs(days: number = 30): Promise<number> {
     try {
       const result = await this.prisma.$executeRaw`
         DELETE FROM "SecurityAuditLog" 
@@ -438,7 +434,7 @@ export class RLSSecurityManager {
       return Number(result);
     } catch (error) {
       console.error('Error clearing old audit logs:', error);
-      throw error;
+      return 0;
     }
   }
 }
@@ -456,12 +452,12 @@ export const securityUtils = {
   /**
    * Check if user has physiotherapist role
    */
-  isPhysiotherapist: (role: string): boolean => role === 'PHYSIOTHERAPIST',
+  isPhysiotherapist: (role: string): boolean => role === 'Fisioterapeuta',
 
   /**
    * Check if user has patient role
    */
-  isPatient: (role: string): boolean => role === 'PATIENT',
+  isPatient: (role: string): boolean => role === 'Paciente',
 
   /**
    * Get user IP address from request

@@ -117,5 +117,6 @@ export async function measurePerformance<T>(
 }
 
 // Export singleton
-export const simpleLogger = new SimpleLogger();
-export { simpleLogger as railwayLogger }; // Alias for compatibility
+const edgeLogger = new SimpleLogger();
+export default edgeLogger;
+export const simpleLogger = edgeLogger;

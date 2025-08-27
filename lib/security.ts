@@ -115,11 +115,11 @@ export function validateCSRFToken(token: string, sessionToken: string): boolean 
 // Cleanup old rate limit entries
 setInterval(() => {
   const now = Date.now();
-  for (const [key, value] of rateLimitStore.entries()) {
+  Array.from(rateLimitStore.entries()).forEach(([key, value]) => {
     if (now > value.resetTime) {
       rateLimitStore.delete(key);
     }
-  }
+  });
 }, 5 * 60 * 1000); // Cleanup every 5 minutes
 
 export { defaultConfig };

@@ -17,6 +17,12 @@ const nextConfig = {
     
     // Enable SWC optimizations
     swcPlugins: [],
+    
+    // Edge Runtime compatibility
+    serverComponentsExternalPackages: ['winston'],
+    
+    // Hot reload improvements
+    webVitalsAttribution: ['CLS', 'LCP'],
   },
 
   // Cache headers configuration
@@ -99,6 +105,23 @@ const nextConfig = {
 
   // Build-time optimizations
   webpack: (config, { dev, isServer }) => {
+    // Edge Runtime compatibility
+    config.resolve.fallback = {
+      ...config.resolve.fallback,
+      fs: false,
+      net: false,
+      tls: false,
+      crypto: false,
+      stream: false,
+      url: false,
+      zlib: false,
+      http: false,
+      https: false,
+      assert: false,
+      os: false,
+      path: false,
+    };
+    
     // Production optimizations
     if (!dev) {
       // Enable webpack caching for faster builds
@@ -128,6 +151,13 @@ const nextConfig = {
             },
           },
         },
+      };
+    } else {
+      // Development hot reload improvements
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+        ignored: /node_modules/,
       };
     }
     

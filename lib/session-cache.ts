@@ -1,6 +1,6 @@
 // lib/session-cache.ts - Distributed Session Cache System
 import { sessionCache } from './cache';
-import { railwayLogger } from './railway-logger';
+import edgeLogger from './edge-logger';
 import crypto from 'crypto';
 
 export interface SessionData {
@@ -63,7 +63,7 @@ export class DistributedSessionManager {
       // Track user sessions for concurrent session management
       await this.addUserSession(sessionData.userId, sessionId, mergedOptions.maxAge!);
 
-      railwayLogger.info('Session created', {
+      edgeLogger.info('Session created', {
         sessionId,
         userId: sessionData.userId,
         ttl: mergedOptions.maxAge,
@@ -71,7 +71,7 @@ export class DistributedSessionManager {
 
       return sessionId;
     } catch (error) {
-      railwayLogger.error('Failed to create session', error, { sessionId });
+      edgeLogger.error('Failed to create session', error as Error, { sessionId });
       throw error;
     }
   }
@@ -101,7 +101,7 @@ export class DistributedSessionManager {
 
       return session;
     } catch (error) {
-      railwayLogger.error('Failed to get session', error, { sessionId });
+      edgeLogger.error('Failed to get session', error as Error, { sessionId });
       return null;
     }
   }
@@ -132,7 +132,7 @@ export class DistributedSessionManager {
 
       return true;
     } catch (error) {
-      railwayLogger.error('Failed to touch session', error, { sessionId });
+      edgeLogger.error('Failed to touch session', error as Error, { sessionId });
       return false;
     }
   }
@@ -151,14 +151,14 @@ export class DistributedSessionManager {
       // Remove from user sessions list
       await this.removeUserSession(session.userId, sessionId);
 
-      railwayLogger.info('Session destroyed', {
+      edgeLogger.info('Session destroyed', {
         sessionId,
         userId: session.userId,
       });
 
       return true;
     } catch (error) {
-      railwayLogger.error('Failed to destroy session', error, { sessionId });
+      edgeLogger.error('Failed to destroy session', error as Error, { sessionId });
       return false;
     }
   }
@@ -180,14 +180,14 @@ export class DistributedSessionManager {
       // Clear the user sessions list
       await sessionCache.del(`${this.userSessionPrefix}:${userId}`);
 
-      railwayLogger.info('All user sessions destroyed', {
+      edgeLogger.info('All user sessions destroyed', {
         userId,
         destroyedCount,
       });
 
       return destroyedCount;
     } catch (error) {
-      railwayLogger.error('Failed to destroy user sessions', error, { userId });
+      edgeLogger.error('Failed to destroy user sessions', error as Error, { userId });
       return 0;
     }
   }
@@ -228,7 +228,7 @@ export class DistributedSessionManager {
 
       return validSessions;
     } catch (error) {
-      railwayLogger.error('Failed to get user sessions', error, { userId });
+      edgeLogger.error('Failed to get user sessions', error as Error, { userId });
       return [];
     }
   }
@@ -255,7 +255,7 @@ export class DistributedSessionManager {
         cacheStats: cacheMetrics,
       };
     } catch (error) {
-      railwayLogger.error('Failed to get session stats', error);
+      edgeLogger.error('Failed to get session stats', error as Error);
       return {
         totalSessions: 0,
         activeUsers: 0,
@@ -275,10 +275,10 @@ export class DistributedSessionManager {
       // This is a simplified cleanup - in production you'd want a more efficient approach
       // Perhaps using Redis SCAN or maintaining an expiration index
       
-      railwayLogger.info('Session cleanup completed', { cleanedCount });
+      edgeLogger.info('Session cleanup completed', { cleanedCount });
       return cleanedCount;
     } catch (error) {
-      railwayLogger.error('Session cleanup failed', error);
+      edgeLogger.error('Session cleanup failed', error as Error);
       return 0;
     }
   }

@@ -3,7 +3,7 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { Appointment, AppointmentStatus } from '../../types';
+import { Appointment, AppointmentStatus } from '@/types';
 
 // In a real app, you would use a Zod schema for validation
 // import { appointmentSchema } from '@/lib/validations/appointment';
@@ -17,7 +17,7 @@ export async function saveAppointmentAction(appointmentData: Appointment) {
   const { id, patientId, therapistId, startTime, endTime, ...rest } = appointmentData;
   
   // Remove fields that are derived from relations
-  const { patient, therapist, patientName, patientAvatarUrl, ...dataToSave } = rest;
+  const { patientName, patientAvatarUrl, ...dataToSave } = rest;
   
   const payload = {
     ...dataToSave,
@@ -29,12 +29,12 @@ export async function saveAppointmentAction(appointmentData: Appointment) {
 
   try {
     if (id && !id.startsWith('app_recurr_') && !id.startsWith('app_series_')) {
-       await prisma.appointment.update({
+       await prisma.client.appointment.update({
         where: { id },
         data: payload,
       });
     } else {
-       await prisma.appointment.create({
+       await prisma.client.appointment.create({
         data: {
           ...payload,
           id: id.startsWith('app_') ? undefined : id, // Let prisma generate ID for new ones
@@ -52,7 +52,7 @@ export async function saveAppointmentAction(appointmentData: Appointment) {
 
 export async function deleteAppointmentAction(id: string) {
     try {
-        await prisma.appointment.delete({
+        await prisma.client.appointment.delete({
             where: { id },
         });
         revalidatePath('/dashboard/agenda');
@@ -65,7 +65,7 @@ export async function deleteAppointmentAction(id: string) {
 
 export async function deleteAppointmentSeriesAction(seriesId: string, fromDate: Date) {
     try {
-        await prisma.appointment.deleteMany({
+        await prisma.client.appointment.deleteMany({
             where: { 
                 seriesId,
                 startTime: { gte: fromDate }

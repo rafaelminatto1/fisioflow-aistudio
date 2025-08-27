@@ -14,7 +14,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   const { id } = params;
 
   // Fetch the patient and all related data in a single query
-  const patient = await prisma.patient.findUnique({
+  const patient = await prisma.client.patient.findUnique({
     where: { id },
     include: {
       painPoints: true,

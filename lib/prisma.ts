@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { queryCache, CachePatterns } from './cache'
-import { railwayLogger } from './railway-logger'
+import edgeLogger from './edge-logger'
 import crypto from 'crypto'
 
 const globalForPrisma = globalThis as unknown as {
@@ -78,7 +78,7 @@ class CachedPrismaClient {
       
       if (cached !== null) {
         this.queryStats.cached++;
-        railwayLogger.debug('Query served from cache', {
+        edgeLogger.debug('Query served from cache', {
           model: modelName,
           operation,
           cacheKey
@@ -104,7 +104,7 @@ class CachedPrismaClient {
         compress: this.shouldCompress(result)
       });
       
-      railwayLogger.debug('Query executed and cached', {
+      edgeLogger.debug('Query executed and cached', {
         model: modelName,
         operation,
         queryTime,
@@ -170,17 +170,17 @@ class CachedPrismaClient {
   // Invalidation methods
   async invalidateModel(modelName: string): Promise<void> {
     await queryCache.invalidateTag(`model:${modelName}`);
-    railwayLogger.info('Model cache invalidated', { model: modelName });
+    edgeLogger.info('Model cache invalidated', { model: modelName });
   }
 
   async invalidateRecord(modelName: string, id: string): Promise<void> {
     await queryCache.invalidateTag(`${modelName}:${id}`);
-    railwayLogger.info('Record cache invalidated', { model: modelName, id });
+    edgeLogger.info('Record cache invalidated', { model: modelName, id });
   }
 
   async invalidateUser(userId: string): Promise<void> {
     await queryCache.invalidateTag(`user:${userId}`);
-    railwayLogger.info('User cache invalidated', { userId });
+    edgeLogger.info('User cache invalidated', { userId });
   }
 
   // Stats and monitoring
@@ -261,14 +261,14 @@ export const cachedPrismaWithPool = new CachedPrismaClient(prismaWithPool)
 // Enhanced graceful shutdown - only in Node.js runtime, not Edge Runtime
 if (typeof process !== 'undefined' && process.on) {
   const gracefulShutdown = async (signal: string) => {
-    railwayLogger.info(`Received ${signal}, starting graceful shutdown`);
+    edgeLogger.info(`Received ${signal}, starting graceful shutdown`);
     
     try {
       // Log final cache stats
       const queryStats = cachedPrisma.getQueryStats();
       const cacheStats = await queryCache.getMetrics();
       
-      railwayLogger.info('Final cache statistics', {
+      edgeLogger.info('Final cache statistics', {
         queryStats,
         cacheStats
       });
@@ -279,10 +279,10 @@ if (typeof process !== 'undefined' && process.on) {
       await cachedPrisma.$disconnect();
       await cachedPrismaWithPool.$disconnect();
       
-      railwayLogger.info('Graceful shutdown completed');
+      edgeLogger.info('Graceful shutdown completed');
       process.exit(0);
     } catch (error) {
-      railwayLogger.error('Error during graceful shutdown', error);
+      edgeLogger.error('Error during graceful shutdown', error as Error);
       process.exit(1);
     }
   };

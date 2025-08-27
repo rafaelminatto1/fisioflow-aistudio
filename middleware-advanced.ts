@@ -11,7 +11,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { railwayLogger, measurePerformance } from './lib/simple-logger';
+import { simpleLogger as edgeLogger, measurePerformance } from './lib/simple-logger';
 import { cache } from './lib/cache';
 import crypto from 'crypto';
 
@@ -86,11 +86,11 @@ const ROUTE_CACHE_CONFIG = {
 // Função para limpar cache expirado
 function cleanupRateLimitCache() {
   const now = Date.now();
-  for (const [key, value] of rateLimitCache.entries()) {
+  Array.from(rateLimitCache.entries()).forEach(([key, value]) => {
     if (now > value.resetTime) {
       rateLimitCache.delete(key);
     }
-  }
+  });
 }
 
 // Rate limiting
@@ -183,7 +183,7 @@ function handleHealthCheck(request: NextRequest): NextResponse | null {
   const { pathname } = new URL(request.url);
   
   if (pathname === MIDDLEWARE_CONFIG.healthCheck.path) {
-    const metrics = railwayLogger.getMetrics();
+    const metrics = edgeLogger.getMetrics();
     
     const healthData = {
       status: 'healthy',
@@ -207,7 +207,7 @@ function handleHealthCheck(request: NextRequest): NextResponse | null {
       },
     };
     
-    railwayLogger.info('Health check executado', { 
+    edgeLogger.info('Health check executado', { 
       ip: request.headers.get('x-forwarded-for') || 'unknown',
       userAgent: request.headers.get('user-agent'),
     });
@@ -299,7 +299,7 @@ async function tryServeFromCache(request: NextRequest): Promise<NextResponse | n
         },
       });
       
-      railwayLogger.debug('Route served from cache', {
+      edgeLogger.debug('Route served from cache', {
         url: request.url,
         cacheKey,
         age: Date.now() - cached.timestamp,
@@ -308,7 +308,7 @@ async function tryServeFromCache(request: NextRequest): Promise<NextResponse | n
       return response;
     }
   } catch (error) {
-    railwayLogger.error('Cache retrieval error', error, {
+    edgeLogger.error('Cache retrieval error', error as Error, {
       url: request.url,
     });
   }
@@ -317,7 +317,7 @@ async function tryServeFromCache(request: NextRequest): Promise<NextResponse | n
 }
 
 // Store response in cache
-async function storeInCache(request: NextRequest, response: NextResponse): Promise<void> {
+async function storeInCache(request: NextRequest, response: NextResponse | Response): Promise<void> {
   if (!shouldCacheRoute(request)) return;
   
   // Only cache successful responses
@@ -366,7 +366,7 @@ async function storeInCache(request: NextRequest, response: NextResponse): Promi
       compress: body.length > 1024,
     });
     
-    railwayLogger.debug('Response cached', {
+    edgeLogger.debug('Response cached', {
       url: request.url,
       cacheKey,
       ttl,
@@ -374,7 +374,7 @@ async function storeInCache(request: NextRequest, response: NextResponse): Promi
     });
     
   } catch (error) {
-    railwayLogger.error('Cache storage error', error, {
+    edgeLogger.error('Cache storage error', error as Error, {
       url: request.url,
     });
   }
@@ -386,7 +386,7 @@ export async function middleware(request: NextRequest) {
     const startTime = Date.now();
     
     // Criar contexto de logging
-    const logRequest = railwayLogger.createRequestMiddleware();
+    const logRequest = edgeLogger.createRequestMiddleware();
     const logResponse = logRequest(request);
     
     try {
@@ -406,7 +406,7 @@ export async function middleware(request: NextRequest) {
       
       // Rate limiting
       if (!checkRateLimit(request)) {
-        railwayLogger.warn('Rate limit excedido', {
+        edgeLogger.warn('Rate limit excedido', {
           ip: request.headers.get('x-forwarded-for') || 'unknown',
           userAgent: request.headers.get('user-agent'),
           url: request.url,
@@ -440,7 +440,7 @@ export async function middleware(request: NextRequest) {
         try {
           await storeInCache(request, response.clone());
         } catch (error) {
-          railwayLogger.error('Failed to store response in cache', error);
+          edgeLogger.error('Failed to store response in cache', error as Error);
         }
       }
       
@@ -462,7 +462,7 @@ export async function middleware(request: NextRequest) {
       
       // Log de performance se demorou muito
       if (duration > 1000) {
-        railwayLogger.warn('Requisição lenta detectada', {
+        edgeLogger.warn('Requisição lenta detectada', {
           url: request.url,
           method: request.method,
           duration,
@@ -472,7 +472,7 @@ export async function middleware(request: NextRequest) {
       
       // Log cache performance metrics
       if (duration > 0) {
-        railwayLogger.debug('Request processed', {
+        edgeLogger.debug('Request processed', {
           url: request.url,
           method: request.method,
           duration,
@@ -485,7 +485,7 @@ export async function middleware(request: NextRequest) {
       return finalResponse;
       
     } catch (error) {
-      railwayLogger.error('Erro no middleware', error, {
+      edgeLogger.error('Erro no middleware', error as Error, {
         url: request.url,
         method: request.method,
         userAgent: request.headers.get('user-agent'),
@@ -511,9 +511,9 @@ export const MiddlewareCache = {
   async invalidateRoutePattern(pattern: string): Promise<void> {
     try {
       await cache.invalidateTag(`path:${pattern}`);
-      railwayLogger.info('Route cache invalidated', { pattern });
+      edgeLogger.info('Route cache invalidated', { pattern });
     } catch (error) {
-      railwayLogger.error('Failed to invalidate route cache', error, { pattern });
+      edgeLogger.error('Failed to invalidate route cache', error as Error, { pattern });
     }
   },
   
@@ -523,9 +523,9 @@ export const MiddlewareCache = {
   async invalidateAllRoutes(): Promise<void> {
     try {
       await cache.invalidateTag('route-cache');
-      railwayLogger.info('All route cache invalidated');
+      edgeLogger.info('All route cache invalidated');
     } catch (error) {
-      railwayLogger.error('Failed to invalidate all route cache', error);
+      edgeLogger.error('Failed to invalidate all route cache', error as Error);
     }
   },
   

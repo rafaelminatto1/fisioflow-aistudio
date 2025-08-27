@@ -373,7 +373,7 @@ export function SecurityDashboard() {
             <CardContent>
               <div className="space-y-2">
                 {securityData.policies.map((policy, index) => (
-                  <div key={policy.tableName + policy.policyName} className="flex items-center justify-between p-3 border rounded">
+                  <div key={index} className="flex items-center justify-between p-3 border rounded">
                     <div>
                       <p className="font-medium">{policy.policyName}</p>
                       <p className="text-sm text-muted-foreground">

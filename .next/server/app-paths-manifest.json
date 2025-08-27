@@ -1,19 +1,20 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
   "/api/analytics/advanced/route": "app/api/analytics/advanced/route.js",
-  "/api/pacientes/route": "app/api/pacientes/route.js",
   "/api/neon/management/route": "app/api/neon/management/route.js",
-  "/api/security/route": "app/api/security/route.js",
   "/api/neon/metrics/route": "app/api/neon/metrics/route.js",
   "/api/neon/rls/route": "app/api/neon/rls/route.js",
+  "/api/pacientes/route": "app/api/pacientes/route.js",
   "/api/test/route": "app/api/test/route.js",
   "/dashboard/page": "app/dashboard/page.js",
-  "/page": "app/page.js",
   "/api/status/route": "app/api/status/route.js",
+  "/api/security/route": "app/api/security/route.js",
+  "/page": "app/page.js",
   "/api/auth-disabled/[...nextauth]/route": "app/api/auth-disabled/[...nextauth]/route.js",
   "/api/health/route": "app/api/health/route.js",
   "/pacientes/[id]/page": "app/pacientes/[id]/page.js",
   "/pacientes/page": "app/pacientes/page.js",
   "/admin/security/page": "app/admin/security/page.js",
-  "/admin/monitoring/page": "app/admin/monitoring/page.js"
+  "/admin/monitoring/page": "app/admin/monitoring/page.js",
+  "/admin/cache/page": "app/admin/cache/page.js"
 }

@@ -46,9 +46,9 @@ interface PoolMetrics {
 
 // Classe para gerenciar o pool de conexões
 class RailwayConnectionPool {
-  private pool: Pool;
-  private prisma: PrismaClient;
-  private metrics: PoolMetrics;
+  private pool!: Pool;
+  private prisma!: PrismaClient;
+  private metrics!: PoolMetrics;
   private startTime: number;
   private queryTimes: number[] = [];
   private metricsInterval?: NodeJS.Timeout;
@@ -88,7 +88,6 @@ class RailwayConnectionPool {
       connectionString: databaseUrl,
       min: RAILWAY_CONFIG.minConnections,
       max: RAILWAY_CONFIG.maxConnections,
-      acquireTimeoutMillis: RAILWAY_CONFIG.acquireTimeoutMillis,
       idleTimeoutMillis: RAILWAY_CONFIG.idleTimeoutMillis,
       connectionTimeoutMillis: RAILWAY_CONFIG.connectionTimeoutMillis,
       statement_timeout: RAILWAY_CONFIG.statementTimeoutMillis,

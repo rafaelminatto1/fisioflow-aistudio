@@ -11,7 +11,7 @@ import {
 } from './cache';
 import { cacheInvalidator } from './cache-invalidation';
 import { sessionManager } from './session-cache';
-import { railwayLogger } from './railway-logger';
+import edgeLogger from './edge-logger';
 import redis from './redis';
 
 export interface CacheMetricsSummary {
@@ -155,11 +155,11 @@ export class CacheMetricsManager {
       try {
         await this.collectMetrics();
       } catch (error) {
-        railwayLogger.error('Failed to collect cache metrics', error);
+        edgeLogger.error('Failed to collect cache metrics', error as Error);
       }
     }, intervalMs);
 
-    railwayLogger.info('Cache metrics monitoring started', { intervalMs });
+    edgeLogger.info('Cache metrics monitoring started', { intervalMs });
   }
 
   /**
@@ -169,7 +169,7 @@ export class CacheMetricsManager {
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
       this.monitoringInterval = null;
-      railwayLogger.info('Cache metrics monitoring stopped');
+      edgeLogger.info('Cache metrics monitoring stopped');
     }
   }
 
@@ -254,7 +254,7 @@ export class CacheMetricsManager {
       // Check for alerts
       this.checkAlerts(summary);
 
-      railwayLogger.debug('Cache metrics collected', {
+      edgeLogger.debug('Cache metrics collected', {
         hitRate: summary.overall.hitRate,
         operations: summary.overall.totalOperations,
         collectionTime: Date.now() - startTime,
@@ -263,7 +263,7 @@ export class CacheMetricsManager {
       return summary;
 
     } catch (error) {
-      railwayLogger.error('Error collecting cache metrics', error);
+      edgeLogger.error('Error collecting cache metrics', error as Error);
       throw error;
     }
   }
@@ -302,7 +302,7 @@ export class CacheMetricsManager {
         }
 
       } catch (error) {
-        railwayLogger.error('Error checking alert rule', error, { rule: rule.metric });
+        edgeLogger.error('Error checking alert rule', error as Error, { rule: rule.metric });
       }
     }
   }
@@ -345,7 +345,7 @@ export class CacheMetricsManager {
 
     this.alerts.push(alert);
 
-    railwayLogger.warn('Cache alert triggered', {
+    edgeLogger.warn('Cache alert triggered', {
       metric: rule.metric,
       value,
       threshold: rule.threshold,
@@ -369,7 +369,7 @@ export class CacheMetricsManager {
       activeAlert.resolved = true;
       activeAlert.resolvedAt = Date.now();
 
-      railwayLogger.info('Cache alert resolved', {
+      edgeLogger.info('Cache alert resolved', {
         metric: rule.metric,
         duration: activeAlert.resolvedAt - activeAlert.timestamp,
       });
@@ -382,7 +382,7 @@ export class CacheMetricsManager {
   private sendNotification(alert: MetricAlert): void {
     // TODO: Implement actual notification logic
     // This could send to Slack, email, webhook, etc.
-    railwayLogger.info('Alert notification would be sent', {
+    edgeLogger.info('Alert notification would be sent', {
       alertId: alert.id,
       severity: alert.rule.severity,
     });
@@ -424,7 +424,7 @@ export class CacheMetricsManager {
    */
   addAlertRule(rule: AlertRule): void {
     this.alertRules.push(rule);
-    railwayLogger.info('Alert rule added', { metric: rule.metric });
+    edgeLogger.info('Alert rule added', { metric: rule.metric });
   }
 
   /**
@@ -435,7 +435,7 @@ export class CacheMetricsManager {
     this.alertRules = this.alertRules.filter(rule => rule.metric !== metric);
     
     if (this.alertRules.length < initialLength) {
-      railwayLogger.info('Alert rule removed', { metric });
+      edgeLogger.info('Alert rule removed', { metric });
     }
   }
 
@@ -446,7 +446,7 @@ export class CacheMetricsManager {
     const rule = this.alertRules.find(r => r.metric === metric);
     if (rule) {
       Object.assign(rule, updates);
-      railwayLogger.info('Alert rule updated', { metric });
+      edgeLogger.info('Alert rule updated', { metric });
     }
   }
 

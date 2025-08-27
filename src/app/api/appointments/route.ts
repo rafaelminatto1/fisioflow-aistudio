@@ -1,7 +1,7 @@
 // src/app/api/appointments/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { AppointmentTypeColors } from '@/types'; // Using old types file for now
+import { AppointmentTypeColors } from '@/types';
 
 export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-        const appointments = await prisma.appointment.findMany({
+        const appointments = await prisma.client.appointment.findMany({
             where: {
                 startTime: { gte: new Date(startDate) },
                 endTime: { lte: new Date(endDate) },
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
         });
 
         // The data needs to be massaged to match the EnrichedAppointment type on the client
-        const enrichedAppointments = appointments.map(app => ({
+        const enrichedAppointments = appointments.map((app: any) => ({
             ...app,
             // Prisma returns Date objects, no need to parse on server
             patientName: app.patient.name,

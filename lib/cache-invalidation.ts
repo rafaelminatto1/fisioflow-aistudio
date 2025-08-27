@@ -10,7 +10,7 @@ import {
 } from './cache';
 import { PrismaCache } from './prisma';
 import { sessionManager } from './session-cache';
-import { railwayLogger } from './railway-logger';
+import edgeLogger from './edge-logger';
 
 export interface InvalidationRule {
   trigger: string;              // The event that triggers invalidation
@@ -134,7 +134,7 @@ export class CacheInvalidationManager {
    */
   addRule(rule: InvalidationRule): void {
     this.rules.push(rule);
-    railwayLogger.debug('Cache invalidation rule added', { 
+    edgeLogger.debug('Cache invalidation rule added', { 
       trigger: rule.trigger,
       targets: rule.targets.length,
     });
@@ -149,7 +149,7 @@ export class CacheInvalidationManager {
     const removedCount = initialLength - this.rules.length;
     
     if (removedCount > 0) {
-      railwayLogger.info('Cache invalidation rules removed', { 
+      edgeLogger.info('Cache invalidation rules removed', { 
         trigger, 
         removedCount 
       });
@@ -171,7 +171,7 @@ export class CacheInvalidationManager {
         await this.processEventQueue();
       }
 
-      railwayLogger.info('Cache invalidation triggered', {
+      edgeLogger.info('Cache invalidation triggered', {
         eventType: event.type,
         entityType: event.entityType,
         entityId: event.entityId,
@@ -179,7 +179,7 @@ export class CacheInvalidationManager {
       });
 
     } catch (error) {
-      railwayLogger.error('Cache invalidation failed', error, { event });
+      edgeLogger.error('Cache invalidation failed', error as Error, { event });
       throw error;
     }
   }
@@ -211,13 +211,13 @@ export class CacheInvalidationManager {
       // Process queue
       await this.processEventQueue();
 
-      railwayLogger.info('Bulk cache invalidation completed', {
+      edgeLogger.info('Bulk cache invalidation completed', {
         eventCount: events.length,
         processingTime: Date.now() - startTime,
       });
 
     } catch (error) {
-      railwayLogger.error('Bulk cache invalidation failed', error, { 
+      edgeLogger.error('Bulk cache invalidation failed', error as Error, { 
         eventCount: events.length 
       });
       throw error;
@@ -253,7 +253,7 @@ export class CacheInvalidationManager {
       await this.invalidate(event);
     }, delay);
 
-    railwayLogger.info('Cache invalidation scheduled', { trigger, delay });
+    edgeLogger.info('Cache invalidation scheduled', { trigger, delay });
   }
 
   /**
@@ -272,7 +272,7 @@ export class CacheInvalidationManager {
         await this.processEvent(event);
       }
     } catch (error) {
-      railwayLogger.error('Error processing invalidation queue', error);
+      edgeLogger.error('Error processing invalidation queue', error as Error);
     } finally {
       this.processing = false;
     }
@@ -285,7 +285,7 @@ export class CacheInvalidationManager {
     const matchingRules = this.rules.filter(rule => rule.trigger === event.type);
     
     if (matchingRules.length === 0) {
-      railwayLogger.debug('No invalidation rules found for event', { 
+      edgeLogger.debug('No invalidation rules found for event', { 
         eventType: event.type 
       });
       return;
@@ -306,7 +306,7 @@ export class CacheInvalidationManager {
         }
 
       } catch (error) {
-        railwayLogger.error('Error executing invalidation rule', error, {
+        edgeLogger.error('Error executing invalidation rule', error as Error, {
           trigger: rule.trigger,
           event,
         });
@@ -333,7 +333,7 @@ export class CacheInvalidationManager {
         await this.cascadeInvalidation(event);
       }
 
-      railwayLogger.debug('Invalidation rule executed', {
+      edgeLogger.debug('Invalidation rule executed', {
         trigger: rule.trigger,
         targets: invalidatedCount,
         cascade: rule.cascade,
@@ -341,7 +341,7 @@ export class CacheInvalidationManager {
       });
 
     } catch (error) {
-      railwayLogger.error('Failed to execute invalidation rule', error, {
+      edgeLogger.error('Failed to execute invalidation rule', error as Error, {
         trigger: rule.trigger,
         event,
       });
@@ -370,7 +370,7 @@ export class CacheInvalidationManager {
       }
 
     } catch (error) {
-      railwayLogger.error('Failed to invalidate target', error, { target, event });
+      edgeLogger.error('Failed to invalidate target', error as Error, { target, event });
       throw error;
     }
   }
@@ -408,7 +408,7 @@ export class CacheInvalidationManager {
         break;
         
       default:
-        railwayLogger.warn('Unknown model for cache invalidation', { modelName });
+        edgeLogger.warn('Unknown model for cache invalidation', { modelName });
     }
   }
 
@@ -489,13 +489,13 @@ export class CacheInvalidationManager {
           break;
       }
 
-      railwayLogger.debug('Cascade invalidation completed', {
+      edgeLogger.debug('Cascade invalidation completed', {
         entityType: event.entityType,
         entityId: event.entityId,
       });
 
     } catch (error) {
-      railwayLogger.error('Cascade invalidation failed', error, { event });
+      edgeLogger.error('Cascade invalidation failed', error as Error, { event });
     }
   }
 

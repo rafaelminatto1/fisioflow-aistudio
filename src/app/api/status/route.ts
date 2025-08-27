@@ -1,36 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// Edge Runtime compatible status endpoint
+export const runtime = 'edge';
+
 /**
  * Status Endpoint
  * Retorna informações detalhadas sobre o status da aplicação
+ * Compatível com Edge Runtime
  */
 export async function GET(request: NextRequest) {
   try {
     const startTime = Date.now();
     
-    // Verificar memória
-    const memoryUsage = process.memoryUsage();
+    // Verificar memória (simulado para Edge Runtime)
     const memoryUsageInMB = {
-      used: Math.round(memoryUsage.heapUsed / 1024 / 1024),
-      total: Math.round(memoryUsage.heapTotal / 1024 / 1024),
-      percentage: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100)
+      used: 0, // Edge Runtime não tem acesso a process.memoryUsage()
+      total: 0,
+      percentage: 0
     };
 
-    // Verificar uptime
-    const uptime = Math.floor(process.uptime());
+    // Verificar uptime (simulado para Edge Runtime)
+    const uptime = 0; // Edge Runtime não tem acesso a process.uptime()
 
     // Status dos serviços
     const services = {
       database: await checkDatabaseStatus(),
       redis: await checkRedisStatus(),
       memory: {
-        status: memoryUsageInMB.percentage < 90 ? 'healthy' : 'warning',
+        status: 'healthy', // Sempre healthy no Edge Runtime
         usage: memoryUsageInMB
       },
       system: {
         status: 'healthy',
-        nodeVersion: process.version,
-        platform: process.platform
+        nodeVersion: 'edge-runtime', // Edge Runtime não tem acesso a process.version
+        platform: 'edge' // Edge Runtime não tem acesso a process.platform
       }
     };
 
@@ -43,7 +46,7 @@ export async function GET(request: NextRequest) {
       status: overallStatus,
       timestamp: new Date().toISOString(),
       version: '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      environment: (typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : undefined) || 'development',
       uptime,
       services,
       metrics: {
@@ -75,8 +78,9 @@ export async function GET(request: NextRequest) {
  */
 async function checkDatabaseStatus() {
   try {
-    // Em ambiente de teste, simular status saudável
-    if (process.env.NODE_ENV === 'test') {
+    // Em ambiente de teste, simular status saudável (Edge Runtime compatible)
+    const nodeEnv = typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : undefined;
+    if (nodeEnv === 'test') {
       return {
         status: 'healthy',
         responseTime: 10,
@@ -84,8 +88,9 @@ async function checkDatabaseStatus() {
       };
     }
 
-    // Verificar se DATABASE_URL está configurada
-    if (!process.env.DATABASE_URL) {
+    // Verificar se DATABASE_URL está configurada (Edge Runtime compatible)
+    const databaseUrl = typeof process !== 'undefined' && process.env ? process.env.DATABASE_URL : undefined;
+    if (!databaseUrl) {
       return {
         status: 'unhealthy',
         responseTime: 0,
@@ -126,8 +131,9 @@ async function checkDatabaseStatus() {
  */
 async function checkRedisStatus() {
   try {
-    // Em ambiente de teste, simular status saudável
-    if (process.env.NODE_ENV === 'test') {
+    // Em ambiente de teste, simular status saudável (Edge Runtime compatible)
+    const nodeEnv = typeof process !== 'undefined' && process.env ? process.env.NODE_ENV : undefined;
+    if (nodeEnv === 'test') {
       return {
         status: 'healthy',
         responseTime: 5,
@@ -135,8 +141,9 @@ async function checkRedisStatus() {
       };
     }
 
-    // Verificar se REDIS_URL está configurada
-    if (!process.env.REDIS_URL) {
+    // Verificar se REDIS_URL está configurada (Edge Runtime compatible)
+    const redisUrl = typeof process !== 'undefined' && process.env ? process.env.REDIS_URL : undefined;
+    if (!redisUrl) {
       return {
         status: 'warning',
         responseTime: 0,
@@ -149,7 +156,7 @@ async function checkRedisStatus() {
     // Importar Redis dinamicamente
     const { createClient } = await import('redis');
     const client = createClient({
-      url: process.env.REDIS_URL
+      url: redisUrl
     });
     
     try {

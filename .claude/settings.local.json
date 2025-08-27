@@ -19,7 +19,11 @@
       "mcp__gemini-cli__brainstorm",
       "Bash(npm run:*)",
       "Bash(node test-cache-system.js)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(bash:*)",
+      "Bash(railway --version)",
+      "Bash(railway up:*)"
     ],
     "deny": [],
     "ask": []

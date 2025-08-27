@@ -1,5 +1,5 @@
 import { Patient, PatientAttachment, PatientSummary, CommunicationLog, PainPoint } from '../types';
-import { api } from '../lib/api';
+import api from '../lib/api';
 import { eventService } from './eventService';
 
 export const getRecentPatients = async (): Promise<Patient[]> => {

@@ -3,6 +3,103 @@
   "name": "FisioFlow MCP Configuration",
   "description": "Model Context Protocol configuration for FisioFlow AI providers",
   "providers": {
+    "railway": {
+      "name": "Railway Platform",
+      "type": "infrastructure",
+      "enabled": true,
+      "apiKey": "${RAILWAY_API_KEY}",
+      "baseUrl": "https://backboard.railway.app/graphql",
+      "projectId": "${RAILWAY_PROJECT_ID}",
+      "services": {
+        "deploy": {
+          "enabled": true,
+          "autoRedeploy": false,
+          "buildCommand": "npm run build",
+          "startCommand": "npm start"
+        },
+        "monitoring": {
+          "enabled": true,
+          "metrics": ["cpu", "memory", "network", "disk"],
+          "alerts": {
+            "cpu": 80,
+            "memory": 85,
+            "errorRate": 5
+          }
+        },
+        "environment": {
+          "production": {
+            "domain": "${RAILWAY_PRODUCTION_DOMAIN}",
+            "variables": {
+              "NODE_ENV": "production",
+              "DATABASE_URL": "${DATABASE_URL}",
+              "NEXTAUTH_SECRET": "${NEXTAUTH_SECRET}",
+              "NEXTAUTH_URL": "${NEXTAUTH_URL}"
+            }
+          },
+          "staging": {
+            "domain": "${RAILWAY_STAGING_DOMAIN}",
+            "variables": {
+              "NODE_ENV": "staging",
+              "DATABASE_URL": "${STAGING_DATABASE_URL}"
+            }
+          }
+        }
+      },
+      "rateLimits": {
+        "requestsPerMinute": 100,
+        "deploysPerHour": 10
+      },
+      "timeout": 60000,
+      "retries": 3
+    },
+    "neondb": {
+      "name": "Neon Database",
+      "type": "database",
+      "enabled": true,
+      "apiKey": "${NEON_API_KEY}",
+      "baseUrl": "https://console.neon.tech/api/v2",
+      "projectId": "${NEON_PROJECT_ID}",
+      "database": {
+        "host": "${NEON_DB_HOST}",
+        "port": 5432,
+        "name": "${NEON_DB_NAME}",
+        "user": "${NEON_DB_USER}",
+        "password": "${NEON_DB_PASSWORD}",
+        "ssl": true,
+        "pooling": {
+          "enabled": true,
+          "maxConnections": 20,
+          "idleTimeout": 30000
+        }
+      },
+      "operations": {
+        "backup": {
+          "enabled": true,
+          "schedule": "0 2 * * *",
+          "retention": "30d"
+        },
+        "monitoring": {
+          "enabled": true,
+          "metrics": ["connections", "queries", "performance", "storage"],
+          "alerts": {
+            "connectionLimit": 18,
+            "slowQueries": 5000,
+            "storageUsage": 80
+          }
+        },
+        "maintenance": {
+          "autoVacuum": true,
+          "analyzeStats": true,
+          "reindexing": "weekly"
+        }
+      },
+      "rateLimits": {
+        "requestsPerMinute": 1000,
+        "connectionsPerMinute": 50
+      },
+      "timeout": 30000,
+      "retries": 3
+    },
     "openai": {
       "name": "OpenAI",
       "type": "openai",
@@ -107,7 +204,25 @@
       "case_analysis": ["anthropic", "openai", "google"],
       "research_query": ["openai", "anthropic", "google"],
       "document_analysis": ["anthropic", "google", "openai"],
-      "general_question": ["google", "openai", "anthropic"]
+      "general_question": ["google", "openai", "anthropic"],
+      "deploy_management": ["railway"],
+      "infrastructure_monitoring": ["railway"],
+      "database_operations": ["neondb"],
+      "database_monitoring": ["neondb"],
+      "backup_restore": ["neondb"],
+      "environment_config": ["railway", "neondb"]
+    },
+    "infrastructureRouting": {
+      "railway": {
+        "deploy": ["production", "staging"],
+        "monitoring": ["metrics", "logs", "alerts"],
+        "environment": ["variables", "domains", "services"]
+      },
+      "neondb": {
+        "operations": ["backup", "restore", "maintenance"],
+        "monitoring": ["performance", "connections", "storage"],
+        "management": ["users", "databases", "schemas"]
+      }
     }
   },
   "cache": {
@@ -119,9 +234,27 @@
       "case_analysis": 1800,
       "research_query": 3600,
       "document_analysis": 7200,
-      "general_question": 1800
+      "general_question": 1800,
+      "deploy_management": 300,
+      "infrastructure_monitoring": 60,
+      "database_operations": 600,
+      "database_monitoring": 120,
+      "backup_restore": 1800,
+      "environment_config": 3600
     },
-    "maxSize": 1000
+    "maxSize": 1000,
+    "infrastructureCache": {
+      "railway": {
+        "deployStatus": 30,
+        "metrics": 60,
+        "logs": 300
+      },
+      "neondb": {
+        "connectionStatus": 60,
+        "queryMetrics": 120,
+        "backupStatus": 600
+      }
+    }
   },
   "monitoring": {
     "enabled": true,
@@ -138,5 +271,51 @@
     "encryptCache": false,
     "rateLimitByUser": true,
     "maxRequestsPerUser": 100
+  },
+  "authentication": {
+    "railway": {
+      "type": "bearer",
+      "apiKey": "${RAILWAY_API_KEY}",
+      "refreshToken": "${RAILWAY_REFRESH_TOKEN}",
+      "tokenExpiry": 3600,
+      "autoRefresh": true
+    },
+    "neondb": {
+      "type": "api_key",
+      "apiKey": "${NEON_API_KEY}",
+      "connectionString": "${DATABASE_URL}",
+      "sslMode": "require"
+    }
+  },
+  "infrastructure": {
+    "healthChecks": {
+      "enabled": true,
+      "interval": 300,
+      "timeout": 10,
+      "retries": 3,
+      "endpoints": {
+        "railway": "https://backboard.railway.app/health",
+        "neondb": "${NEON_DB_HOST}:5432"
+      }
+    },
+    "failover": {
+      "enabled": true,
+      "strategy": "circuit_breaker",
+      "thresholds": {
+        "errorRate": 0.5,
+        "responseTime": 5000,
+        "consecutiveFailures": 5
+      }
+    },
+    "logging": {
+      "level": "info",
+      "destinations": ["console", "file"],
+      "format": "json",
+      "rotation": {
+        "enabled": true,
+        "maxSize": "100MB",
+        "maxFiles": 10
+      }
+    }
   }
 }

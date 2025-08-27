@@ -3,8 +3,8 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { X, Save, Calendar, Clock } from 'lucide-react';
-import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary, RecurrenceRule } from '../../../types';
-import { useToast } from '../../ui/use-toast';
+import { Appointment, Patient, AppointmentStatus, AppointmentType, Therapist, PatientSummary } from '@/types';
+import { useToast } from '../ui/use-toast';
 import PatientSearchInput from './PatientSearchInput';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -110,6 +110,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({ isOpen, onC
             <PatientSearchInput
               onSelectPatient={setSelectedPatient}
               selectedPatient={selectedPatient}
+              patients={patients}
             />
           </div>
           

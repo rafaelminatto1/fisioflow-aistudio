@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const patients = await prisma.patient.findMany({
+    const patients = await prisma.client.patient.findMany({
       where: {
         OR: [
           { name: { contains: term, mode: 'insensitive' } },

@@ -67,31 +67,31 @@ export class NeonMonitoring {
         timestamp: new Date(),
         database: {
           connections: {
-            active: Number(neonMetrics.connectionStats?.active_connections) || 0,
-            idle: Number(neonMetrics.connectionStats?.idle_connections) || 0,
-            total: Number(neonMetrics.connectionStats?.total_connections) || 0
+            active: neonMetrics.connectionStats?.active_connections || 0,
+            idle: neonMetrics.connectionStats?.idle_connections || 0,
+            total: neonMetrics.connectionStats?.total_connections || 0
           },
           performance: {
             avgQueryTime: healthCheck.latency || 0,
-            slowQueries: 0, // Not available from current metrics
+            slowQueries: neonMetrics.activeQueries?.active_queries || 0,
             errorRate: healthCheck.status === 'unhealthy' ? 100 : 0
           },
           storage: {
-            used: 0, // Not available from current metrics
-            available: 0, // Not available from current metrics
-            percentage: 0 // Not available from current metrics
+            used: 0, // Not available from current API
+            available: 0, // Not available from current API
+            percentage: 0 // Not available from current API
           }
         },
         compute: {
-          cpu: 0, // Not available from current metrics
-          memory: 0, // Not available from current metrics
+          cpu: 0, // Not available from current API
+          memory: 0, // Not available from current API
           status: healthCheck.status === 'healthy' ? 'active' : 'idle',
-          autoscaling: false // Not available from current metrics
+          autoscaling: false // Not available from current API
         },
         api: {
           responseTime: healthCheck.latency || 0,
           errorRate: healthCheck.status === 'unhealthy' ? 100 : 0,
-          requestsPerMinute: 0 // Not available from current metrics
+          requestsPerMinute: 0 // Not available from current API
         }
       };
 

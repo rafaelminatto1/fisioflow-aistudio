@@ -14,8 +14,8 @@ export default async function AgendaPage() {
     const weekEnd = endOfWeek(today, { weekStartsOn: 1 });
 
     const [therapists, initialAppointments, patients] = await Promise.all([
-        prisma.user.findMany({ where: { role: 'Fisioterapeuta' } }),
-        prisma.appointment.findMany({
+        prisma.client.user.findMany({ where: { role: 'Fisioterapeuta' } }),
+        prisma.client.appointment.findMany({
             where: {
                 startTime: { gte: weekStart },
                 endTime: { lte: weekEnd },
@@ -24,7 +24,7 @@ export default async function AgendaPage() {
                 patient: { select: { name: true, phone: true, medicalAlerts: true } }
             }
         }),
-        prisma.patient.findMany({ 
+        prisma.client.patient.findMany({ 
             where: { status: 'Active' },
             select: { id: true, name: true, cpf: true }
         })

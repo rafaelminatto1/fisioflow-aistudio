@@ -2,7 +2,7 @@
 'use client';
 
 import React from 'react';
-import { SoapNote } from '../../types';
+import { SoapNote } from '@/types';
 import { FileText } from 'lucide-react';
 
 interface ClinicalHistoryTimelineProps {

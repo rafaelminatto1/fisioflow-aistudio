@@ -3,9 +3,9 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Patient, SoapNote, TreatmentPlan } from '../../types'; // Assuming types are accessible
+import { Patient, SoapNote, TreatmentPlan } from '@/types';
 import { User, Stethoscope, Paperclip, History, Plus } from 'lucide-react';
-import InfoCard from '../../ui/InfoCard';
+import InfoCard from '../ui/InfoCard';
 import ClinicalHistoryTimeline from './ClinicalHistoryTimeline';
 import NewSoapNoteModal from './NewSoapNoteModal';
 

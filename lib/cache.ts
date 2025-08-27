@@ -1,6 +1,6 @@
 // lib/cache.ts - Enhanced Multi-Layer Cache System
 import redis from './redis';
-import { railwayLogger } from './railway-logger';
+import edgeLogger from './edge-logger';
 
 export interface CacheOptions {
   ttl?: number; // Time to live in seconds
@@ -104,7 +104,7 @@ export class CacheManager {
       
     } catch (error) {
       this.metrics.errors++;
-      railwayLogger.error('Cache get error', error, { key, prefix: this.prefix });
+      edgeLogger.error('Cache get error', error instanceof Error ? error : new Error(String(error)), { key, prefix: this.prefix });
       return null;
     }
   }
@@ -149,7 +149,7 @@ export class CacheManager {
       
     } catch (error) {
       this.metrics.errors++;
-      railwayLogger.error('Cache set error', error, { key, prefix: this.prefix });
+      edgeLogger.error('Cache set error', error instanceof Error ? error : new Error(String(error)), { key, prefix: this.prefix });
     }
   }
 
@@ -175,7 +175,7 @@ export class CacheManager {
       
     } catch (error) {
       this.metrics.errors++;
-      railwayLogger.error('Cache delete error', error, { key, prefix: this.prefix });
+      edgeLogger.error('Cache delete error', error instanceof Error ? error : new Error(String(error)), { key, prefix: this.prefix });
     }
   }
 
@@ -204,11 +204,11 @@ export class CacheManager {
       }
       
       this.updateMetrics(Date.now() - startTime);
-      railwayLogger.info('Cache tag invalidated', { tag, keysCount: keys.length });
+      edgeLogger.info('Cache tag invalidated', { tag, keysCount: keys.length });
       
     } catch (error) {
       this.metrics.errors++;
-      railwayLogger.error('Cache tag invalidation error', error, { tag });
+      edgeLogger.error('Cache tag invalidation error', error instanceof Error ? error : new Error(String(error)), { tag });
     }
   }
 
@@ -229,11 +229,11 @@ export class CacheManager {
       }
       
       this.updateMetrics(Date.now() - startTime);
-      railwayLogger.info('Cache cleared', { prefix: this.prefix, keysCount: keys.length });
+      edgeLogger.info('Cache cleared', { prefix: this.prefix, keysCount: keys.length });
       
     } catch (error) {
       this.metrics.errors++;
-      railwayLogger.error('Cache clear error', error, { prefix: this.prefix });
+      edgeLogger.error('Cache clear error', error instanceof Error ? error : new Error(String(error)), { prefix: this.prefix });
     }
   }
 
@@ -334,7 +334,7 @@ export class CacheManager {
       if (freedSpace >= neededSize) break;
     }
     
-    railwayLogger.info('Memory cache evicted', { freedSpace, neededSize });
+    edgeLogger.info('Memory cache evicted', { freedSpace, neededSize });
   }
   
   private cleanupMemoryCache(): void {
@@ -353,7 +353,7 @@ export class CacheManager {
     this.currentMemorySize -= cleanedSize;
     
     if (cleanedCount > 0) {
-      railwayLogger.debug('Memory cache cleanup', { cleanedCount, cleanedSize });
+      edgeLogger.debug('Memory cache cleanup', { cleanedCount, cleanedSize });
     }
   }
   
@@ -404,7 +404,7 @@ export class CacheManager {
       const redisClient = await redis;
       return redisClient.getStats();
     } catch (error) {
-      railwayLogger.error('Failed to get Redis stats', error);
+      edgeLogger.error('Failed to get Redis stats', error instanceof Error ? error : new Error(String(error)));
       return null;
     }
   }
@@ -432,12 +432,12 @@ export const cache = new CacheManager('default', 100 * 1024 * 1024);
 // Cache warming and preloading utilities
 export class CacheWarmer {
   static async warmPatientCache(): Promise<void> {
-    railwayLogger.info('Starting patient cache warming');
+    edgeLogger.info('Starting patient cache warming');
     // TODO: Implement cache warming logic
   }
   
   static async warmAppointmentCache(): Promise<void> {
-    railwayLogger.info('Starting appointment cache warming');
+    edgeLogger.info('Starting appointment cache warming');
     // TODO: Implement cache warming logic
   }
   
