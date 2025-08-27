@@ -1,1 +1,0 @@
-self.__BUILD_MANIFEST=function(e){return{__rewrites:{afterFiles:[{has:e,source:"/api/flask/:path*",destination:e},{has:e,source:"/cache-static/:path*",destination:"/static/:path*"}],beforeFiles:[],fallback:[]},"/_error":["static/chunks/pages/_error-41b7ed050ee49bd2.js"],sortedPages:["/_app","/_error"]}}(void 0),self.__BUILD_MANIFEST_CB&&self.__BUILD_MANIFEST_CB();

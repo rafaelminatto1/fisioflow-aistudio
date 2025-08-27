@@ -31,7 +31,8 @@
       "Bash(railway link:*)",
       "Bash(railway environment set:*)",
       "Bash(railway projects:*)",
-      "Bash(railway:*)"
+      "Bash(railway:*)",
+      "Bash(git reset:*)"
     ],
     "deny": [],
     "ask": []
