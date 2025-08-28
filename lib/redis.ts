@@ -1,63 +1,66 @@
-// src/lib/redis.ts - Build-safe Redis client
-type RedisClient = {
-  get: (key: string) => Promise<string | null>;
-  set: (key: string, value: string) => Promise<string>;
-  del: (key: string) => Promise<number>;
-  exists: (key: string) => Promise<number>;
-  incr: (key: string) => Promise<number>;
-  expire: (key: string, seconds: number) => Promise<number>;
-  connect: () => Promise<void>;
-  disconnect: () => Promise<void>;
-  on: (event: string, callback: (err?: Error) => void) => void;
-  isReady: boolean;
-};
+import IORedis from 'ioredis';
+import edgeLogger from './edge-logger';
 
-// Create a mock redis client for build time
-const mockRedis: RedisClient = {
-  get: async () => null,
-  set: async () => 'OK',
-  del: async () => 0,
-  exists: async () => 0,
-  incr: async () => 1,
-  expire: async () => 1,
-  connect: async () => {},
-  disconnect: async () => {},
-  on: () => {},
-  isReady: false,
-};
-
-// Only create real Redis client at runtime if needed
-async function initializeRedis() {
-  if (
-    typeof window === 'undefined' &&
-    process.env.REDIS_URL &&
-    process.env.NODE_ENV !== 'test'
-  ) {
-    try {
-      const { createClient } = await import('redis');
-
-      const client = createClient({
-        url: process.env.REDIS_URL,
-        socket: {
-          reconnectStrategy: false, // Prevent connection attempts during build
-        },
-      });
-
-      client.on('error', (err: Error) =>
-        console.error('Redis Client Error', err)
-      );
-
-      return client;
-    } catch (error) {
-      console.warn('Redis not available, using mock client');
-      return mockRedis;
-    }
-  } else {
-    return mockRedis;
-  }
+// Declaração para o cache global da instância do Redis
+declare global {
+  // eslint-disable-next-line no-var
+  var __redis: IORedis | undefined;
 }
 
-// Initialize Redis lazily
-const redis: RedisClient = mockRedis;
+let redis: IORedis;
+
+const redisUrl = process.env.REDIS_URL;
+
+if (!redisUrl) {
+  edgeLogger.warn('REDIS_URL não está definido. Usando um mock do Redis para fins de build e desenvolvimento local. Funcionalidades de cache avançado como tags não funcionarão.');
+
+  // Mock do IORedis para evitar que a aplicação quebre durante o build ou em ambientes sem Redis.
+  // Ele simula a interface do ioredis, mas não armazena dados.
+  const mockRedis = {
+    get: async () => null,
+    set: async () => 'OK',
+    del: async () => 1,
+    sadd: async () => 1,
+    smembers: async () => [],
+    scan: async function* () {
+      // Gerador vazio para o scan
+      yield []; // Retorna um cursor '0' e um array vazio de chaves
+      return;
+    },
+    on: () => {},
+    connect: async () => {},
+    disconnect: async () => {},
+  } as unknown as IORedis;
+
+  redis = mockRedis;
+
+} else {
+  if (process.env.NODE_ENV === 'production') {
+    // Em produção, usa a instância singleton
+    if (!globalThis.__redis) {
+      globalThis.__redis = new IORedis(redisUrl, {
+        maxRetriesPerRequest: 3,
+        enableReadyCheck: true,
+      });
+      edgeLogger.info('Nova conexão Redis de produção criada.');
+    }
+    redis = globalThis.__redis;
+  } else {
+    // Em desenvolvimento, cria uma nova conexão para evitar problemas com HMR
+    redis = new IORedis(redisUrl, {
+        maxRetriesPerRequest: 3,
+        enableReadyCheck: false, // Menos estrito em dev
+    });
+    edgeLogger.info('Nova conexão Redis de desenvolvimento criada.');
+  }
+
+  redis.on('error', (err) => {
+    edgeLogger.error('Erro no cliente Redis', err);
+  });
+
+  redis.on('connect', () => {
+    edgeLogger.info('Cliente Redis conectado com sucesso.');
+  });
+}
 
 export default redis;
