@@ -9,7 +9,7 @@ interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   error?: Error;
 }
 
@@ -76,7 +76,7 @@ class EdgeLogger {
     return JSON.stringify(logData);
   }
 
-  private log(level: LogLevel, message: string, error?: Error, metadata?: Record<string, any>): void {
+  private log(level: LogLevel, message: string, error?: Error, metadata?: Record<string, unknown>): void {
     if (!this.shouldLog(level)) return;
 
     const entry: LogEntry = {
@@ -119,19 +119,19 @@ class EdgeLogger {
   }
 
   // Métodos públicos
-  debug(message: string, metadata?: Record<string, any>): void {
+  debug(message: string, metadata?: Record<string, unknown>): void {
     this.log('debug', message, undefined, metadata);
   }
 
-  info(message: string, metadata?: Record<string, any>): void {
+  info(message: string, metadata?: Record<string, unknown>): void {
     this.log('info', message, undefined, metadata);
   }
 
-  warn(message: string, metadata?: Record<string, any>): void {
+  warn(message: string, metadata?: Record<string, unknown>): void {
     this.log('warn', message, undefined, metadata);
   }
 
-  error(message: string, error?: Error, metadata?: Record<string, any>): void {
+  error(message: string, error?: Error, metadata?: Record<string, unknown>): void {
     this.log('error', message, error, metadata);
   }
 

@@ -74,6 +74,20 @@ const nextConfig = {
           },
         ],
       },
+      // Font files caching
+      {
+        source: '/fonts/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+          {
+            key: 'Access-Control-Allow-Origin',
+            value: '*',
+          },
+        ],
+      },
     ];
   },
 
@@ -126,11 +140,7 @@ const nextConfig = {
   // Enhanced rewrites with caching considerations
   async rewrites() {
     return [
-      // Flask API proxy with caching headers
-      {
-        source: '/api/flask/:path*',
-        destination: 'http://flask:5001/api/:path*',
-      },
+      // Removed Flask API proxy - not needed for Railway deployment
       // Cache-friendly static file serving
       {
         source: '/cache-static/:path*',

@@ -32,7 +32,15 @@
       "Bash(railway environment set:*)",
       "Bash(railway projects:*)",
       "Bash(railway:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(mkdir:*)",
+      "WebFetch(domain:aifisio-production.up.railway.app)",
+      "Bash(timeout:*)",
+      "mcp__gemini-cli__ask-gemini",
+      "WebSearch",
+      "WebFetch(domain:station.railway.com)",
+      "WebFetch(domain:railway.com)",
+      "WebFetch(domain:docs.railway.com)"
     ],
     "deny": [],
     "ask": []

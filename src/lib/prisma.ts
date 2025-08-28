@@ -2,15 +2,15 @@
 import { PrismaClient } from '@prisma/client';
 
 declare global {
-  var prisma: PrismaClient | undefined;
+  var __prisma: PrismaClient | undefined;
 }
 
-const prisma = globalThis.prisma || new PrismaClient({
+const prisma = globalThis.__prisma || new PrismaClient({
     log: process.env.NODE_ENV === 'development' ? ['query', 'info', 'warn', 'error'] : [],
 });
 
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma;
+  globalThis.__prisma = prisma;
 }
 
 // --- PRISMA MIDDLEWARE ---

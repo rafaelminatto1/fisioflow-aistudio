@@ -27,10 +27,7 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="//fonts.gstatic.com" />
       </head>
       <body className={inter.className}>
-        <ResourcePreloader resources={[
-          "/api/auth/session",
-          "/api/auth/providers"
-        ]} />
+        <ResourcePreloader />
         <AuthProvider>
           {children}
           <ToastContainer />

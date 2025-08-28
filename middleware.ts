@@ -274,7 +274,7 @@ export async function middleware(request: NextRequest) {
   });
 }
 
-// Configuração do matcher
+// Configuração do matcher - mais permissiva para Railway
 export const config = {
   matcher: [
     /*
@@ -283,7 +283,8 @@ export const config = {
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
      * - public folder
+     * - api routes (let Next.js handle them directly)
      */
-    '/((?!_next/static|_next/image|favicon.ico|public/).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|public/).*)',
   ],
 };

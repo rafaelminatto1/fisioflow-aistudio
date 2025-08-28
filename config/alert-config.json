@@ -1,0 +1,43 @@
+{
+  "email": {
+    "enabled": false,
+    "smtp": {
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "secure": false,
+      "auth": {
+        "user": "",
+        "pass": ""
+      }
+    },
+    "from": "",
+    "to": [],
+    "subject": "[FisioFlow] Alerta do Sistema"
+  },
+  "webhook": {
+    "enabled": false,
+    "url": "",
+    "method": "POST",
+    "headers": {
+      "Content-Type": "application/json"
+    }
+  },
+  "slack": {
+    "enabled": false,
+    "webhookUrl": "",
+    "channel": "#alerts",
+    "username": "FisioFlow Bot"
+  },
+  "discord": {
+    "enabled": false,
+    "webhookUrl": ""
+  },
+  "console": {
+    "enabled": true,
+    "colors": true
+  },
+  "file": {
+    "enabled": true,
+    "path": "C:\\Users\\amand\\Rafael\\aifisio\\fisioflow-aistudio\\logs\\alerts.log"
+  }
+}

@@ -1,9 +1,8 @@
 [build]
-builder = "NIXPACKS"
-command = "npm run build"
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
 
 [deploy]
-command = "npm start"
 healthcheckPath = "/api/health"
 healthcheckTimeout = 120
 healthcheckInterval = 30

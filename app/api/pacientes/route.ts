@@ -30,16 +30,13 @@ export async function GET(request: NextRequest) {
     }
     
     // 2. Se não houver cache, busca no banco
-    const where: any = {
+    const where = {
       OR: [
-        { name: { contains: searchTerm, mode: 'insensitive' } },
-        { cpf: { contains: searchTerm, mode: 'insensitive' } },
+        { name: { contains: searchTerm, mode: 'insensitive' as const } },
+        { cpf: { contains: searchTerm, mode: 'insensitive' as const } },
       ],
+      ...(status && status !== 'All' ? { status } : {})
     };
-
-    if (status && status !== 'All') {
-      where.status = status;
-    }
 
     const patients = await cachedPrisma.client.patient.findMany({
       take: take,
