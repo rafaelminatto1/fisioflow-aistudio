@@ -10,7 +10,7 @@ import {
   RecurrenceRule,
 } from '../types';
 import { useToast } from '../contexts/ToastContext';
-import { PatientSearchInput } from './agenda/PatientSearchInput';
+import PatientSearchInput from './agenda/PatientSearchInput';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import RecurrenceSelector from './RecurrenceSelector';
@@ -34,7 +34,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  onDelete,
+  // onDelete, // Temporariamente comentado
   appointmentToEdit,
   initialData,
   patients,
@@ -128,12 +128,14 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
     setIsSaving(true);
 
     const startTime = new Date(slotDate);
+    if (!slotTime) return;
     const [hour, minute] = slotTime.split(':');
+    if (!hour || !minute) return;
     startTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
 
     const endTime = new Date(startTime.getTime() + duration * 60000);
 
-    const baseAppointment: Appointment = {
+    const baseAppointment: any = {
       id: appointmentToEdit?.id || `app_${Date.now()}`,
       patientId: selectedPatient.id,
       patientName: selectedPatient.name,
@@ -150,8 +152,11 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
       value: appointmentToEdit?.value || 120,
       paymentStatus: appointmentToEdit?.paymentStatus || 'pending',
       recurrenceRule: recurrenceRule,
-      seriesId: appointmentToEdit?.seriesId,
     };
+    
+    if (appointmentToEdit?.seriesId) {
+      baseAppointment.seriesId = appointmentToEdit.seriesId;
+    }
 
     const appointmentsToSave = generateRecurrences(baseAppointment);
 

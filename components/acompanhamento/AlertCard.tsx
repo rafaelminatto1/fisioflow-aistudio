@@ -7,8 +7,6 @@ import {
   MessageSquare,
   CalendarPlus,
   StickyNote,
-  CheckCircle,
-  XCircle,
   BrainCircuit,
   AlertTriangle,
 } from 'lucide-react';

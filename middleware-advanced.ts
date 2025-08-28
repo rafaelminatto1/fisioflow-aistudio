@@ -330,9 +330,7 @@ async function tryServeFromCache(
       return response;
     }
   } catch (error) {
-    edgeLogger.error('Cache retrieval error', error as Error, {
-      url: request.url,
-    });
+    edgeLogger.error(`Cache retrieval error for ${request.url}`, error as Error);
   }
 
   return null;
@@ -398,9 +396,7 @@ async function storeInCache(
       size: body.length,
     });
   } catch (error) {
-    edgeLogger.error('Cache storage error', error as Error, {
-      url: request.url,
-    });
+    edgeLogger.error(`Cache storage error for ${request.url}`, error as Error);
   }
 }
 
@@ -520,11 +516,7 @@ export async function middleware(request: NextRequest) {
 
       return finalResponse;
     } catch (error) {
-      edgeLogger.error('Erro no middleware', error as Error, {
-        url: request.url,
-        method: request.method,
-        userAgent: request.headers.get('user-agent'),
-      });
+      edgeLogger.error(`Erro no middleware para ${request.url} (${request.method})`, error as Error);
 
       const errorResponse = NextResponse.json(
         { error: 'Internal server error' },
@@ -548,9 +540,7 @@ export const MiddlewareCache = {
       await cache.invalidateTag(`path:${pattern}`);
       edgeLogger.info('Route cache invalidated', { pattern });
     } catch (error) {
-      edgeLogger.error('Failed to invalidate route cache', error as Error, {
-        pattern,
-      });
+      edgeLogger.error(`Failed to invalidate route cache for pattern ${pattern}`, error as Error);
     }
   },
 

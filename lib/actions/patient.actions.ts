@@ -24,7 +24,7 @@ export async function createPatient(data: PatientFormData) {
 
   // 2. Lógica de negócio (criação no DB)
   try {
-    await cachedPrisma.client.patient.create({
+    await cachedPrisma.patient.create({
       data: {
         ...patientData,
         birthDate: patientData.birthDate
@@ -59,7 +59,7 @@ export async function updatePatient(id: string, data: PatientFormData) {
   const { ...patientData } = validationResult.data;
 
   try {
-    await cachedPrisma.client.patient.update({
+    await cachedPrisma.patient.update({
       where: { id },
       data: {
         ...patientData,

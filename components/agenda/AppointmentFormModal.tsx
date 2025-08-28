@@ -2,10 +2,9 @@
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
-import { X, Save, Calendar, Clock } from 'lucide-react';
+import { X, Save } from 'lucide-react';
 import {
   Appointment,
-  Patient,
   AppointmentStatus,
   AppointmentType,
   Therapist,
@@ -14,7 +13,7 @@ import {
 import { useToast } from '../ui/use-toast';
 import PatientSearchInput from './PatientSearchInput';
 import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+// import { ptBR } from 'date-fns/locale'; // Temporariamente comentado
 // import RecurrenceSelector from './RecurrenceSelector';
 // import { findConflict } from '@/services/scheduling/conflictDetection';
 // import { generateRecurrences } from '@/services/scheduling/recurrenceService';
@@ -35,12 +34,12 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  onDelete,
+  // onDelete, // Temporariamente comentado
   appointmentToEdit,
   initialData,
   patients,
   therapists,
-  allAppointments,
+  // allAppointments, // Temporariamente comentado
 }) => {
   const [selectedPatient, setSelectedPatient] = useState<PatientSummary | null>(
     null
@@ -107,7 +106,9 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
     setIsSaving(true);
 
     const startTime = new Date(slotDate);
+    if (!slotTime) return;
     const [hour, minute] = slotTime.split(':');
+    if (!hour || !minute) return;
     startTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
 
     const endTime = new Date(startTime.getTime() + duration * 60000);

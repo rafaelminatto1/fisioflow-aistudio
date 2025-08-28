@@ -45,11 +45,22 @@ export async function saveSoapNoteAction(
   }
 
   try {
-    await prisma.client.soapNote.create({
+    // Find the most recent appointment for this patient
+    const recentAppointment = await prisma.appointment.findFirst({
+      where: { patientId },
+      orderBy: { startTime: 'desc' },
+    });
+
+    if (!recentAppointment) {
+      return {
+        success: false,
+        message: 'Nenhuma consulta encontrada para este paciente.',
+      };
+    }
+
+    await prisma.soapNote.create({
       data: {
-        patientId,
-        therapistName: user.name || 'Fisioterapeuta',
-        date: new Date().toLocaleDateString('pt-BR'), // Simple date for now
+        appointmentId: recentAppointment.id,
         ...validation.data,
       },
     });

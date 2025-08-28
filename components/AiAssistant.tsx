@@ -71,6 +71,7 @@ const SourceIcon: React.FC<{ source: Message['source'] }> = ({ source }) => {
   };
 
   const config = iconConfig[source as string] || iconConfig['default'];
+  if (!config) return null;
   const IconComponent = config.icon;
 
   return (

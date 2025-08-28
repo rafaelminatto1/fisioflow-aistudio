@@ -13,17 +13,15 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
+// import { Label } from '@/components/ui/label';
 import {
   Shield,
   ShieldCheck,
   ShieldAlert,
-  Eye,
   Lock,
   Unlock,
   AlertTriangle,
   CheckCircle,
-  XCircle,
   RefreshCw,
   Download,
   Trash2,
@@ -76,7 +74,7 @@ export function SecurityDashboard() {
   const [securityData, setSecurityData] = useState<SecurityData | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedTable, setSelectedTable] = useState<string>('');
+  // const [selectedTable, setSelectedTable] = useState<string>('');
 
   const fetchSecurityData = async () => {
     try {

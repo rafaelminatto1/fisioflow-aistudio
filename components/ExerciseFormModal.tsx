@@ -55,16 +55,30 @@ const ExerciseFormModal: React.FC<ExerciseFormModalProps> = ({
 
   useEffect(() => {
     if (exerciseToEdit) {
-      setFormData({
-        ...exerciseToEdit,
-        bodyParts: exerciseToEdit.bodyParts,
-        equipment: exerciseToEdit.equipment,
-        contraindications: exerciseToEdit.contraindications,
-        modifications: exerciseToEdit.modifications || {
-          easier: '',
-          harder: '',
-        },
-      });
+      // Criar objeto condicionalmente para evitar undefined
+      const exerciseData: any = { 
+        name: exerciseToEdit.name || '',
+        description: exerciseToEdit.description || '',
+        category: exerciseToEdit.category || '',
+        difficulty: exerciseToEdit.difficulty || 'beginner',
+        instructions: exerciseToEdit.instructions || [],
+        media: exerciseToEdit.media || { thumbnailUrl: '', videoUrl: '', duration: 0 }
+      };
+
+      // Adicionar propriedades apenas quando existirem
+      if (exerciseToEdit.bodyParts) exerciseData.bodyParts = exerciseToEdit.bodyParts;
+      if (exerciseToEdit.equipment) exerciseData.equipment = exerciseToEdit.equipment;
+      if (exerciseToEdit.contraindications) exerciseData.contraindications = exerciseToEdit.contraindications;
+      if (exerciseToEdit.modifications) exerciseData.modifications = exerciseToEdit.modifications;
+
+      // Garantir arrays padrão
+      exerciseData.bodyParts = exerciseData.bodyParts || [];
+      exerciseData.equipment = exerciseData.equipment || [];
+      exerciseData.contraindications = exerciseData.contraindications || [];
+      exerciseData.instructions = exerciseData.instructions || [];
+      exerciseData.modifications = exerciseData.modifications || { easier: '', harder: '' };
+
+      setFormData(exerciseData);
     } else {
       setFormData({
         ...initialFormData,
@@ -125,18 +139,18 @@ const ExerciseFormModal: React.FC<ExerciseFormModalProps> = ({
       // A simple way to get a thumbnail from a youtube link
       let thumbnailUrl = formData.media.thumbnailUrl;
       if (formData.media.videoUrl?.includes('youtube.com/watch?v=')) {
-        const videoId = formData.media.videoUrl.split('v=')[1].split('&')[0];
+        const videoId = formData.media.videoUrl.split('v=')[1]?.split('&')[0];
         thumbnailUrl = `https://img.youtube.com/vi/${videoId}/0.jpg`;
       } else if (!thumbnailUrl) {
         thumbnailUrl = `https://via.placeholder.com/480x360.png/E2E8F0/64748B?text=${encodeURIComponent(formData.name)}`;
       }
 
       const submissionData: Omit<Exercise, 'id'> & { id?: string } = {
-        id: exerciseToEdit?.id,
+        ...(exerciseToEdit?.id && { id: exerciseToEdit.id }),
         ...formData,
         media: { ...formData.media, thumbnailUrl },
         status: saveAsSuggestion ? 'pending_approval' : 'approved',
-        authorId: saveAsSuggestion ? user?.id : undefined,
+        authorId: saveAsSuggestion ? (user?.id || '') : '',
       };
 
       await onSave(submissionData);

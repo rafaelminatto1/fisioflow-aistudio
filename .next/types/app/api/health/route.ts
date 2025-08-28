@@ -1,4 +1,4 @@
-// File: C:\Users\amand\Rafael\aifisio\fisioflow-aistudio\app\api\health\route.ts
+// File: C:\Users\rafal\OneDrive\Documentos\KIA\fisioflow-aistudio\app\api\health\route.ts
 import * as entry from '../../../../../app/api/health/route.js'
 import type { NextRequest } from 'next/server.js'
 

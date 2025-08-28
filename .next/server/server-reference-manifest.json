@@ -1,5 +1,1 @@
-{
-  "node": {},
-  "edge": {},
-  "encryptionKey": "xHcdngk3EplG6kXfxs0fBA99jXKxmfAXovoqUpBwUwY="
-}
+{"node":{"a55586fbfe04bbf4f808e7a32374b196cfe19e10":{"workers":{"app/pacientes/[id]/page":"15884"},"layer":{"app/pacientes/[id]/page":"action-browser"}}},"edge":{},"encryptionKey":"DOypm0qPh+jhPcX8yxeaMu0C60bTOlN55wDCHEjfzPg="}

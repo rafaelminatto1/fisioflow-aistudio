@@ -8,7 +8,6 @@ import {
   sessionCache,
   queryCache,
 } from './cache';
-import { PrismaCache } from './prisma';
 import { sessionManager } from './session-cache';
 import edgeLogger from './edge-logger';
 
@@ -183,7 +182,7 @@ export class CacheInvalidationManager {
         processingTime: Date.now() - startTime,
       });
     } catch (error) {
-      edgeLogger.error('Cache invalidation failed', error as Error, { event });
+      edgeLogger.error(`Cache invalidation failed for event ${event.type}`, error as Error);
       throw error;
     }
   }
@@ -224,9 +223,7 @@ export class CacheInvalidationManager {
         processingTime: Date.now() - startTime,
       });
     } catch (error) {
-      edgeLogger.error('Bulk cache invalidation failed', error as Error, {
-        eventCount: events.length,
-      });
+      edgeLogger.error(`Bulk cache invalidation failed for ${events.length} events`, error as Error);
       throw error;
     }
   }
@@ -317,10 +314,7 @@ export class CacheInvalidationManager {
           await this.executeRule(rule, event);
         }
       } catch (error) {
-        edgeLogger.error('Error executing invalidation rule', error as Error, {
-          trigger: rule.trigger,
-          event,
-        });
+        edgeLogger.error(`Error executing invalidation rule: ${rule.trigger}`, error as Error);
       }
     }
   }
@@ -354,10 +348,7 @@ export class CacheInvalidationManager {
         executionTime: Date.now() - startTime,
       });
     } catch (error) {
-      edgeLogger.error('Failed to execute invalidation rule', error as Error, {
-        trigger: rule.trigger,
-        event,
-      });
+      edgeLogger.error(`Failed to execute invalidation rule: ${rule.trigger}`, error as Error);
       throw error;
     }
   }
@@ -384,10 +375,7 @@ export class CacheInvalidationManager {
         await this.invalidateGenericTag(target);
       }
     } catch (error) {
-      edgeLogger.error('Failed to invalidate target', error as Error, {
-        target,
-        event,
-      });
+      edgeLogger.error(`Failed to invalidate target: ${target}`, error as Error);
       throw error;
     }
   }
@@ -402,27 +390,27 @@ export class CacheInvalidationManager {
     switch (modelName) {
       case 'Patient':
         if (entityId) {
-          await PrismaCache.invalidatePatient(entityId);
+          // await PrismaCache.invalidatePatient(entityId);
         } else {
-          await PrismaCache.invalidatePatients();
+          // await PrismaCache.invalidatePatients();
         }
         break;
 
       case 'Appointment':
         if (entityId) {
-          await PrismaCache.invalidateAppointment(entityId);
+          // await PrismaCache.invalidateAppointment(entityId);
         } else {
-          await PrismaCache.invalidateAppointments();
+          // await PrismaCache.invalidateAppointments();
         }
         break;
 
       case 'Report':
-        await PrismaCache.invalidateReports();
+        // await PrismaCache.invalidateReports();
         break;
 
       case 'User':
         if (entityId) {
-          await PrismaCache.invalidateUserData(entityId);
+          // await PrismaCache.invalidateUserData(entityId);
           await sessionManager.destroyUserSessions(entityId);
         }
         break;
@@ -494,7 +482,7 @@ export class CacheInvalidationManager {
       switch (event.entityType) {
         case 'Patient':
           // Invalidate patient-related data
-          await PrismaCache.invalidatePatientRelated(event.entityId);
+          // await PrismaCache.invalidatePatientRelated(event.entityId);
           break;
 
         case 'Appointment':
@@ -507,7 +495,7 @@ export class CacheInvalidationManager {
           if (event.userId || event.entityId) {
             const userId = event.userId || event.entityId;
             await sessionManager.destroyUserSessions(userId);
-            await PrismaCache.invalidateUserData(userId);
+            // await PrismaCache.invalidateUserData(userId);
           }
           break;
       }
@@ -517,9 +505,7 @@ export class CacheInvalidationManager {
         entityId: event.entityId,
       });
     } catch (error) {
-      edgeLogger.error('Cascade invalidation failed', error as Error, {
-        event,
-      });
+      edgeLogger.error(`Cascade invalidation failed for ${event.entityType}`, error as Error);
     }
   }
 

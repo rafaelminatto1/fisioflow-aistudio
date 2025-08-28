@@ -299,9 +299,7 @@ export class CacheMetricsManager {
           this.resolveAlert(rule);
         }
       } catch (error) {
-        edgeLogger.error('Error checking alert rule', error as Error, {
-          rule: rule.metric,
-        });
+        edgeLogger.error(`Error checking alert rule: ${rule.metric}`, error as Error);
       }
     }
   }

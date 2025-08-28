@@ -4,9 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build && npm run copy-standalone",
-    "copy-standalone": "cp -r public .next/standalone/ 2>/dev/null || true && cp -r .next/static .next/standalone/.next/ 2>/dev/null || true",
-    "start": "node server.js",
+    "build": "prisma generate && next build",
+    "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "check": "npm run lint && npm run type-check",

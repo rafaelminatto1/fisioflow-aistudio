@@ -27,8 +27,8 @@ const KPICards: React.FC<KPICardsProps> = ({ stats, isLoading }) => {
         title='Faturamento do Mês'
         value={stats.monthlyRevenue.value}
         icon={<DollarSign />}
-        change={stats.monthlyRevenue.change}
-        changeType={stats.monthlyRevenue.changeType}
+        {...(stats.monthlyRevenue.change && { change: stats.monthlyRevenue.change })}
+        {...(stats.monthlyRevenue.changeType && { changeType: stats.monthlyRevenue.changeType })}
       />
       <StatCard
         title='Pacientes Ativos'
@@ -40,8 +40,8 @@ const KPICards: React.FC<KPICardsProps> = ({ stats, isLoading }) => {
         title='Novos Pacientes (Mês)'
         value={stats.newPatientsThisMonth.value}
         icon={<BarChart3 />}
-        change={stats.newPatientsThisMonth.change}
-        changeType={stats.newPatientsThisMonth.changeType}
+        {...(stats.newPatientsThisMonth.change && { change: stats.newPatientsThisMonth.change })}
+        {...(stats.newPatientsThisMonth.changeType && { changeType: stats.newPatientsThisMonth.changeType })}
       />
       <StatCard
         title='Satisfação (NPS)'

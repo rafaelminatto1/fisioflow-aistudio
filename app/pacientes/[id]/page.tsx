@@ -1,5 +1,5 @@
 // app/pacientes/[id]/page.tsx
-import cachedPrisma from '../../../lib/prisma';
+import { cachedPrisma } from '../../../lib/prisma';
 import { notFound } from 'next/navigation';
 import PageHeader from '../../../components/ui/PageHeader';
 import PatientDetailClient from '../../../components/pacientes/PatientDetailClient';
@@ -15,7 +15,7 @@ export default async function PatientDetailPage({
 }: PatientDetailPageProps) {
   const { id } = params;
 
-  const patient = await cachedPrisma.client.patient.findUnique({
+  const patient = await cachedPrisma.patient.findUnique({
     where: { id },
   });
 
@@ -69,7 +69,7 @@ export default async function PatientDetailPage({
       />
 
       {/* O componente cliente gerencia a interatividade das abas */}
-      <PatientDetailClient patient={patientWithRelations} />
+      <PatientDetailClient patient={patientWithRelations as any} />
     </>
   );
 }

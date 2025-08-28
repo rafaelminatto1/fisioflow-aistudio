@@ -40,7 +40,7 @@ export const defaultNeonConfig: NeonConfig = {
  * Pool de conexões otimizado para Neon DB
  */
 export class NeonConnectionPool {
-  private pool: Pool;
+  private pool!: Pool; // Definitive assignment assertion
   private config: NeonConfig;
 
   constructor(config: Partial<NeonConfig> = {}) {
@@ -63,10 +63,6 @@ export class NeonConnectionPool {
       query_timeout: this.config.queryTimeout,
       // Configurações específicas para Neon
       application_name: 'fisioflow',
-      // Otimizações de performance
-      tcp_keepalives_idle: 60,
-      tcp_keepalives_interval: 10,
-      tcp_keepalives_count: 6,
     });
 
     // Event listeners para monitoramento
@@ -91,7 +87,7 @@ export class NeonConnectionPool {
    * Executa query com retry automático
    */
   async query(text: string, params?: any[], retries = 3): Promise<any> {
-    let lastError: Error;
+    let lastError: Error = new Error('Query failed after all retries');
 
     for (let attempt = 1; attempt <= retries; attempt++) {
       try {
@@ -194,7 +190,7 @@ export class NeonConnectionPool {
  * Cliente Prisma otimizado para Neon
  */
 export class NeonPrismaClient extends PrismaClient {
-  private connectionPool: NeonConnectionPool;
+  private connectionPool!: NeonConnectionPool;
 
   constructor() {
     super({

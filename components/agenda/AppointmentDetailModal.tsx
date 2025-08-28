@@ -3,14 +3,14 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
-import { X, Edit, Trash2, Play, DollarSign, Repeat, Video } from 'lucide-react';
+import { X, Edit, Trash2, Play, Video } from 'lucide-react';
 import {
   Patient,
   Therapist,
   EnrichedAppointment,
   PatientSummary,
 } from '@/types';
-import { useToast } from '../ui/use-toast';
+// import { useToast } from '../ui/use-toast'; // Temporariamente comentado
 
 interface AppointmentDetailModalProps {
   appointment: EnrichedAppointment | null;
@@ -30,7 +30,7 @@ const AppointmentDetailModal: React.FC<AppointmentDetailModalProps> = ({
   onDelete,
 }) => {
   const router = useRouter();
-  const { toast } = useToast();
+  // const { toast } = useToast(); // Temporariamente comentado
 
   if (!appointment || !patient || !therapist) return null;
 

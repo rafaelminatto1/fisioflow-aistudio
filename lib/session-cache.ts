@@ -71,9 +71,7 @@ export class DistributedSessionManager {
 
       return sessionId;
     } catch (error) {
-      edgeLogger.error('Failed to create session', error as Error, {
-        sessionId,
-      });
+      edgeLogger.error(`Failed to create session ${sessionId}`, error as Error);
       throw error;
     }
   }
@@ -102,7 +100,7 @@ export class DistributedSessionManager {
 
       return session;
     } catch (error) {
-      edgeLogger.error('Failed to get session', error as Error, { sessionId });
+      edgeLogger.error('Failed to get session', error as Error);
       return null;
     }
   }
@@ -136,9 +134,7 @@ export class DistributedSessionManager {
 
       return true;
     } catch (error) {
-      edgeLogger.error('Failed to touch session', error as Error, {
-        sessionId,
-      });
+      edgeLogger.error(`Failed to touch session ${sessionId}`, error as Error);
       return false;
     }
   }
@@ -164,9 +160,7 @@ export class DistributedSessionManager {
 
       return true;
     } catch (error) {
-      edgeLogger.error('Failed to destroy session', error as Error, {
-        sessionId,
-      });
+      edgeLogger.error(`Failed to destroy session ${sessionId}`, error as Error);
       return false;
     }
   }
@@ -195,9 +189,7 @@ export class DistributedSessionManager {
 
       return destroyedCount;
     } catch (error) {
-      edgeLogger.error('Failed to destroy user sessions', error as Error, {
-        userId,
-      });
+      edgeLogger.error(`Failed to destroy user sessions for ${userId}`, error as Error);
       return 0;
     }
   }
@@ -238,9 +230,7 @@ export class DistributedSessionManager {
 
       return validSessions;
     } catch (error) {
-      edgeLogger.error('Failed to get user sessions', error as Error, {
-        userId,
-      });
+      edgeLogger.error(`Failed to get user sessions for ${userId}`, error as Error);
       return [];
     }
   }

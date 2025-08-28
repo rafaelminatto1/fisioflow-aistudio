@@ -76,7 +76,11 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   };
 
   const handleSaveClick = async () => {
-    await onSave({ ...formData, id: eventToEdit?.id });
+    const eventData: any = { ...formData };
+    if (eventToEdit?.id) {
+      eventData.id = eventToEdit.id;
+    }
+    await onSave(eventData);
   };
 
   const formatDateForInput = (date: Date) => {

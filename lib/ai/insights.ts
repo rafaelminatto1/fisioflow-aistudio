@@ -216,7 +216,7 @@ export class AIInsightsService {
   }
 
   private async gatherPatientData(patientId: string) {
-    const patient = await cachedPrisma.client.patient.findUnique({
+    const patient = await cachedPrisma.patient.findUnique({
       where: { id: patientId },
       include: {
         appointments: {
@@ -225,6 +225,9 @@ export class AIInsightsService {
           include: {
             therapist: {
               select: { name: true },
+            },
+            soapNotes: {
+              orderBy: { createdAt: 'desc' },
             },
           },
         },
@@ -236,10 +239,6 @@ export class AIInsightsService {
           orderBy: { measuredAt: 'desc' },
           take: 20,
         },
-        soapNotes: {
-          orderBy: { createdAt: 'desc' },
-          take: 10,
-        },
       },
     });
 
@@ -248,7 +247,7 @@ export class AIInsightsService {
 
   private async gatherClinicData(therapistId: string) {
     const [patients, appointments, painPoints] = await Promise.all([
-      cachedPrisma.client.patient.findMany({
+      cachedPrisma.patient.findMany({
         where: {
           appointments: {
             some: {
@@ -265,7 +264,7 @@ export class AIInsightsService {
           metricResults: true,
         },
       }),
-      cachedPrisma.client.appointment.findMany({
+      cachedPrisma.appointment.findMany({
         where: {
           therapistId,
           startTime: {
@@ -278,7 +277,7 @@ export class AIInsightsService {
           },
         },
       }),
-      cachedPrisma.client.painPoint.findMany({
+      cachedPrisma.painPoint.findMany({
         where: {
           patient: {
             appointments: {
@@ -676,7 +675,7 @@ Seja estratégico e orientado por dados.
   ): Promise<void> {
     try {
       // Store in database for historical tracking
-      await cachedPrisma.client.$executeRaw`
+      await cachedPrisma.$executeRaw`
         INSERT INTO "PatientInsights" ("patientId", "riskLevel", "insights", "generatedAt")
         VALUES (${patientId}, ${insights.riskLevel}, ${JSON.stringify(insights.insights)}::jsonb, ${insights.generatedAt})
         ON CONFLICT ("patientId") 

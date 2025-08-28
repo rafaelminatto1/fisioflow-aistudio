@@ -113,3 +113,15 @@ ToastDescription.displayName = ToastPrimitives.Description.displayName;
 
 export type ToastProps = React.ComponentPropsWithoutRef<typeof Toast>;
 export type ToastActionElement = React.ReactElement<typeof ToastAction>;
+
+// ToastContainer component for app layout
+export function ToastContainer() {
+  return (
+    <ToastProvider>
+      <ToastViewport />
+    </ToastProvider>
+  );
+}
+
+// Export as default for backward compatibility
+export default ToastContainer;

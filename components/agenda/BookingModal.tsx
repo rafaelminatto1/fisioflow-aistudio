@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -8,7 +8,7 @@ import {
   Clock,
   User,
   FileText,
-  DollarSign,
+  // DollarSign, // Temporariamente comentado
   Check,
   ChevronRight,
   Stethoscope,
@@ -16,7 +16,7 @@ import {
   Heart,
   Brain,
 } from 'lucide-react';
-import { PatientSearchInput } from './PatientSearchInput';
+import PatientSearchInput from './PatientSearchInput';
 import { cn } from '../../lib/utils';
 import {
   Patient,
@@ -109,7 +109,9 @@ export default function BookingModal({
 
     try {
       const startTime = new Date(slot.date);
+      if (!slot.time) return;
       const [hour, minute] = slot.time.split(':');
+      if (!hour || !minute) return;
       startTime.setHours(parseInt(hour, 10), parseInt(minute, 10), 0, 0);
 
       const endTime = new Date(startTime.getTime() + duration * 60000);

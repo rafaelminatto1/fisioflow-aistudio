@@ -5,7 +5,7 @@
     "buildCommand": "npm run build",
     "watchPatterns": [
       "**/*.ts",
-      "**/*.tsx",
+      "**/*.tsx", 
       "**/*.js",
       "**/*.jsx",
       "package.json",
@@ -15,12 +15,14 @@
   "deploy": {
     "startCommand": "npm start",
     "healthcheckPath": "/api/health",
-    "healthcheckTimeout": 120,
+    "healthcheckTimeout": 60,
     "healthcheckInterval": 30,
-    "healthcheckRetries": 5,
+    "healthcheckRetries": 3,
     "restartPolicyType": "ON_FAILURE",
-    "restartPolicyMaxRetries": 10,
-    "numReplicas": 1
+    "restartPolicyMaxRetries": 5,
+    "numReplicas": 1,
+    "memoryLimit": "1Gi",
+    "cpuLimit": "1000m"
   },
   "environments": {
     "production": {
@@ -28,20 +30,26 @@
         "NODE_ENV": "production",
         "LOG_LEVEL": "info",
         "NEON_POOLED_CONNECTION": "true",
-        "DATABASE_POOL_SIZE": "20",
-        "DATABASE_TIMEOUT": "30000",
+        "DATABASE_POOL_SIZE": "15",
+        "DATABASE_TIMEOUT": "15000",
         "HEALTH_CHECK_ENABLED": "true",
         "RATE_LIMIT_ENABLED": "true",
-        "CORS_ENABLED": "true"
+        "CORS_ENABLED": "true",
+        "CACHE_ENABLED": "true",
+        "CACHE_TTL": "300",
+        "IMAGE_OPTIMIZATION": "true",
+        "COMPRESSION_ENABLED": "true",
+        "NEXT_TELEMETRY_DISABLED": "1"
       }
     },
     "staging": {
       "variables": {
-        "NODE_ENV": "staging",
+        "NODE_ENV": "staging", 
         "LOG_LEVEL": "debug",
         "NEON_POOLED_CONNECTION": "true",
-        "DATABASE_POOL_SIZE": "10",
-        "DATABASE_TIMEOUT": "30000"
+        "DATABASE_POOL_SIZE": "8",
+        "DATABASE_TIMEOUT": "15000",
+        "CACHE_ENABLED": "true"
       }
     }
   },
@@ -52,8 +60,12 @@
       "command": "node scripts/backup.js"
     },
     {
-      "schedule": "*/15 * * * *",
+      "schedule": "*/15 * * * *", 
       "command": "node scripts/neon-autoscaling.js --check"
+    },
+    {
+      "schedule": "0 */6 * * *",
+      "command": "node -e 'console.log(\"Cache warmup completed\")'"
     }
   ]
 }

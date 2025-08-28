@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import cachedPrisma from '@/lib/prisma';
+import { cachedPrisma } from '@/lib/prisma';
 import { aiInsightsService } from '@/lib/ai/insights';
 import { withPerformanceMonitoring } from '@/lib/prisma-performance';
 import { structuredLogger } from '@/lib/monitoring/logger';
@@ -84,7 +84,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     previousMonthData,
   ] = await Promise.all([
     // Total patients for this therapist
-    cachedPrisma.client.patient.count({
+    cachedPrisma.patient.count({
       where: {
         appointments: {
           some: {
@@ -95,7 +95,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Active patients
-    cachedPrisma.client.patient.count({
+    cachedPrisma.patient.count({
       where: {
         status: 'Active',
         appointments: {
@@ -107,7 +107,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Completed appointments in range
-    cachedPrisma.client.appointment.count({
+    cachedPrisma.appointment.count({
       where: {
         therapistId: userId,
         status: 'Realizado' as any,
@@ -116,7 +116,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Total appointments in range
-    cachedPrisma.client.appointment.count({
+    cachedPrisma.appointment.count({
       where: {
         therapistId: userId,
         startTime: { gte: startDate },
@@ -124,7 +124,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     }),
 
     // Previous month for growth calculation
-    cachedPrisma.client.patient.count({
+    cachedPrisma.patient.count({
       where: {
         appointments: {
           some: {
@@ -140,7 +140,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
   ]);
 
   // Calculate sessions per patient
-  const sessionsData = await cachedPrisma.client.appointment.groupBy({
+  const sessionsData = await cachedPrisma.appointment.groupBy({
     by: ['patientId'],
     where: {
       therapistId: userId,
@@ -180,7 +180,7 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
 }
 
 async function getPatientInsights(userId: string) {
-  const patients = await cachedPrisma.client.patient.findMany({
+  const patients = await cachedPrisma.patient.findMany({
     where: {
       appointments: {
         some: {
@@ -256,7 +256,7 @@ async function getPatientInsights(userId: string) {
 
 async function getPerformanceMetrics(userId: string, startDate: Date) {
   // Weekly appointments data
-  const weeklyAppointments = await cachedPrisma.client.$queryRaw<any[]>`
+  const weeklyAppointments = await cachedPrisma.$queryRaw<any[]>`
     SELECT 
       DATE_TRUNC('week', "startTime") as week,
       COUNT(*) as appointments,
@@ -270,7 +270,7 @@ async function getPerformanceMetrics(userId: string, startDate: Date) {
   `;
 
   // Treatment success by type
-  const treatmentSuccess = await cachedPrisma.client.$queryRaw<any[]>`
+  const treatmentSuccess = await cachedPrisma.$queryRaw<any[]>`
     SELECT 
       type as "treatmentType",
       COUNT(*) as "patientCount",
@@ -307,7 +307,7 @@ async function getIntelligentAlerts(userId: string) {
   const alerts = [];
 
   // Find patients with declining attendance
-  const irregularPatients = await cachedPrisma.client.$queryRaw<any[]>`
+  const irregularPatients = await cachedPrisma.$queryRaw<any[]>`
     SELECT 
       p.id,
       p.name,
@@ -334,7 +334,7 @@ async function getIntelligentAlerts(userId: string) {
   });
 
   // Check for capacity warnings
-  const todayAppointments = await cachedPrisma.client.appointment.count({
+  const todayAppointments = await cachedPrisma.appointment.count({
     where: {
       therapistId: userId,
       startTime: {
@@ -461,7 +461,7 @@ function determineRiskLevel(
   return 'low';
 }
 
-function generatePainReductionTrends(startDate: Date) {
+function generatePainReductionTrends(_startDate: Date) {
   const trends = [];
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
 

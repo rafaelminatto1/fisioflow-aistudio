@@ -43,7 +43,11 @@
       "WebFetch(domain:docs.railway.com)",
       "Bash(cp:*)",
       "Bash(set RAILWAY_TOKEN=6c8ed942-9408-460d-adb2-d9908fdfa7e9)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(git restore:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(sed:*)",
+      "Bash(find:*)"
     ],
     "deny": [],
     "ask": []

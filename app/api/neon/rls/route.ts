@@ -49,13 +49,14 @@ export async function GET(request: NextRequest) {
         const limit = parseInt(searchParams.get('limit') || '100');
         const offset = parseInt(searchParams.get('offset') || '0');
 
-        const auditLogs = await getAuditLogs({
-          userId,
-          tableName,
-          operation,
-          limit,
-          offset,
-        });
+        const auditOptions: any = {};
+        if (userId) auditOptions.userId = userId;
+        if (tableName) auditOptions.tableName = tableName;
+        if (operation) auditOptions.operation = operation;
+        auditOptions.limit = limit || 100;
+        auditOptions.offset = offset || 0;
+        
+        const auditLogs = await getAuditLogs(auditOptions);
 
         return NextResponse.json({
           success: true,
@@ -214,6 +215,7 @@ export async function POST(request: NextRequest) {
           // Execute each statement
           for (let i = 0; i < statements.length; i++) {
             const statement = statements[i];
+            if (!statement) continue;
             try {
               await prisma.$executeRawUnsafe(statement);
               results.push({ statement: i + 1, status: 'success' });

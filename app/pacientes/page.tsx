@@ -1,5 +1,5 @@
 // app/pacientes/page.tsx
-import cachedPrisma from '../../lib/prisma';
+import { cachedPrisma } from '../../lib/prisma';
 import PatientList from '../../components/pacientes/PatientList';
 import PageHeader from '../../components/ui/PageHeader';
 
@@ -29,10 +29,9 @@ export default async function PacientesPage({
     where.status = status;
   }
 
-  const initialPatients = await cachedPrisma.client.patient.findMany({
+  const findManyOptions: any = {
     take,
     skip: cursor ? 1 : 0,
-    cursor: cursor ? { id: cursor } : undefined,
     where,
     select: {
       id: true,
@@ -46,7 +45,13 @@ export default async function PacientesPage({
       // lastAppointment: true // Adicionar este campo no schema e na query se necessário
     },
     orderBy: { createdAt: 'desc' },
-  });
+  };
+  
+  if (cursor) {
+    findManyOptions.cursor = { id: cursor };
+  }
+  
+  const initialPatients = await cachedPrisma.patient.findMany(findManyOptions);
 
   // Transform to PatientSummary format
   const transformedPatients = initialPatients.map((patient: any) => ({
@@ -61,10 +66,13 @@ export default async function PacientesPage({
     cpf: patient.cpf,
   }));
 
-  const nextCursor =
-    initialPatients.length === take
-      ? initialPatients[initialPatients.length - 1].id
-      : null;
+  let nextCursor = null;
+  if (initialPatients.length === take && initialPatients.length > 0) {
+    const lastPatient = initialPatients[initialPatients.length - 1];
+    if (lastPatient && lastPatient.id) {
+      nextCursor = lastPatient.id;
+    }
+  }
 
   const initialData = {
     items: transformedPatients,

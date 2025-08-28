@@ -38,11 +38,11 @@ import {
   TrendingUp,
   TrendingDown,
   Users,
-  Clock,
+  // Clock, // Temporariamente comentado
   Target,
   RefreshCw,
   Download,
-  Filter,
+  // Filter, // Temporariamente comentado
 } from 'lucide-react';
 
 interface AdvancedDashboardProps {
@@ -325,7 +325,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
           </CardHeader>
           <CardContent>
             <div className='space-y-3'>
-              {data.alerts.slice(0, 5).map((alert, index) => (
+              {data.alerts.slice(0, 5).map((alert) => (
                 <div
                   key={alert.timestamp + alert.message}
                   className={`p-3 border-l-4 rounded-md ${
@@ -541,7 +541,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                         patient.riskLevel === 'critical'
                     )
                     .slice(0, 5)
-                    .map((patient, index) => (
+                    .map((patient) => (
                       <div
                         key={patient.patientId}
                         className='flex items-center justify-between p-3 border rounded-lg'
@@ -598,7 +598,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
               <CardContent>
                 <div className='space-y-3'>
                   {data.predictions.dischargeCandidates.map(
-                    (patient, index) => (
+                    (patient) => (
                       <div
                         key={patient.patientName + patient.expectedDate}
                         className='flex items-center justify-between p-3 bg-green-50 rounded-lg'
@@ -638,7 +638,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
               </CardHeader>
               <CardContent>
                 <div className='space-y-4'>
-                  {data.predictions.riskPatients.map((patient, index) => (
+                  {data.predictions.riskPatients.map((patient) => (
                     <div
                       key={patient.patientName + patient.riskFactors.join('-')}
                       className='p-3 border rounded-lg'

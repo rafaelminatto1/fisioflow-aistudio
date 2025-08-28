@@ -3,7 +3,21 @@
 
 import prisma from '@/lib/prisma';
 import { revalidatePath } from 'next/cache';
-import { Appointment, AppointmentStatus } from '@/types';
+import { Appointment, AppointmentStatus, AppointmentType } from '@/types';
+
+// Map TypeScript enum to Prisma enum
+const mapAppointmentType = (type: AppointmentType) => {
+  const typeMap = {
+    [AppointmentType.Evaluation]: 'Avaliacao',
+    [AppointmentType.Session]: 'Sessao',
+    [AppointmentType.Return]: 'Retorno',
+    [AppointmentType.Pilates]: 'Pilates',
+    [AppointmentType.Urgent]: 'Urgente',
+    [AppointmentType.Teleconsulta]: 'Teleconsulta',
+  } as const;
+  
+  return typeMap[type] || 'Sessao';
+};
 
 // In a real app, you would use a Zod schema for validation
 // import { appointmentSchema } from '@/lib/validations/appointment';
@@ -18,26 +32,31 @@ export async function saveAppointmentAction(appointmentData: Appointment) {
     appointmentData;
 
   // Remove fields that are derived from relations
-  const { patientName, patientAvatarUrl, ...dataToSave } = rest;
+  const { patientName, patientAvatarUrl, type, ...dataToSave } = rest;
 
-  const payload = {
+  const basePayload = {
     ...dataToSave,
+    type: mapAppointmentType(type),
     startTime: new Date(startTime),
     endTime: new Date(endTime),
-    patient: { connect: { id: patientId } },
-    therapist: { connect: { id: therapistId } },
   };
 
   try {
     if (id && !id.startsWith('app_recurr_') && !id.startsWith('app_series_')) {
-      await prisma.client.appointment.update({
+      await prisma.appointment.update({
         where: { id },
-        data: payload,
+        data: {
+          ...basePayload,
+          patient: { connect: { id: patientId } },
+          therapist: { connect: { id: therapistId } },
+        },
       });
     } else {
-      await prisma.client.appointment.create({
+      await prisma.appointment.create({
         data: {
-          ...payload,
+          ...basePayload,
+          patientId,
+          therapistId,
           id: id.startsWith('app_') ? undefined : id, // Let prisma generate ID for new ones
         },
       });
@@ -53,7 +72,7 @@ export async function saveAppointmentAction(appointmentData: Appointment) {
 
 export async function deleteAppointmentAction(id: string) {
   try {
-    await prisma.client.appointment.delete({
+    await prisma.appointment.delete({
       where: { id },
     });
     revalidatePath('/dashboard/agenda');
@@ -69,7 +88,7 @@ export async function deleteAppointmentSeriesAction(
   fromDate: Date
 ) {
   try {
-    await prisma.client.appointment.deleteMany({
+    await prisma.appointment.deleteMany({
       where: {
         seriesId,
         startTime: { gte: fromDate },
