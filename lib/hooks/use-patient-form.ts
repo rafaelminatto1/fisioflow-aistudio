@@ -27,12 +27,14 @@ export function usePatientForm(form: any) {
       if (cepClean?.length !== 8) {
         return; // CEP deve ter 8 dígitos
       }
-      
+
       setIsCepLoading(true);
       try {
-        const response = await fetch(`https://viacep.com.br/ws/${cepClean}/json/`);
+        const response = await fetch(
+          `https://viacep.com.br/ws/${cepClean}/json/`
+        );
         if (!response.ok) throw new Error('CEP não encontrado');
-        
+
         const data = await response.json();
         if (data.erro) throw new Error('CEP inválido');
 
@@ -40,9 +42,8 @@ export function usePatientForm(form: any) {
         setValue('addressStreet', data.logradouro, { shouldValidate: true });
         setValue('addressCity', data.localidade, { shouldValidate: true });
         setValue('addressState', data.uf, { shouldValidate: true });
-        
       } catch (error) {
-        console.error("Erro ao buscar CEP:", error);
+        console.error('Erro ao buscar CEP:', error);
         // Opcional: Adicionar um toast de erro aqui
       } finally {
         setIsCepLoading(false);
@@ -51,7 +52,7 @@ export function usePatientForm(form: any) {
 
     // Atraso para evitar chamadas excessivas enquanto o usuário digita
     const debounceTimer = setTimeout(() => {
-        fetchCep();
+      fetchCep();
     }, 500);
 
     return () => clearTimeout(debounceTimer);

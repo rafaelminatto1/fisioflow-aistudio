@@ -25,9 +25,11 @@ winston.addColors(colors);
 const developmentFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => {
+  winston.format.printf(info => {
     const { timestamp, level, message, ...meta } = info;
-    const metaString = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+    const metaString = Object.keys(meta).length
+      ? JSON.stringify(meta, null, 2)
+      : '';
     return `${timestamp} [${level}]: ${message} ${metaString}`;
   })
 );
@@ -74,7 +76,9 @@ if (process.env.NODE_ENV === 'production') {
 
 // Create the logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  level:
+    process.env.LOG_LEVEL ||
+    (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
   levels,
   format: productionFormat,
   transports,
@@ -123,7 +127,13 @@ class ContextualLogger {
   }
 
   // Specialized logging methods
-  logAPICall(method: string, url: string, statusCode: number, duration: number, context?: LogContext): void {
+  logAPICall(
+    method: string,
+    url: string,
+    statusCode: number,
+    duration: number,
+    context?: LogContext
+  ): void {
     this.http(`${method} ${url} ${statusCode}`, {
       ...context,
       method,
@@ -133,7 +143,11 @@ class ContextualLogger {
     });
   }
 
-  logDatabaseQuery(query: string, duration: number, context?: LogContext): void {
+  logDatabaseQuery(
+    query: string,
+    duration: number,
+    context?: LogContext
+  ): void {
     this.debug('Database query executed', {
       ...context,
       query: query.substring(0, 100) + (query.length > 100 ? '...' : ''),
@@ -141,7 +155,11 @@ class ContextualLogger {
     });
   }
 
-  logCacheOperation(operation: 'hit' | 'miss' | 'set' | 'delete', key: string, context?: LogContext): void {
+  logCacheOperation(
+    operation: 'hit' | 'miss' | 'set' | 'delete',
+    key: string,
+    context?: LogContext
+  ): void {
     this.debug(`Cache ${operation}`, {
       ...context,
       operation,
@@ -149,7 +167,11 @@ class ContextualLogger {
     });
   }
 
-  logBusinessEvent(event: string, details: Record<string, any>, context?: LogContext): void {
+  logBusinessEvent(
+    event: string,
+    details: Record<string, any>,
+    context?: LogContext
+  ): void {
     this.info(`Business event: ${event}`, {
       ...context,
       event,
@@ -157,7 +179,11 @@ class ContextualLogger {
     });
   }
 
-  logSecurityEvent(event: string, details: Record<string, any>, context?: LogContext): void {
+  logSecurityEvent(
+    event: string,
+    details: Record<string, any>,
+    context?: LogContext
+  ): void {
     this.warn(`Security event: ${event}`, {
       ...context,
       event,

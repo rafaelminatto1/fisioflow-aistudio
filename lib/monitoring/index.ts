@@ -53,51 +53,51 @@ export class NeonMonitoring {
     connections: 90,
     errorRate: 5,
     responseTime: 1000,
-    storage: 90
+    storage: 90,
   };
 
   async collectMetrics(): Promise<MonitoringMetrics> {
     try {
       const [healthCheck, neonMetrics] = await Promise.all([
         checkNeonHealth(),
-        getNeonMetrics()
+        getNeonMetrics(),
       ]);
-      
+
       const metrics: MonitoringMetrics = {
         timestamp: new Date(),
         database: {
           connections: {
             active: neonMetrics.connectionStats?.active_connections || 0,
             idle: neonMetrics.connectionStats?.idle_connections || 0,
-            total: neonMetrics.connectionStats?.total_connections || 0
+            total: neonMetrics.connectionStats?.total_connections || 0,
           },
           performance: {
             avgQueryTime: healthCheck.latency || 0,
             slowQueries: neonMetrics.activeQueries?.active_queries || 0,
-            errorRate: healthCheck.status === 'unhealthy' ? 100 : 0
+            errorRate: healthCheck.status === 'unhealthy' ? 100 : 0,
           },
           storage: {
             used: 0, // Not available from current API
             available: 0, // Not available from current API
-            percentage: 0 // Not available from current API
-          }
+            percentage: 0, // Not available from current API
+          },
         },
         compute: {
           cpu: 0, // Not available from current API
           memory: 0, // Not available from current API
           status: healthCheck.status === 'healthy' ? 'active' : 'idle',
-          autoscaling: false // Not available from current API
+          autoscaling: false, // Not available from current API
         },
         api: {
           responseTime: healthCheck.latency || 0,
           errorRate: healthCheck.status === 'unhealthy' ? 100 : 0,
-          requestsPerMinute: 0 // Not available from current API
-        }
+          requestsPerMinute: 0, // Not available from current API
+        },
       };
 
       this.metrics.push(metrics);
       this.checkThresholds(metrics);
-      
+
       // Manter apenas as últimas 1000 métricas
       if (this.metrics.length > 1000) {
         this.metrics = this.metrics.slice(-1000);
@@ -116,38 +116,41 @@ export class NeonMonitoring {
         metric: 'cpu',
         value: metrics.compute.cpu,
         threshold: this.thresholds.cpu,
-        message: `CPU usage is ${metrics.compute.cpu}%`
+        message: `CPU usage is ${metrics.compute.cpu}%`,
       },
       {
         metric: 'memory',
         value: metrics.compute.memory / 1024, // Convert to GB
         threshold: this.thresholds.memory,
-        message: `Memory usage is ${(metrics.compute.memory / 1024).toFixed(2)}GB`
+        message: `Memory usage is ${(metrics.compute.memory / 1024).toFixed(2)}GB`,
       },
       {
         metric: 'connections',
-        value: (metrics.database.connections.active / metrics.database.connections.total) * 100,
+        value:
+          (metrics.database.connections.active /
+            metrics.database.connections.total) *
+          100,
         threshold: this.thresholds.connections,
-        message: `Connection usage is ${((metrics.database.connections.active / metrics.database.connections.total) * 100).toFixed(1)}%`
+        message: `Connection usage is ${((metrics.database.connections.active / metrics.database.connections.total) * 100).toFixed(1)}%`,
       },
       {
         metric: 'errorRate',
         value: metrics.database.performance.errorRate,
         threshold: this.thresholds.errorRate,
-        message: `Error rate is ${metrics.database.performance.errorRate}%`
+        message: `Error rate is ${metrics.database.performance.errorRate}%`,
       },
       {
         metric: 'responseTime',
         value: metrics.api.responseTime,
         threshold: this.thresholds.responseTime,
-        message: `API response time is ${metrics.api.responseTime}ms`
+        message: `API response time is ${metrics.api.responseTime}ms`,
       },
       {
         metric: 'storage',
         value: metrics.database.storage.percentage,
         threshold: this.thresholds.storage,
-        message: `Storage usage is ${metrics.database.storage.percentage.toFixed(1)}%`
-      }
+        message: `Storage usage is ${metrics.database.storage.percentage.toFixed(1)}%`,
+      },
     ];
 
     checks.forEach(check => {
@@ -157,18 +160,20 @@ export class NeonMonitoring {
           message: check.message,
           metric: check.metric,
           value: check.value,
-          threshold: check.threshold
+          threshold: check.threshold,
         });
       }
     });
   }
 
-  private createAlert(alertData: Omit<Alert, 'id' | 'timestamp' | 'resolved'>): void {
+  private createAlert(
+    alertData: Omit<Alert, 'id' | 'timestamp' | 'resolved'>
+  ): void {
     const alert: Alert = {
       id: `alert_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       timestamp: new Date(),
       resolved: false,
-      ...alertData
+      ...alertData,
     };
 
     this.alerts.push(alert);
@@ -184,7 +189,7 @@ export class NeonMonitoring {
     try {
       // Implementar notificação via email, Slack, etc.
       logger.error(`CRITICAL ALERT: ${alert.message}`, { alert });
-      
+
       // Aqui você pode integrar com serviços de notificação
       // como SendGrid, Slack, Discord, etc.
     } catch (error) {
@@ -229,13 +234,15 @@ export class NeonMonitoring {
     return {
       status,
       activeAlerts: activeAlerts.length,
-      lastMetrics: this.metrics[this.metrics.length - 1] || null
+      lastMetrics: this.metrics[this.metrics.length - 1] || null,
     };
   }
 
   updateThresholds(newThresholds: Partial<typeof this.thresholds>): void {
     this.thresholds = { ...this.thresholds, ...newThresholds };
-    logger.info('Monitoring thresholds updated', { thresholds: this.thresholds });
+    logger.info('Monitoring thresholds updated', {
+      thresholds: this.thresholds,
+    });
   }
 }
 
@@ -245,7 +252,7 @@ export const monitoring = new NeonMonitoring();
 // Função para iniciar monitoramento automático
 export function startMonitoring(intervalMs: number = 60000): NodeJS.Timeout {
   logger.info('Starting Neon monitoring', { interval: intervalMs });
-  
+
   return setInterval(async () => {
     try {
       await monitoring.collectMetrics();

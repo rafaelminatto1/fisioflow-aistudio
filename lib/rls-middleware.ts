@@ -18,7 +18,10 @@ export interface UserContext {
 export interface PrismaWithRLS extends PrismaClient {
   setUserContext(context: UserContext): Promise<void>;
   clearUserContext(): Promise<void>;
-  withUserContext<T>(context: UserContext, operation: () => Promise<T>): Promise<T>;
+  withUserContext<T>(
+    context: UserContext,
+    operation: () => Promise<T>
+  ): Promise<T>;
 }
 
 /**
@@ -40,16 +43,26 @@ export function createPrismaWithRLS(): PrismaWithRLS {
     }
 
     // For operations that require user context, ensure it's set
-    const operations = ['create', 'update', 'delete', 'findMany', 'findFirst', 'findUnique'];
-    
+    const operations = [
+      'create',
+      'update',
+      'delete',
+      'findMany',
+      'findFirst',
+      'findUnique',
+    ];
+
     if (operations.includes(params.action)) {
       // Check if user context is set
       try {
-        const result = await prisma.$queryRaw`SELECT current_setting('app.current_user_id', true) as user_id`;
+        const result =
+          await prisma.$queryRaw`SELECT current_setting('app.current_user_id', true) as user_id`;
         const userContext = result as any;
-        
+
         if (!userContext[0]?.user_id || userContext[0].user_id === '') {
-          console.warn(`RLS Warning: No user context set for ${params.action} on ${params.model}`);
+          console.warn(
+            `RLS Warning: No user context set for ${params.action} on ${params.model}`
+          );
           // In development, we might want to allow this, but log it
           if (process.env.NODE_ENV === 'production') {
             throw new Error('User context required for database operations');
@@ -64,16 +77,17 @@ export function createPrismaWithRLS(): PrismaWithRLS {
   });
 
   // Add utility methods
-  prisma.setUserContext = async function(context: UserContext) {
-    await this.$executeRaw`SELECT set_current_user(${context.userId}, ${context.userEmail || null})`;
+  prisma.setUserContext = async function (context: UserContext) {
+    await this
+      .$executeRaw`SELECT set_current_user(${context.userId}, ${context.userEmail || null})`;
   };
 
-  prisma.clearUserContext = async function() {
+  prisma.clearUserContext = async function () {
     await this.$executeRaw`SELECT clear_current_user()`;
   };
 
-  prisma.withUserContext = async function<T>(
-    context: UserContext, 
+  prisma.withUserContext = async function <T>(
+    context: UserContext,
     operation: () => Promise<T>
   ): Promise<T> {
     try {
@@ -93,7 +107,7 @@ export function createPrismaWithRLS(): PrismaWithRLS {
 export async function getUserContextFromSession(): Promise<UserContext | null> {
   try {
     const session = await auth();
-    
+
     if (!session?.user?.id) {
       return null;
     }
@@ -112,7 +126,9 @@ export async function getUserContextFromSession(): Promise<UserContext | null> {
 /**
  * Get user context from API request headers
  */
-export function getUserContextFromRequest(request: NextRequest): UserContext | null {
+export function getUserContextFromRequest(
+  request: NextRequest
+): UserContext | null {
   const userId = request.headers.get('x-user-id');
   const userEmail = request.headers.get('x-user-email');
   const userRole = request.headers.get('x-user-role');
@@ -136,18 +152,25 @@ export function withRLS<T extends any[], R>(
 ) {
   return async (...args: T): Promise<R> => {
     const prisma = createPrismaWithRLS();
-    
+
     try {
       // Try to get user context from session first
       let userContext = await getUserContextFromSession();
-      
+
       // If no session, try to get from request headers (for API routes)
-      if (!userContext && args[0] && typeof args[0] === 'object' && 'headers' in args[0]) {
+      if (
+        !userContext &&
+        args[0] &&
+        typeof args[0] === 'object' &&
+        'headers' in args[0]
+      ) {
         userContext = getUserContextFromRequest(args[0] as NextRequest);
       }
 
       if (userContext) {
-        return await prisma.withUserContext(userContext, () => handler(...args));
+        return await prisma.withUserContext(userContext, () =>
+          handler(...args)
+        );
       } else {
         // No user context available - proceed without RLS (might be public endpoint)
         console.warn('No user context available for RLS');
@@ -168,11 +191,11 @@ export async function rlsMiddleware(
   next: () => Promise<Response>
 ): Promise<Response> {
   const prisma = createPrismaWithRLS();
-  
+
   try {
     // Get user context from session or headers
     let userContext = await getUserContextFromSession();
-    
+
     if (!userContext) {
       userContext = getUserContextFromRequest(request);
     }
@@ -217,27 +240,36 @@ export async function verifyRLSSetup(): Promise<{
   isConfigured: boolean;
 }> {
   const prisma = createPrismaWithRLS();
-  
+
   try {
     // Check which tables have RLS enabled
-    const tablesWithRLS = await prisma.$queryRaw`
+    const tablesWithRLS = (await prisma.$queryRaw`
       SELECT tablename 
       FROM pg_tables 
       WHERE schemaname = 'public' 
       AND rowsecurity = true
       ORDER BY tablename
-    ` as { tablename: string }[];
+    `) as { tablename: string }[];
 
     // Count total policies
-    const policiesCount = await prisma.$queryRaw`
+    const policiesCount = (await prisma.$queryRaw`
       SELECT COUNT(*) as count
       FROM pg_policies 
       WHERE schemaname = 'public'
-    ` as { count: bigint }[];
+    `) as { count: bigint }[];
 
-    const expectedTables = ['User', 'Patient', 'Appointment', 'PainPoint', 'MetricResult', 'SoapNote'];
+    const expectedTables = [
+      'User',
+      'Patient',
+      'Appointment',
+      'PainPoint',
+      'MetricResult',
+      'SoapNote',
+    ];
     const configuredTables = tablesWithRLS.map(t => t.tablename);
-    const isConfigured = expectedTables.every(table => configuredTables.includes(table));
+    const isConfigured = expectedTables.every(table =>
+      configuredTables.includes(table)
+    );
 
     return {
       tablesWithRLS: configuredTables,
@@ -260,28 +292,28 @@ export async function getAuditLogs(options: {
   offset?: number;
 }): Promise<any[]> {
   const prisma = createPrismaWithRLS();
-  
+
   try {
     const { userId, tableName, operation, limit = 100, offset = 0 } = options;
-    
+
     let whereClause = 'WHERE 1=1';
     const params: any[] = [];
-    
+
     if (userId) {
       whereClause += ` AND user_id = $${params.length + 1}`;
       params.push(userId);
     }
-    
+
     if (tableName) {
       whereClause += ` AND table_name = $${params.length + 1}`;
       params.push(tableName);
     }
-    
+
     if (operation) {
       whereClause += ` AND operation = $${params.length + 1}`;
       params.push(operation);
     }
-    
+
     const query = `
       SELECT * FROM "AuditLog" 
       ${whereClause}
@@ -289,10 +321,10 @@ export async function getAuditLogs(options: {
       LIMIT $${params.length + 1} 
       OFFSET $${params.length + 2}
     `;
-    
+
     params.push(limit, offset);
-    
-    return await prisma.$queryRawUnsafe(query, ...params) as any[];
+
+    return (await prisma.$queryRawUnsafe(query, ...params)) as any[];
   } finally {
     await prisma.$disconnect();
   }

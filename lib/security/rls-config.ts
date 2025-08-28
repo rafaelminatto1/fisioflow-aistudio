@@ -63,7 +63,7 @@ export class RLSSecurityManager {
         table: policy.tablename,
         operation: policy.cmd as any,
         condition: policy.qual || policy.with_check || '',
-        description: `Policy for ${policy.tablename} - ${policy.cmd}`
+        description: `Policy for ${policy.tablename} - ${policy.cmd}`,
       }));
     } catch (error) {
       console.error('Error fetching security policies:', error);
@@ -129,7 +129,7 @@ export class RLSSecurityManager {
         ipAddress: log.ipAddress,
         userAgent: log.userAgent,
         metadata: log.metadata,
-        createdAt: new Date(log.createdAt)
+        createdAt: new Date(log.createdAt),
       }));
     } catch (error) {
       console.error('Error fetching audit logs:', error);
@@ -148,9 +148,10 @@ export class RLSSecurityManager {
     request?: Request
   ): Promise<void> {
     try {
-      const ipAddress = request?.headers.get('x-forwarded-for') || 
-                       request?.headers.get('x-real-ip') || 
-                       'unknown';
+      const ipAddress =
+        request?.headers.get('x-forwarded-for') ||
+        request?.headers.get('x-real-ip') ||
+        'unknown';
       const userAgent = request?.headers.get('user-agent') || 'unknown';
 
       await this.prisma.$executeRaw`
@@ -186,7 +187,7 @@ export class RLSSecurityManager {
       const [policies, auditCount, recentEvents] = await Promise.all([
         this.getSecurityPolicies(),
         this.getAuditLogCount(),
-        this.getAuditLogs(10)
+        this.getAuditLogs(10),
       ]);
 
       const rlsStatus = await this.checkRLSStatus();
@@ -198,7 +199,7 @@ export class RLSSecurityManager {
         auditLogEntries: auditCount,
         recentSecurityEvents: recentEvents,
         policyViolations: await this.getPolicyViolationCount(),
-        lastSecurityCheck: new Date()
+        lastSecurityCheck: new Date(),
       };
     } catch (error) {
       console.error('Error getting security metrics:', error);
@@ -208,7 +209,7 @@ export class RLSSecurityManager {
         auditLogEntries: 0,
         recentSecurityEvents: [],
         policyViolations: 0,
-        lastSecurityCheck: new Date()
+        lastSecurityCheck: new Date(),
       };
     }
   }
@@ -261,16 +262,14 @@ export class RLSSecurityManager {
       // For now, we'll implement basic role-based checks
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
-        select: { role: true }
+        select: { role: true },
       });
 
       if (!user) {
-        await this.logSecurityEvent(
-          'PERMISSION_DENIED',
-          tableName,
-          recordId,
-          { reason: 'User not found', operation }
-        );
+        await this.logSecurityEvent('PERMISSION_DENIED', tableName, recordId, {
+          reason: 'User not found',
+          operation,
+        });
         return false;
       }
 
@@ -289,23 +288,20 @@ export class RLSSecurityManager {
       );
 
       if (!hasPermission) {
-        await this.logSecurityEvent(
-          'PERMISSION_DENIED',
-          tableName,
-          recordId,
-          { reason: 'Insufficient permissions', operation, role: user.role }
-        );
+        await this.logSecurityEvent('PERMISSION_DENIED', tableName, recordId, {
+          reason: 'Insufficient permissions',
+          operation,
+          role: user.role,
+        });
       }
 
       return hasPermission;
     } catch (error) {
       console.error('Error validating user permission:', error);
-      await this.logSecurityEvent(
-        'PERMISSION_ERROR',
-        tableName,
-        recordId,
-        { error: error instanceof Error ? error.message : String(error), operation }
-      );
+      await this.logSecurityEvent('PERMISSION_ERROR', tableName, recordId, {
+        error: error instanceof Error ? error.message : String(error),
+        operation,
+      });
       return false;
     }
   }
@@ -328,8 +324,8 @@ export class RLSSecurityManager {
             const appointment = await this.prisma.appointment.findFirst({
               where: {
                 patientId: recordId,
-                therapistId: userId
-              }
+                therapistId: userId,
+              },
             });
             return !!appointment;
           }
@@ -337,7 +333,10 @@ export class RLSSecurityManager {
         }
         if (role === 'Paciente') {
           // Patients can only view/update their own data
-          return recordId === userId && (operation === 'SELECT' || operation === 'UPDATE');
+          return (
+            recordId === userId &&
+            (operation === 'SELECT' || operation === 'UPDATE')
+          );
         }
         break;
 
@@ -348,11 +347,8 @@ export class RLSSecurityManager {
             const appointment = await this.prisma.appointment.findFirst({
               where: {
                 id: recordId,
-                OR: [
-                  { therapistId: userId },
-                  { patientId: userId }
-                ]
-              }
+                OR: [{ therapistId: userId }, { patientId: userId }],
+              },
             });
             return !!appointment;
           }
@@ -376,14 +372,11 @@ export class RLSSecurityManager {
       await this.prisma.$executeRawUnsafe(`
         ALTER TABLE "${tableName}" ENABLE ROW LEVEL SECURITY;
       `);
-      
-      await this.logSecurityEvent(
-        'RLS_ENABLED',
+
+      await this.logSecurityEvent('RLS_ENABLED', tableName, undefined, {
         tableName,
-        undefined,
-        { tableName }
-      );
-      
+      });
+
       return true;
     } catch (error) {
       console.error(`Error enabling RLS for table ${tableName}:`, error);
@@ -399,14 +392,12 @@ export class RLSSecurityManager {
       await this.prisma.$executeRawUnsafe(`
         ALTER TABLE "${tableName}" DISABLE ROW LEVEL SECURITY;
       `);
-      
-      await this.logSecurityEvent(
-        'RLS_DISABLED',
+
+      await this.logSecurityEvent('RLS_DISABLED', tableName, undefined, {
         tableName,
-        undefined,
-        { tableName, warning: 'RLS disabled - security risk' }
-      );
-      
+        warning: 'RLS disabled - security risk',
+      });
+
       return true;
     } catch (error) {
       console.error(`Error disabling RLS for table ${tableName}:`, error);
@@ -423,14 +414,14 @@ export class RLSSecurityManager {
         DELETE FROM "SecurityAuditLog" 
         WHERE "createdAt" < NOW() - INTERVAL '${days} days';
       `;
-      
+
       await this.logSecurityEvent(
         'AUDIT_LOG_CLEANUP',
         'SecurityAuditLog',
         undefined,
         { daysRetention: days, deletedRecords: result }
       );
-      
+
       return Number(result);
     } catch (error) {
       console.error('Error clearing old audit logs:', error);
@@ -463,9 +454,11 @@ export const securityUtils = {
    * Get user IP address from request
    */
   getUserIP: (request: Request): string => {
-    return request.headers.get('x-forwarded-for') ||
-           request.headers.get('x-real-ip') ||
-           'unknown';
+    return (
+      request.headers.get('x-forwarded-for') ||
+      request.headers.get('x-real-ip') ||
+      'unknown'
+    );
   },
 
   /**
@@ -481,13 +474,13 @@ export const securityUtils = {
   sanitizeForLog: (data: any): any => {
     const sensitiveFields = ['password', 'token', 'secret', 'key', 'auth'];
     const sanitized = { ...data };
-    
+
     for (const field of sensitiveFields) {
       if (sanitized[field]) {
         sanitized[field] = '[REDACTED]';
       }
     }
-    
+
     return sanitized;
-  }
+  },
 };

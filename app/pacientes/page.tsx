@@ -12,10 +12,12 @@ type PacientesPageProps = {
 };
 
 // Esta é uma página Server Component que busca os dados iniciais.
-export default async function PacientesPage({ searchParams }: PacientesPageProps) {
+export default async function PacientesPage({
+  searchParams,
+}: PacientesPageProps) {
   const take = 20;
   const { q: searchTerm = '', status = 'All', cursor } = searchParams;
-  
+
   const where: any = {
     OR: [
       { name: { contains: searchTerm, mode: 'insensitive' } },
@@ -26,7 +28,7 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
   if (status && status !== 'All') {
     where.status = status;
   }
-  
+
   const initialPatients = await cachedPrisma.client.patient.findMany({
     take,
     skip: cursor ? 1 : 0,
@@ -45,7 +47,7 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
     },
     orderBy: { createdAt: 'desc' },
   });
-  
+
   // Transform to PatientSummary format
   const transformedPatients = initialPatients.map((patient: any) => ({
     id: patient.id,
@@ -58,19 +60,22 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
     medicalAlerts: patient.medicalAlerts || undefined,
     cpf: patient.cpf,
   }));
-  
-  const nextCursor = initialPatients.length === take ? initialPatients[initialPatients.length - 1].id : null;
-  
+
+  const nextCursor =
+    initialPatients.length === take
+      ? initialPatients[initialPatients.length - 1].id
+      : null;
+
   const initialData = {
-      items: transformedPatients,
-      nextCursor,
-  }
+    items: transformedPatients,
+    nextCursor,
+  };
 
   return (
     <>
       <PageHeader
-        title="Gestão de Pacientes"
-        description="Adicione, visualize e gerencie as informações dos seus pacientes."
+        title='Gestão de Pacientes'
+        description='Adicione, visualize e gerencie as informações dos seus pacientes.'
       />
       {/* O componente cliente gerencia a interatividade */}
       <PatientList initialData={initialData} />

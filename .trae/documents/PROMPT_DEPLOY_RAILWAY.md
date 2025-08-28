@@ -2,9 +2,12 @@
 
 ## Contexto do Projeto
 
-Olá Claude Code! Preciso realizar o deploy da aplicação **FisioFlow** na plataforma Railway. Este é um sistema completo de gestão para clínicas de fisioterapia desenvolvido em Next.js 14 com as seguintes características:
+Olá Claude Code! Preciso realizar o deploy da aplicação **FisioFlow** na plataforma Railway. Este é
+um sistema completo de gestão para clínicas de fisioterapia desenvolvido em Next.js 14 com as
+seguintes características:
 
 ### Tecnologias Implementadas
+
 - **Frontend**: Next.js 14 com App Router, TypeScript, Tailwind CSS
 - **Backend**: API Routes do Next.js, Prisma ORM
 - **Banco de Dados**: PostgreSQL (Neon DB)
@@ -13,16 +16,19 @@ Olá Claude Code! Preciso realizar o deploy da aplicação **FisioFlow** na plat
 - **Runtime**: Edge Runtime (totalmente compatível)
 
 ### Correções Recentes Implementadas
+
 ✅ **Edge Runtime Compatibility**: Substituído Winston Logger por logger compatível  
 ✅ **MCP Configuration**: Sistema completo de configuração automatizada  
 ✅ **Environment Automation**: Scripts para obter credenciais reais do Railway e Neon  
 ✅ **Hot Reload Fix**: Corrigidos problemas de desenvolvimento  
-✅ **Build Optimization**: Removidas dependências incompatíveis com Edge Runtime  
+✅ **Build Optimization**: Removidas dependências incompatíveis com Edge Runtime
 
 ## Pré-requisitos Verificados
 
 ### ✅ Variáveis de Ambiente Configuradas
+
 Todas as variáveis estão configuradas no `.env.local`:
+
 ```bash
 # Railway Configuration
 RAILWAY_API_KEY=real_api_key_from_cli
@@ -43,6 +49,7 @@ NEXTAUTH_URL=https://fisioflow-production.railway.app
 ```
 
 ### ✅ Build Status
+
 - Build local sem erros
 - TypeScript compilation OK
 - Edge Runtime compatibility verificada
@@ -51,6 +58,7 @@ NEXTAUTH_URL=https://fisioflow-production.railway.app
 ## Instruções Específicas para Deploy
 
 ### 1. Verificação Pré-Deploy
+
 Antes de iniciar o deploy, execute:
 
 ```bash
@@ -67,6 +75,7 @@ npm run build
 ### 2. Deploy no Railway
 
 #### Opção A: Deploy Automático (Recomendado)
+
 ```bash
 # Deploy para produção
 npm run railway:deploy-production
@@ -76,6 +85,7 @@ npm run railway:logs
 ```
 
 #### Opção B: Deploy Manual via CLI
+
 ```bash
 # Login no Railway (se necessário)
 railway login
@@ -159,6 +169,7 @@ curl https://your-app.railway.app/api/health
 ### 🚨 Problemas Conhecidos e Soluções
 
 #### 1. Build Failures
+
 ```bash
 # Se o build falhar, verificar:
 - Dependências instaladas: npm install
@@ -167,6 +178,7 @@ curl https://your-app.railway.app/api/health
 ```
 
 #### 2. Database Connection Issues
+
 ```bash
 # Verificar conexão Neon:
 npm run env:test-connections
@@ -176,6 +188,7 @@ railway variables | grep DATABASE_URL
 ```
 
 #### 3. NextAuth Errors
+
 ```bash
 # Verificar variáveis NextAuth:
 - NEXTAUTH_SECRET deve estar definido
@@ -183,6 +196,7 @@ railway variables | grep DATABASE_URL
 ```
 
 #### 4. Edge Runtime Issues
+
 ```bash
 # Se houver erros de runtime:
 - Verificar se não há APIs Node.js sendo usadas
@@ -235,8 +249,11 @@ railway status
 
 ---
 
-**Objetivo**: Deploy bem-sucedido do FisioFlow no Railway com todas as funcionalidades operacionais, banco de dados conectado e autenticação funcionando.
+**Objetivo**: Deploy bem-sucedido do FisioFlow no Railway com todas as funcionalidades operacionais,
+banco de dados conectado e autenticação funcionando.
 
-**Resultado Esperado**: Aplicação acessível em produção, sem erros, com todas as features funcionais e pronta para uso pelos usuários finais.
+**Resultado Esperado**: Aplicação acessível em produção, sem erros, com todas as features funcionais
+e pronta para uso pelos usuários finais.
 
-Por favor, execute o deploy seguindo estas instruções e me informe sobre qualquer erro ou sucesso durante o processo!
+Por favor, execute o deploy seguindo estas instruções e me informe sobre qualquer erro ou sucesso
+durante o processo!

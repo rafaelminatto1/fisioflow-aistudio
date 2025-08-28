@@ -20,16 +20,25 @@ export async function GET(request: NextRequest) {
 
       // Calculate date range
       const now = new Date();
-      const daysBack = range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365;
-      const startDate = new Date(now.getTime() - daysBack * 24 * 60 * 60 * 1000);
+      const daysBack =
+        range === '7d' ? 7 : range === '30d' ? 30 : range === '90d' ? 90 : 365;
+      const startDate = new Date(
+        now.getTime() - daysBack * 24 * 60 * 60 * 1000
+      );
 
       // Gather comprehensive analytics data
-      const [overviewData, patientInsights, performanceData, alertsData, predictionsData] = await Promise.all([
+      const [
+        overviewData,
+        patientInsights,
+        performanceData,
+        alertsData,
+        predictionsData,
+      ] = await Promise.all([
         getOverviewMetrics(userId, startDate),
         getPatientInsights(userId),
         getPerformanceMetrics(userId, startDate),
         getIntelligentAlerts(userId),
-        getAIPredictions(userId)
+        getAIPredictions(userId),
       ]);
 
       const dashboardData = {
@@ -39,7 +48,7 @@ export async function GET(request: NextRequest) {
         alerts: alertsData,
         predictions: predictionsData,
         generatedAt: new Date().toISOString(),
-        timeRange: range
+        timeRange: range,
       };
 
       BusinessMetrics.recordAPICall('analytics', 'GET', 200);
@@ -47,15 +56,14 @@ export async function GET(request: NextRequest) {
         userId,
         range,
         patientCount: patientInsights.length,
-        alertCount: alertsData.length
+        alertCount: alertsData.length,
       });
 
       return NextResponse.json(dashboardData);
-
     } catch (error: any) {
       structuredLogger.error('Failed to generate advanced analytics', {
         error: error.message,
-        stack: error.stack
+        stack: error.stack,
       });
 
       BusinessMetrics.recordAPICall('analytics', 'GET', 500);
@@ -68,16 +76,22 @@ export async function GET(request: NextRequest) {
 }
 
 async function getOverviewMetrics(userId: string, startDate: Date) {
-  const [totalPatients, activePatients, completedAppointments, totalAppointments, previousMonthData] = await Promise.all([
+  const [
+    totalPatients,
+    activePatients,
+    completedAppointments,
+    totalAppointments,
+    previousMonthData,
+  ] = await Promise.all([
     // Total patients for this therapist
     cachedPrisma.client.patient.count({
       where: {
         appointments: {
           some: {
-            therapistId: userId
-          }
-        }
-      }
+            therapistId: userId,
+          },
+        },
+      },
     }),
 
     // Active patients
@@ -86,10 +100,10 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
         status: 'Active',
         appointments: {
           some: {
-            therapistId: userId
-          }
-        }
-      }
+            therapistId: userId,
+          },
+        },
+      },
     }),
 
     // Completed appointments in range
@@ -97,16 +111,16 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
       where: {
         therapistId: userId,
         status: 'Realizado' as any,
-        startTime: { gte: startDate }
-      }
+        startTime: { gte: startDate },
+      },
     }),
 
     // Total appointments in range
     cachedPrisma.client.appointment.count({
       where: {
         therapistId: userId,
-        startTime: { gte: startDate }
-      }
+        startTime: { gte: startDate },
+      },
     }),
 
     // Previous month for growth calculation
@@ -114,15 +128,15 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
       where: {
         appointments: {
           some: {
-            therapistId: userId
-          }
+            therapistId: userId,
+          },
         },
         createdAt: {
           gte: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000), // 60 days ago
-          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)  // 30 days ago
-        }
-      }
-    })
+          lte: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), // 30 days ago
+        },
+      },
+    }),
   ]);
 
   // Calculate sessions per patient
@@ -130,26 +144,38 @@ async function getOverviewMetrics(userId: string, startDate: Date) {
     by: ['patientId'],
     where: {
       therapistId: userId,
-      startTime: { gte: startDate }
+      startTime: { gte: startDate },
     },
     _count: {
-      id: true
-    }
+      id: true,
+    },
   });
 
-  const avgSessionsPerPatient = sessionsData.length > 0
-    ? sessionsData.reduce((sum: number, item: any) => sum + item._count.id, 0) / sessionsData.length
-    : 0;
+  const avgSessionsPerPatient =
+    sessionsData.length > 0
+      ? sessionsData.reduce(
+          (sum: number, item: any) => sum + item._count.id,
+          0
+        ) / sessionsData.length
+      : 0;
 
-  const completionRate = totalAppointments > 0 ? Math.round((completedAppointments / totalAppointments) * 100) : 0;
-  const monthlyGrowth = previousMonthData > 0 ? Math.round(((activePatients - previousMonthData) / previousMonthData) * 100) : 0;
+  const completionRate =
+    totalAppointments > 0
+      ? Math.round((completedAppointments / totalAppointments) * 100)
+      : 0;
+  const monthlyGrowth =
+    previousMonthData > 0
+      ? Math.round(
+          ((activePatients - previousMonthData) / previousMonthData) * 100
+        )
+      : 0;
 
   return {
     totalPatients,
     activePatients,
     completionRate,
     avgSessionsPerPatient: Math.round(avgSessionsPerPatient * 10) / 10,
-    monthlyGrowth
+    monthlyGrowth,
   };
 }
 
@@ -158,42 +184,55 @@ async function getPatientInsights(userId: string) {
     where: {
       appointments: {
         some: {
-          therapistId: userId
-        }
-      }
+          therapistId: userId,
+        },
+      },
     },
     include: {
       appointments: {
         where: { therapistId: userId },
         orderBy: { startTime: 'desc' },
-        take: 10
+        take: 10,
       },
       painPoints: {
         orderBy: { createdAt: 'desc' },
-        take: 5
-      }
+        take: 5,
+      },
     },
-    take: 50 // Limit for performance
+    take: 50, // Limit for performance
   });
 
   const patientInsights = await Promise.all(
     patients.map(async (patient: any) => {
       // Calculate recovery progress based on appointments and pain trends
-      const completedAppointments = patient.appointments.filter((apt: any) => apt.status === 'Realizado').length;
+      const completedAppointments = patient.appointments.filter(
+        (apt: any) => apt.status === 'Realizado'
+      ).length;
       const totalAppointments = patient.appointments.length;
-      const attendanceRate = totalAppointments > 0 ? Math.round((completedAppointments / totalAppointments) * 100) : 0;
+      const attendanceRate =
+        totalAppointments > 0
+          ? Math.round((completedAppointments / totalAppointments) * 100)
+          : 0;
 
       // Calculate pain trend
       const painTrend = calculatePainTrend(patient.painPoints);
-      
+
       // Calculate recovery progress (simplified algorithm)
       const recoveryProgress = Math.min(
-        Math.round((completedAppointments * 10) + (attendanceRate * 0.5) + (painTrend === 'improving' ? 20 : painTrend === 'stable' ? 10 : 0)),
+        Math.round(
+          completedAppointments * 10 +
+            attendanceRate * 0.5 +
+            (painTrend === 'improving' ? 20 : painTrend === 'stable' ? 10 : 0)
+        ),
         100
       );
 
       // Determine risk level
-      const riskLevel = determineRiskLevel(attendanceRate, recoveryProgress, painTrend);
+      const riskLevel = determineRiskLevel(
+        attendanceRate,
+        recoveryProgress,
+        painTrend
+      );
 
       return {
         patientId: patient.id,
@@ -201,14 +240,17 @@ async function getPatientInsights(userId: string) {
         riskLevel,
         recoveryProgress,
         attendanceRate,
-        painTrend
+        painTrend,
       };
     })
   );
 
   return patientInsights.sort((a: any, b: any) => {
     const riskOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    return riskOrder[a.riskLevel as keyof typeof riskOrder] - riskOrder[b.riskLevel as keyof typeof riskOrder];
+    return (
+      riskOrder[a.riskLevel as keyof typeof riskOrder] -
+      riskOrder[b.riskLevel as keyof typeof riskOrder]
+    );
   });
 }
 
@@ -249,15 +291,15 @@ async function getPerformanceMetrics(userId: string, startDate: Date) {
       week: new Date(row.week).toLocaleDateString('pt-BR'),
       appointments: Number(row.appointments),
       completed: Number(row.completed),
-      noShow: Number(row.noShow)
+      noShow: Number(row.noShow),
     })),
     treatmentSuccess: treatmentSuccess.map((row: any) => ({
       treatmentType: row.treatmentType,
       successRate: Math.round(Number(row.successRate)),
       avgDuration: Math.round(Number(row.avgDuration) || 0),
-      patientCount: Number(row.patientCount)
+      patientCount: Number(row.patientCount),
     })),
-    painReductionTrends
+    painReductionTrends,
   };
 }
 
@@ -287,7 +329,7 @@ async function getIntelligentAlerts(userId: string) {
       message: 'Paciente com alto índice de faltas',
       patientName: patient.name,
       actionRequired: 'Entrar em contato para verificar situação',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   });
 
@@ -297,9 +339,9 @@ async function getIntelligentAlerts(userId: string) {
       therapistId: userId,
       startTime: {
         gte: new Date(new Date().setHours(0, 0, 0, 0)),
-        lte: new Date(new Date().setHours(23, 59, 59, 999))
-      }
-    }
+        lte: new Date(new Date().setHours(23, 59, 59, 999)),
+      },
+    },
   });
 
   if (todayAppointments > 8) {
@@ -308,7 +350,7 @@ async function getIntelligentAlerts(userId: string) {
       severity: 'medium' as const,
       message: 'Agenda com alta demanda hoje',
       actionRequired: 'Monitorar tempo de atendimento e considerar otimizações',
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
@@ -318,53 +360,58 @@ async function getIntelligentAlerts(userId: string) {
 async function getAIPredictions(userId: string) {
   // Get clinic insights from AI service
   try {
-    const clinicInsights = await aiInsightsService.generateClinicInsights(userId);
-    
+    const clinicInsights =
+      await aiInsightsService.generateClinicInsights(userId);
+
     if (clinicInsights) {
       // Generate discharge candidates based on AI insights
       const dischargeCandidates = [
         {
-          patientName: "Maria Silva",
+          patientName: 'Maria Silva',
           probability: 92,
-          expectedDate: "2024-02-15"
+          expectedDate: '2024-02-15',
         },
         {
-          patientName: "João Santos",
+          patientName: 'João Santos',
           probability: 87,
-          expectedDate: "2024-02-20"
+          expectedDate: '2024-02-20',
         },
         {
-          patientName: "Ana Costa",
+          patientName: 'Ana Costa',
           probability: 78,
-          expectedDate: "2024-02-25"
-        }
+          expectedDate: '2024-02-25',
+        },
       ];
 
       // Generate risk patients interventions
       const riskPatients = [
         {
-          patientName: "Pedro Oliveira",
-          riskFactors: ["Faltas frequentes", "Dor persistente", "Baixa adesão aos exercícios"],
+          patientName: 'Pedro Oliveira',
+          riskFactors: [
+            'Faltas frequentes',
+            'Dor persistente',
+            'Baixa adesão aos exercícios',
+          ],
           recommendedActions: [
-            "Reagendar consulta de acompanhamento",
-            "Revisar plano de exercícios",
-            "Contato telefônico para suporte"
-          ]
+            'Reagendar consulta de acompanhamento',
+            'Revisar plano de exercícios',
+            'Contato telefônico para suporte',
+          ],
         },
         {
-          patientName: "Carla Lima",
-          riskFactors: ["Progresso lento", "Complexidade do caso"],
+          patientName: 'Carla Lima',
+          riskFactors: ['Progresso lento', 'Complexidade do caso'],
           recommendedActions: [
-            "Considerar referência para especialista",
-            "Intensificar acompanhamento",
-            "Avaliação de exames complementares"
-          ]
-        }
+            'Considerar referência para especialista',
+            'Intensificar acompanhamento',
+            'Avaliação de exames complementares',
+          ],
+        },
       ];
 
       return {
         dischargeCandidates,
-        riskPatients
+        riskPatients,
       };
     }
   } catch (error) {
@@ -374,24 +421,35 @@ async function getAIPredictions(userId: string) {
   // Fallback mock data if AI service fails
   return {
     dischargeCandidates: [],
-    riskPatients: []
+    riskPatients: [],
   };
 }
 
 // Helper functions
-function calculatePainTrend(painPoints: any[]): 'improving' | 'stable' | 'worsening' {
+function calculatePainTrend(
+  painPoints: any[]
+): 'improving' | 'stable' | 'worsening' {
   if (painPoints.length < 2) return 'stable';
-  
-  const recent = painPoints.slice(0, 2).reduce((sum, p) => sum + p.intensity, 0) / 2;
-  const older = painPoints.slice(2, 4).reduce((sum, p) => sum + p.intensity, 0) / 2;
-  
+
+  const recent =
+    painPoints.slice(0, 2).reduce((sum, p) => sum + p.intensity, 0) / 2;
+  const older =
+    painPoints.slice(2, 4).reduce((sum, p) => sum + p.intensity, 0) / 2;
+
   if (recent < older - 1) return 'improving';
   if (recent > older + 1) return 'worsening';
   return 'stable';
 }
 
-function determineRiskLevel(attendanceRate: number, recoveryProgress: number, painTrend: string): 'low' | 'medium' | 'high' | 'critical' {
-  if (attendanceRate < 50 || (painTrend === 'worsening' && recoveryProgress < 30)) {
+function determineRiskLevel(
+  attendanceRate: number,
+  recoveryProgress: number,
+  painTrend: string
+): 'low' | 'medium' | 'high' | 'critical' {
+  if (
+    attendanceRate < 50 ||
+    (painTrend === 'worsening' && recoveryProgress < 30)
+  ) {
     return 'critical';
   }
   if (attendanceRate < 70 || recoveryProgress < 40) {
@@ -406,14 +464,14 @@ function determineRiskLevel(attendanceRate: number, recoveryProgress: number, pa
 function generatePainReductionTrends(startDate: Date) {
   const trends = [];
   const months = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun'];
-  
+
   for (let i = 0; i < 6; i++) {
     trends.push({
       month: months[i],
       avgPainReduction: Math.round(30 + Math.random() * 40), // 30-70% reduction
-      patientsSurvey: Math.round(20 + Math.random() * 30)    // 20-50 patients
+      patientsSurvey: Math.round(20 + Math.random() * 30), // 20-50 patients
     });
   }
-  
+
   return trends;
 }

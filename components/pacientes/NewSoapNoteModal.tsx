@@ -1,10 +1,11 @@
+// src/components/pacientes/NewSoapNoteModal.tsx
 'use client';
 
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
+import React, { useState, useRef, useTransition } from 'react';
+import { X, Save, Loader2 } from 'lucide-react';
+import { useToast } from '../ui/use-toast';
+import PainScale from '../ui/PainScale';
+import { saveSoapNoteAction } from '../../lib/actions/soap.actions';
 
 interface NewSoapNoteModalProps {
   isOpen: boolean;
@@ -12,117 +13,126 @@ interface NewSoapNoteModalProps {
   patientId: string;
 }
 
-export default function NewSoapNoteModal({ isOpen, onClose, patientId }: NewSoapNoteModalProps) {
-  const [formData, setFormData] = useState({
-    subjective: '',
-    objective: '',
-    assessment: '',
-    plan: ''
-  });
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      // TODO: Implement API call to save SOAP note
-      // Saving SOAP note
-      
-      // Reset form and close modal
-      setFormData({ subjective: '', objective: '', assessment: '', plan: '' });
-      onClose();
-    } catch (error) {
-      console.error('Error saving SOAP note:', error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleChange = (field: string, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
+const NewSoapNoteModal: React.FC<NewSoapNoteModalProps> = ({
+  isOpen,
+  onClose,
+  patientId,
+}) => {
+  const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [painScale, setPainScale] = useState<number | undefined>(undefined);
 
   if (!isOpen) return null;
 
+  const handleSubmit = (formData: FormData) => {
+    if (painScale !== undefined) {
+      formData.set('painScale', String(painScale));
+    }
+
+    startTransition(async () => {
+      const result = await saveSoapNoteAction(patientId, formData);
+      if (result.success) {
+        toast({ title: 'Sucesso!', description: result.message });
+        formRef.current?.reset();
+        setPainScale(undefined);
+        onClose();
+      } else {
+        toast({
+          title: 'Erro',
+          description: result.message,
+          variant: 'destructive',
+        });
+      }
+    });
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      <div className="fixed inset-0 bg-black bg-opacity-50" onClick={onClose} />
-      
-      <div className="relative bg-white rounded-lg shadow-lg w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-xl font-semibold text-gray-900">Nova Anotação SOAP</h2>
+    <div className='fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4'>
+      <div
+        className='bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col'
+        onClick={e => e.stopPropagation()}
+      >
+        <header className='flex items-center justify-between p-4 border-b'>
+          <h2 className='text-lg font-bold text-slate-800'>
+            Nova Anotação Clínica (SOAP)
+          </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className='p-2 rounded-full hover:bg-slate-100'
           >
-            <X className="h-6 w-6" />
+            <X />
           </button>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="subjective">Subjetivo</Label>
-            <textarea
-              id="subjective"
-              value={formData.subjective}
-              onChange={(e) => handleChange('subjective', e.target.value)}
-              className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Relato do paciente, sintomas, queixas..."
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="objective">Objetivo</Label>
-            <textarea
-              id="objective"
-              value={formData.objective}
-              onChange={(e) => handleChange('objective', e.target.value)}
-              className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Observações clínicas, testes, medições..."
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="assessment">Avaliação</Label>
-            <textarea
-              id="assessment"
-              value={formData.assessment}
-              onChange={(e) => handleChange('assessment', e.target.value)}
-              className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Análise clínica, diagnóstico, interpretação..."
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="plan">Plano</Label>
-            <textarea
-              id="plan"
-              value={formData.plan}
-              onChange={(e) => handleChange('plan', e.target.value)}
-              className="w-full min-h-[100px] px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Plano de tratamento, exercícios, orientações..."
-            />
-          </div>
-          
-          <div className="flex justify-end space-x-3 pt-4 border-t">
-            <Button
-              type="button"
-              variant="outline"
+        </header>
+        <form
+          ref={formRef}
+          action={handleSubmit}
+          className='flex-1 overflow-y-auto'
+        >
+          <main className='p-6 space-y-4'>
+            <PainScale selectedScore={painScale} onSelectScore={setPainScale} />
+            <div>
+              <label className='font-semibold'>S (Subjetivo)*</label>
+              <textarea
+                name='subjective'
+                rows={3}
+                className='mt-1 w-full p-2 border rounded-lg'
+                required
+              />
+            </div>
+            <div>
+              <label className='font-semibold'>O (Objetivo)*</label>
+              <textarea
+                name='objective'
+                rows={3}
+                className='mt-1 w-full p-2 border rounded-lg'
+                required
+              />
+            </div>
+            <div>
+              <label className='font-semibold'>A (Avaliação)*</label>
+              <textarea
+                name='assessment'
+                rows={3}
+                className='mt-1 w-full p-2 border rounded-lg'
+                required
+              />
+            </div>
+            <div>
+              <label className='font-semibold'>P (Plano)*</label>
+              <textarea
+                name='plan'
+                rows={3}
+                className='mt-1 w-full p-2 border rounded-lg'
+                required
+              />
+            </div>
+          </main>
+          <footer className='flex justify-end items-center p-4 border-t bg-slate-50'>
+            <button
+              type='button'
               onClick={onClose}
-              disabled={isSubmitting}
+              className='px-4 py-2 mr-2 border rounded-lg'
             >
               Cancelar
-            </Button>
-            <Button
-              type="submit"
-              disabled={isSubmitting}
+            </button>
+            <button
+              type='submit'
+              disabled={isPending}
+              className='px-4 py-2 text-white bg-sky-500 rounded-lg flex items-center disabled:bg-sky-300'
             >
-              {isSubmitting ? 'Salvando...' : 'Salvar Anotação'}
-            </Button>
-          </div>
+              {isPending ? (
+                <Loader2 className='w-4 h-4 mr-2 animate-spin' />
+              ) : (
+                <Save className='w-4 h-4 mr-2' />
+              )}
+              {isPending ? 'Salvando...' : 'Salvar Anotação'}
+            </button>
+          </footer>
         </form>
       </div>
     </div>
   );
-}
+};
+
+export default NewSoapNoteModal;

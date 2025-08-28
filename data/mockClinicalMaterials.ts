@@ -24,8 +24,14 @@ export const mockMaterialCategories: MaterialCategory[] = [
     id: 'cat3',
     name: 'Protocolos Clínicos',
     materials: [
-      { id: 'mat8', name: 'Protocolo Pós-operatório de LCA (Ligamento Cruzado Anterior)' },
-      { id: 'mat9', name: 'Protocolo de Tratamento para Síndrome do Impacto do Ombro' },
+      {
+        id: 'mat8',
+        name: 'Protocolo Pós-operatório de LCA (Ligamento Cruzado Anterior)',
+      },
+      {
+        id: 'mat9',
+        name: 'Protocolo de Tratamento para Síndrome do Impacto do Ombro',
+      },
       { id: 'mat10', name: 'Diretrizes para Tratamento de Lombalgia Aguda' },
     ],
   },
@@ -35,7 +41,10 @@ export const mockMaterialCategories: MaterialCategory[] = [
     materials: [
       { id: 'mat11', name: 'Folder: O que é Hérnia de Disco?' },
       { id: 'mat12', name: 'Vídeo: Ergonomia no Trabalho' },
-      { id: 'mat13', name: 'Infográfico: Benefícios da Atividade Física Regular' },
+      {
+        id: 'mat13',
+        name: 'Infográfico: Benefícios da Atividade Física Regular',
+      },
     ],
   },
 ];

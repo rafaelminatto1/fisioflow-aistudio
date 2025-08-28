@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { checkNeonHealth, getNeonMetrics, neonApiConfig } from '@/lib/neon-config';
+import {
+  checkNeonHealth,
+  getNeonMetrics,
+  neonApiConfig,
+} from '@/lib/neon-config';
 
 // GET /api/neon/metrics - Get Neon database metrics
 export async function GET(request: NextRequest) {
@@ -7,7 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type') || 'all';
     const authHeader = request.headers.get('authorization');
-    
+
     // Simple API key authentication
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -18,10 +22,7 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.split(' ')[1];
     if (token !== process.env.NEON_API_KEY) {
-      return NextResponse.json(
-        { error: 'Invalid API key' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
 
     switch (type) {
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           data: healthData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'metrics':
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           data: metricsData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'project':
@@ -47,7 +48,7 @@ export async function GET(request: NextRequest) {
           `${neonApiConfig.baseUrl}/projects/${neonApiConfig.projectId}`,
           {
             headers: {
-              'Authorization': `Bearer ${neonApiConfig.apiKey}`,
+              Authorization: `Bearer ${neonApiConfig.apiKey}`,
               'Content-Type': 'application/json',
             },
           }
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           data: projectData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'branches':
@@ -70,7 +71,7 @@ export async function GET(request: NextRequest) {
           `${neonApiConfig.baseUrl}/projects/${neonApiConfig.projectId}/branches`,
           {
             headers: {
-              'Authorization': `Bearer ${neonApiConfig.apiKey}`,
+              Authorization: `Bearer ${neonApiConfig.apiKey}`,
               'Content-Type': 'application/json',
             },
           }
@@ -84,7 +85,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           data: branchesData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'endpoints':
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
           `${neonApiConfig.baseUrl}/projects/${neonApiConfig.projectId}/endpoints`,
           {
             headers: {
-              'Authorization': `Bearer ${neonApiConfig.apiKey}`,
+              Authorization: `Bearer ${neonApiConfig.apiKey}`,
               'Content-Type': 'application/json',
             },
           }
@@ -107,7 +108,7 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({
           success: true,
           data: endpointsData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'all':
@@ -115,7 +116,7 @@ export async function GET(request: NextRequest) {
         // Get comprehensive metrics
         const [health, metrics] = await Promise.all([
           checkNeonHealth(),
-          getNeonMetrics()
+          getNeonMetrics(),
         ]);
 
         // Get project info from Neon API
@@ -125,7 +126,7 @@ export async function GET(request: NextRequest) {
             `${neonApiConfig.baseUrl}/projects/${neonApiConfig.projectId}`,
             {
               headers: {
-                'Authorization': `Bearer ${neonApiConfig.apiKey}`,
+                Authorization: `Bearer ${neonApiConfig.apiKey}`,
                 'Content-Type': 'application/json',
               },
             }
@@ -147,9 +148,9 @@ export async function GET(request: NextRequest) {
               projectId: neonApiConfig.projectId,
               branchId: neonApiConfig.branchId,
               endpointId: neonApiConfig.endpointId,
-            }
+            },
           },
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
     }
   } catch (error) {
@@ -159,7 +160,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: 'Failed to fetch Neon metrics',
         details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
@@ -170,7 +171,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Missing or invalid authorization header' },
@@ -180,10 +181,7 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.split(' ')[1];
     if (token !== process.env.NEON_API_KEY) {
-      return NextResponse.json(
-        { error: 'Invalid API key' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -196,7 +194,7 @@ export async function POST(request: NextRequest) {
           success: true,
           action: 'health_check',
           data: healthData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'collect_metrics':
@@ -205,12 +203,15 @@ export async function POST(request: NextRequest) {
           success: true,
           action: 'collect_metrics',
           data: metricsData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Supported actions: health_check, collect_metrics' },
+          {
+            error:
+              'Invalid action. Supported actions: health_check, collect_metrics',
+          },
           { status: 400 }
         );
     }
@@ -221,7 +222,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Failed to execute metrics action',
         details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

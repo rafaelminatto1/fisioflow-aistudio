@@ -114,25 +114,28 @@ railway domain list
 ### Problemas Comuns
 
 1. **Erro de autenticação**
+
    ```bash
    railway logout
    railway login
    ```
 
 2. **Deploy falha**
+
    ```bash
    # Verificar logs
    railway logs --tail 100
-   
+
    # Validar configurações
    npm run railway:validate
    ```
 
 3. **Variáveis não configuradas**
+
    ```bash
    # Verificar variáveis
    railway variables
-   
+
    # Comparar com .env.example
    cat .env.example
    ```

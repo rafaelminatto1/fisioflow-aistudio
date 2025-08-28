@@ -1,7 +1,7 @@
 /**
  * FisioFlow - Railway Structured Logging & Graceful Shutdown
  * Edge Runtime Compatible Version
- * 
+ *
  * Sistema de logs estruturados otimizado para Railway e Edge Runtime
  * - Logs em formato JSON para Railway
  * - Diferentes níveis de log
@@ -51,8 +51,13 @@ interface LogEntry {
 // Configuração do logger baseada no ambiente Railway
 const RAILWAY_LOG_CONFIG = {
   level: (typeof process !== 'undefined' && process.env?.LOG_LEVEL) || 'info',
-  service: (typeof process !== 'undefined' && process.env?.RAILWAY_SERVICE_NAME) || 'fisioflow',
-  environment: (typeof process !== 'undefined' && (process.env?.RAILWAY_ENVIRONMENT || process.env?.NODE_ENV)) || 'development',
+  service:
+    (typeof process !== 'undefined' && process.env?.RAILWAY_SERVICE_NAME) ||
+    'fisioflow',
+  environment:
+    (typeof process !== 'undefined' &&
+      (process.env?.RAILWAY_ENVIRONMENT || process.env?.NODE_ENV)) ||
+    'development',
 };
 
 // Classe principal do logger compatível com Edge Runtime
@@ -68,7 +73,10 @@ class RailwayLogger {
 
   private shouldLog(level: LogLevel): boolean {
     const levels = ['debug', 'info', 'warn', 'error'];
-    return levels.indexOf(level) >= levels.indexOf(RAILWAY_LOG_CONFIG.level as LogLevel);
+    return (
+      levels.indexOf(level) >=
+      levels.indexOf(RAILWAY_LOG_CONFIG.level as LogLevel)
+    );
   }
 
   private formatLog(entry: LogEntry): string {
@@ -96,7 +104,12 @@ class RailwayLogger {
     return JSON.stringify(logData);
   }
 
-  private log(level: LogLevel, message: string, error?: Error, meta?: any): void {
+  private log(
+    level: LogLevel,
+    message: string,
+    error?: Error,
+    meta?: any
+  ): void {
     if (!this.shouldLog(level)) return;
 
     const entry: LogEntry = {
@@ -105,11 +118,13 @@ class RailwayLogger {
       timestamp: new Date().toISOString(),
       context: this.currentContext || undefined,
       metadata: meta,
-      error: error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack
-      } : undefined
+      error: error
+        ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+          }
+        : undefined,
     };
 
     const formattedLog = this.formatLog(entry);
@@ -141,7 +156,10 @@ class RailwayLogger {
         method: req.method,
         url: req.url,
         userAgent: req.headers.get('user-agent') || undefined,
-        ip: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || undefined,
+        ip:
+          req.headers.get('x-forwarded-for') ||
+          req.headers.get('x-real-ip') ||
+          undefined,
         timestamp: new Date().toISOString(),
         environment: RAILWAY_LOG_CONFIG.environment,
         service: RAILWAY_LOG_CONFIG.service,
@@ -151,7 +169,7 @@ class RailwayLogger {
       this.requestCount++;
 
       const startTime = Date.now();
-      
+
       this.info('Request iniciado', {
         method: req.method,
         url: req.url,
@@ -161,7 +179,7 @@ class RailwayLogger {
       // Retornar função para log de resposta
       return (statusCode: number, error?: Error) => {
         const duration = Date.now() - startTime;
-        
+
         if (error) {
           this.error('Request falhou', error, {
             method: req.method,
@@ -179,7 +197,7 @@ class RailwayLogger {
             duration,
           });
         }
-        
+
         // Limpar contexto após o request
         this.currentContext = null;
       };
@@ -216,7 +234,8 @@ class RailwayLogger {
   // Log de métricas do sistema (simplificado para Edge Runtime)
   systemMetrics() {
     const uptime = Date.now() - this.startTime;
-    const errorRate = this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0;
+    const errorRate =
+      this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0;
 
     this.info('System metrics', {
       uptime,
@@ -237,7 +256,8 @@ class RailwayLogger {
       uptime: Date.now() - this.startTime,
       requestCount: this.requestCount,
       errorCount: this.errorCount,
-      errorRate: this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0,
+      errorRate:
+        this.requestCount > 0 ? (this.errorCount / this.requestCount) * 100 : 0,
     };
   }
 
@@ -278,17 +298,21 @@ export function measurePerformance<T>(
 
   try {
     const result = fn();
-    
+
     if (result instanceof Promise) {
       return result
-        .then((value) => {
+        .then(value => {
           const duration = Date.now() - startTime;
           railwayLogger.performance(operation, { duration });
           return value;
         })
-        .catch((error) => {
+        .catch(error => {
           const duration = Date.now() - startTime;
-          railwayLogger.error(`Performance measurement failed for ${operation}`, error, { duration });
+          railwayLogger.error(
+            `Performance measurement failed for ${operation}`,
+            error,
+            { duration }
+          );
           throw error;
         });
     } else {
@@ -298,7 +322,11 @@ export function measurePerformance<T>(
     }
   } catch (error) {
     const duration = Date.now() - startTime;
-    railwayLogger.error(`Performance measurement failed for ${operation}`, error as Error, { duration });
+    railwayLogger.error(
+      `Performance measurement failed for ${operation}`,
+      error as Error,
+      { duration }
+    );
     throw error;
   }
 }

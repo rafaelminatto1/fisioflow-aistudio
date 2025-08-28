@@ -10,11 +10,11 @@ interface LogEntry {
 
 export class SimpleLogger {
   private prefix: string;
-  
+
   constructor(prefix = 'FisioFlow') {
     this.prefix = prefix;
   }
-  
+
   private formatLog(level: string, message: string, metadata?: any): string {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
@@ -22,35 +22,38 @@ export class SimpleLogger {
       message,
       ...(metadata && { metadata }),
     };
-    
+
     return `[${this.prefix}] ${JSON.stringify(entry)}`;
   }
-  
+
   info(message: string, metadata?: any): void {
     console.log(this.formatLog('info', message, metadata));
   }
-  
+
   warn(message: string, metadata?: any): void {
     console.warn(this.formatLog('warn', message, metadata));
   }
-  
+
   error(message: string, error?: any, metadata?: any): void {
-    const errorData = error instanceof Error 
-      ? { message: error.message, stack: error.stack }
-      : error;
-      
-    console.error(this.formatLog('error', message, { 
-      error: errorData, 
-      ...metadata 
-    }));
+    const errorData =
+      error instanceof Error
+        ? { message: error.message, stack: error.stack }
+        : error;
+
+    console.error(
+      this.formatLog('error', message, {
+        error: errorData,
+        ...metadata,
+      })
+    );
   }
-  
+
   debug(message: string, metadata?: any): void {
     if (process.env.NODE_ENV === 'development') {
       console.debug(this.formatLog('debug', message, metadata));
     }
   }
-  
+
   // Métrica simple
   getMetrics() {
     return {
@@ -60,22 +63,22 @@ export class SimpleLogger {
       errorRate: 0,
     };
   }
-  
+
   // Request middleware compatible
   createRequestMiddleware() {
     return (request: Request) => {
       const requestId = crypto.randomUUID();
       const startTime = Date.now();
-      
+
       this.debug('Request started', {
         requestId,
         method: request.method,
         url: request.url,
       });
-      
+
       return (status: number, error?: Error) => {
         const duration = Date.now() - startTime;
-        
+
         if (error) {
           this.error('Request failed', error, {
             requestId,
@@ -96,18 +99,18 @@ export class SimpleLogger {
 
 // Performance measurement utility
 export async function measurePerformance<T>(
-  label: string, 
+  label: string,
   fn: () => Promise<T>
 ): Promise<T> {
   const start = Date.now();
   try {
     const result = await fn();
     const duration = Date.now() - start;
-    
+
     if (process.env.NODE_ENV === 'development') {
       console.debug(`[Performance] ${label}: ${duration}ms`);
     }
-    
+
     return result;
   } catch (error) {
     const duration = Date.now() - start;

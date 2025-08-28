@@ -5,6 +5,7 @@
 ### 1.1 Stack Tecnológico Atual vs. Proposto
 
 #### Stack Atual
+
 ```
 Frontend: Next.js 14 + React + TypeScript + Tailwind CSS
 Backend: Next.js API Routes + Prisma ORM
@@ -16,6 +17,7 @@ Monitoring: Sentry
 ```
 
 #### Stack Proposto (Melhorias)
+
 ```
 Frontend: Next.js 14 + React + TypeScript + Tailwind CSS + Framer Motion
 Backend: Next.js API Routes + Prisma ORM + tRPC
@@ -40,14 +42,14 @@ graph TD
     B --> F[Financial Service]
     B --> G[AI Service]
     B --> H[Notification Service]
-    
+
     C --> I[(PostgreSQL)]
     D --> I
     E --> I
     F --> I
     G --> J[(Redis Cache)]
     H --> K[Pusher/WebSocket]
-    
+
     L[File Storage] --> M[Cloudinary Storage]
     N[External APIs] --> O[CID-10 API]
     N --> P[TUSS API]
@@ -130,41 +132,38 @@ export async function GET(request: Request) {
   const viewType = searchParams.get('view'); // 'professional' | 'room' | 'equipment'
   const date = searchParams.get('date');
   const filters = JSON.parse(searchParams.get('filters') || '[]');
-  
+
   const appointments = await getMultipleViewAppointments({
     viewType,
     date,
-    filters
+    filters,
   });
-  
+
   return Response.json(appointments);
 }
 
 // app/api/waiting-queue/route.ts
 export async function POST(request: Request) {
   const { patientId, appointmentId } = await request.json();
-  
+
   const queueEntry = await addToWaitingQueue({
     patientId,
-    appointmentId
+    appointmentId,
   });
-  
+
   // Notificar via WebSocket
   await notifyQueueUpdate(queueEntry);
-  
+
   return Response.json(queueEntry);
 }
 
 // app/api/check-in/[appointmentId]/route.ts
-export async function POST(
-  request: Request,
-  { params }: { params: { appointmentId: string } }
-) {
+export async function POST(request: Request, { params }: { params: { appointmentId: string } }) {
   const checkIn = await processCheckIn(params.appointmentId);
-  
+
   // Atualizar fila de espera
   await updateWaitingQueue(params.appointmentId);
-  
+
   return Response.json(checkIn);
 }
 ```
@@ -191,7 +190,7 @@ export const MultiCalendarView: React.FC<MultiCalendarViewProps> = ({
 
   const renderTimeSlots = () => {
     const timeSlots = generateTimeSlots();
-    
+
     return timeSlots.map(time => (
       <div key={time} className="grid grid-cols-4 gap-2">
         <div className="text-sm text-gray-500">{time}</div>
@@ -230,7 +229,7 @@ export const MultiCalendarView: React.FC<MultiCalendarViewProps> = ({
 // components/agenda/WaitingQueue.tsx
 export const WaitingQueue: React.FC = () => {
   const { data: queue } = useRealtimeQuery('waiting-queue');
-  
+
   return (
     <div className="waiting-queue">
       <h3>Fila de Espera</h3>
@@ -249,7 +248,7 @@ export const WaitingQueue: React.FC = () => {
 // components/agenda/CheckInQR.tsx
 export const CheckInQR: React.FC<{ appointmentId: string }> = ({ appointmentId }) => {
   const qrCodeUrl = `${process.env.NEXT_PUBLIC_APP_URL}/check-in/${appointmentId}`;
-  
+
   return (
     <div className="check-in-qr">
       <QRCodeSVG value={qrCodeUrl} size={200} />
@@ -326,7 +325,7 @@ CREATE TABLE patient_diagnoses (
 export class MedicalAIService {
   private openai: OpenAI;
   private gemini: GoogleGenerativeAI;
-  
+
   constructor() {
     this.openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
     this.gemini = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
@@ -335,10 +334,10 @@ export class MedicalAIService {
   async transcribeConsultation(audioFile: File): Promise<string> {
     const transcription = await this.openai.audio.transcriptions.create({
       file: audioFile,
-      model: "whisper-1",
-      language: "pt"
+      model: 'whisper-1',
+      language: 'pt',
     });
-    
+
     return transcription.text;
   }
 
@@ -360,14 +359,17 @@ export class MedicalAIService {
         ]
       }
     `;
-    
-    const model = this.gemini.getGenerativeModel({ model: "gemini-pro" });
+
+    const model = this.gemini.getGenerativeModel({ model: 'gemini-pro' });
     const result = await model.generateContent(prompt);
-    
+
     return JSON.parse(result.response.text()).symptoms;
   }
 
-  async suggestDiagnosis(symptoms: Symptom[], patientHistory: string): Promise<DiagnosisSuggestion[]> {
+  async suggestDiagnosis(
+    symptoms: Symptom[],
+    patientHistory: string
+  ): Promise<DiagnosisSuggestion[]> {
     const prompt = `
       Com base nos sintomas e histórico do paciente, sugira possíveis diagnósticos:
       
@@ -376,10 +378,10 @@ export class MedicalAIService {
       
       Retorne sugestões com códigos CID-10 quando aplicável.
     `;
-    
-    const model = this.gemini.getGenerativeModel({ model: "gemini-pro" });
+
+    const model = this.gemini.getGenerativeModel({ model: 'gemini-pro' });
     const result = await model.generateContent(prompt);
-    
+
     return this.parseDiagnosisSuggestions(result.response.text());
   }
 
@@ -396,10 +398,10 @@ export class MedicalAIService {
       - Hipóteses diagnósticas
       - Plano terapêutico
     `;
-    
-    const model = this.gemini.getGenerativeModel({ model: "gemini-pro" });
+
+    const model = this.gemini.getGenerativeModel({ model: 'gemini-pro' });
     const result = await model.generateContent(prompt);
-    
+
     return result.response.text();
   }
 }
@@ -411,18 +413,18 @@ export class CIDService {
       where: {
         OR: [
           { description: { contains: query, mode: 'insensitive' } },
-          { code: { contains: query, mode: 'insensitive' } }
-        ]
+          { code: { contains: query, mode: 'insensitive' } },
+        ],
       },
-      take: 10
+      take: 10,
     });
-    
+
     return results;
   }
-  
+
   async getCIDByCode(code: string): Promise<CIDCode | null> {
     return await prisma.cidCodes.findUnique({
-      where: { code }
+      where: { code },
     });
   }
 }
@@ -447,7 +449,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
 }) => {
   const [formData, setFormData] = useState(initialData || {});
   const [aiSuggestions, setAISuggestions] = useState<AISuggestion[]>([]);
-  
+
   const renderField = (field: FormField) => {
     switch (field.type) {
       case 'text':
@@ -461,7 +463,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             required={field.required}
           />
         );
-      
+
       case 'scale':
         return (
           <PainScale
@@ -473,7 +475,7 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             max={field.max || 10}
           />
         );
-      
+
       case 'image':
         return (
           <ImageUpload
@@ -481,27 +483,27 @@ export const DynamicForm: React.FC<DynamicFormProps> = ({
             label={field.label}
             onUpload={(imageUrl) => updateField(field.id, imageUrl)}
             annotations={formData[`${field.id}_annotations`]}
-            onAnnotationChange={(annotations) => 
+            onAnnotationChange={(annotations) =>
               updateField(`${field.id}_annotations`, annotations)
             }
           />
         );
-      
+
       default:
         return null;
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit}>
       {template.fields.map(renderField)}
-      
+
       <AIAssistantPanel
         suggestions={aiSuggestions}
         onAcceptSuggestion={handleAcceptSuggestion}
         onRequestSuggestion={handleRequestSuggestion}
       />
-      
+
       <Button type="submit">Salvar Prontuário</Button>
     </form>
   );
@@ -516,7 +518,7 @@ export const ImageAnnotator: React.FC<{
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [currentTool, setCurrentTool] = useState<'arrow' | 'circle' | 'text'>('arrow');
-  
+
   const handleMouseDown = (e: MouseEvent) => {
     setIsDrawing(true);
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -526,7 +528,7 @@ export const ImageAnnotator: React.FC<{
       startAnnotation(x, y);
     }
   };
-  
+
   return (
     <div className="image-annotator">
       <div className="toolbar">
@@ -549,7 +551,7 @@ export const ImageAnnotator: React.FC<{
           Texto
         </Button>
       </div>
-      
+
       <div className="canvas-container">
         <img src={imageUrl} alt="Medical image" />
         <canvas
@@ -559,7 +561,7 @@ export const ImageAnnotator: React.FC<{
           onMouseUp={handleMouseUp}
         />
       </div>
-      
+
       <div className="annotations-list">
         {annotations.map((annotation, index) => (
           <AnnotationItem
@@ -655,64 +657,66 @@ export class FinancialService {
     const transaction = await prisma.financialTransactions.create({
       data: {
         ...data,
-        id: generateUUID()
+        id: generateUUID(),
       },
       include: {
         account: true,
         category: true,
-        patient: true
-      }
+        patient: true,
+      },
     });
-    
+
     // Atualizar saldo da conta
     await this.updateAccountBalance(data.accountId, data.amount, data.type);
-    
+
     // Notificar sobre vencimentos próximos
     if (data.dueDate && isWithinDays(data.dueDate, 3)) {
       await this.notifyUpcomingPayment(transaction);
     }
-    
+
     return transaction;
   }
-  
+
   async generateCashFlow(startDate: Date, endDate: Date): Promise<CashFlowReport> {
     const transactions = await prisma.financialTransactions.findMany({
       where: {
         createdAt: {
           gte: startDate,
-          lte: endDate
-        }
+          lte: endDate,
+        },
       },
       include: {
         category: true,
-        account: true
-      }
+        account: true,
+      },
     });
-    
+
     return this.processCashFlowData(transactions);
   }
-  
-  async reconcileAccount(accountId: string, bankStatement: BankStatement[]): Promise<ReconciliationResult> {
+
+  async reconcileAccount(
+    accountId: string,
+    bankStatement: BankStatement[]
+  ): Promise<ReconciliationResult> {
     const accountTransactions = await this.getAccountTransactions(accountId);
-    
+
     const matched: Transaction[] = [];
     const unmatched: Transaction[] = [];
     const bankOnly: BankStatement[] = [];
-    
+
     // Algoritmo de reconciliação
     for (const bankEntry of bankStatement) {
-      const match = accountTransactions.find(t => 
-        Math.abs(t.amount - bankEntry.amount) < 0.01 &&
-        isSameDay(t.paidDate, bankEntry.date)
+      const match = accountTransactions.find(
+        t => Math.abs(t.amount - bankEntry.amount) < 0.01 && isSameDay(t.paidDate, bankEntry.date)
       );
-      
+
       if (match) {
         matched.push(match);
       } else {
         bankOnly.push(bankEntry);
       }
     }
-    
+
     return { matched, unmatched, bankOnly };
   }
 }
@@ -721,51 +725,51 @@ export class FinancialService {
 export class FinancialReportService {
   async generateDRE(startDate: Date, endDate: Date): Promise<DREReport> {
     const transactions = await this.getTransactionsInPeriod(startDate, endDate);
-    
+
     const revenues = transactions
       .filter(t => t.type === 'income')
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const expenses = transactions
       .filter(t => t.type === 'expense')
       .reduce((sum, t) => sum + t.amount, 0);
-    
+
     const netIncome = revenues - expenses;
-    
+
     return {
       period: { startDate, endDate },
       revenues,
       expenses,
       netIncome,
       revenuesByCategory: this.groupByCategory(transactions, 'income'),
-      expensesByCategory: this.groupByCategory(transactions, 'expense')
+      expensesByCategory: this.groupByCategory(transactions, 'expense'),
     };
   }
-  
+
   async generateProfitabilityReport(): Promise<ProfitabilityReport> {
     const appointments = await prisma.appointments.findMany({
       include: {
         patient: true,
-        transactions: true
-      }
+        transactions: true,
+      },
     });
-    
+
     return appointments.map(appointment => {
       const revenue = appointment.transactions
         .filter(t => t.type === 'income')
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       const costs = appointment.transactions
         .filter(t => t.type === 'expense')
         .reduce((sum, t) => sum + t.amount, 0);
-      
+
       return {
         appointmentId: appointment.id,
         patientName: appointment.patient.name,
         revenue,
         costs,
         profit: revenue - costs,
-        margin: revenue > 0 ? ((revenue - costs) / revenue) * 100 : 0
+        margin: revenue > 0 ? ((revenue - costs) / revenue) * 100 : 0,
       };
     });
   }
@@ -782,33 +786,33 @@ export class BankIntegrationService {
   async connectBank(bankCode: string, credentials: BankCredentials): Promise<BankConnection> {
     // Implementar Open Banking ou APIs bancárias
     const connection = await this.authenticateWithBank(bankCode, credentials);
-    
+
     return await prisma.bankConnections.create({
       data: {
         bankCode,
         accountNumber: connection.accountNumber,
         accessToken: await this.encryptToken(connection.accessToken),
         refreshToken: await this.encryptToken(connection.refreshToken),
-        expiresAt: connection.expiresAt
-      }
+        expiresAt: connection.expiresAt,
+      },
     });
   }
-  
+
   async syncTransactions(connectionId: string): Promise<Transaction[]> {
     const connection = await this.getBankConnection(connectionId);
     const bankTransactions = await this.fetchBankTransactions(connection);
-    
+
     const newTransactions = [];
-    
+
     for (const bankTx of bankTransactions) {
       const existing = await this.findExistingTransaction(bankTx);
-      
+
       if (!existing) {
         const transaction = await this.createTransactionFromBank(bankTx);
         newTransactions.push(transaction);
       }
     }
-    
+
     return newTransactions;
   }
 }
@@ -821,40 +825,40 @@ export class BankIntegrationService {
 export class InsuranceIntegrationService {
   async submitClaim(claimData: ClaimData): Promise<ClaimSubmissionResult> {
     const tissXML = await this.generateTISSXML(claimData);
-    
+
     const submission = await this.sendToInsurance(claimData.providerId, tissXML);
-    
+
     await prisma.insuranceClaims.create({
       data: {
         ...claimData,
         claimNumber: submission.claimNumber,
         status: 'submitted',
-        submittedDate: new Date()
-      }
+        submittedDate: new Date(),
+      },
     });
-    
+
     return submission;
   }
-  
+
   async checkClaimStatus(claimId: string): Promise<ClaimStatus> {
     const claim = await prisma.insuranceClaims.findUnique({
       where: { id: claimId },
-      include: { provider: true }
+      include: { provider: true },
     });
-    
+
     if (!claim) throw new Error('Claim not found');
-    
+
     const status = await this.queryInsuranceAPI(claim.provider.code, claim.claimNumber);
-    
+
     await prisma.insuranceClaims.update({
       where: { id: claimId },
       data: {
         status: status.status,
         approvedAmount: status.approvedAmount,
-        processedDate: status.processedDate
-      }
+        processedDate: status.processedDate,
+      },
     });
-    
+
     return status;
   }
 }
@@ -868,30 +872,30 @@ export class InsuranceIntegrationService {
 // __tests__/services/financialService.test.ts
 describe('FinancialService', () => {
   let service: FinancialService;
-  
+
   beforeEach(() => {
     service = new FinancialService();
   });
-  
+
   describe('createTransaction', () => {
     it('should create a transaction and update account balance', async () => {
       const transactionData = {
         accountId: 'account-1',
-        amount: 100.00,
+        amount: 100.0,
         type: 'income' as const,
-        description: 'Test transaction'
+        description: 'Test transaction',
       };
-      
+
       const transaction = await service.createTransaction(transactionData);
-      
+
       expect(transaction).toBeDefined();
-      expect(transaction.amount).toBe(100.00);
-      
+      expect(transaction.amount).toBe(100.0);
+
       const account = await prisma.financialAccounts.findUnique({
-        where: { id: 'account-1' }
+        where: { id: 'account-1' },
       });
-      
-      expect(account?.balance).toBe(100.00);
+
+      expect(account?.balance).toBe(100.0);
     });
   });
 });
@@ -907,14 +911,14 @@ describe('/api/financial', () => {
       .post('/api/financial/transactions')
       .send({
         accountId: 'test-account',
-        amount: 150.00,
+        amount: 150.0,
         type: 'income',
-        description: 'Test payment'
+        description: 'Test payment',
       })
       .expect(201);
-    
+
     expect(response.body.id).toBeDefined();
-    expect(response.body.amount).toBe(150.00);
+    expect(response.body.amount).toBe(150.0);
   });
 });
 ```
@@ -925,21 +929,21 @@ describe('/api/financial', () => {
 // e2e/financial-flow.spec.ts
 test('complete financial flow', async ({ page }) => {
   await page.goto('/dashboard/financeiro');
-  
+
   // Criar nova transação
   await page.click('[data-testid="new-transaction"]');
   await page.fill('[data-testid="amount"]', '250.00');
   await page.selectOption('[data-testid="type"]', 'income');
   await page.fill('[data-testid="description"]', 'Consulta fisioterapia');
   await page.click('[data-testid="save-transaction"]');
-  
+
   // Verificar se apareceu na lista
-  await expect(page.locator('[data-testid="transaction-list"]'))
-    .toContainText('Consulta fisioterapia');
-  
+  await expect(page.locator('[data-testid="transaction-list"]')).toContainText(
+    'Consulta fisioterapia'
+  );
+
   // Verificar atualização do saldo
-  await expect(page.locator('[data-testid="account-balance"]'))
-    .toContainText('R$ 250,00');
+  await expect(page.locator('[data-testid="account-balance"]')).toContainText('R$ 250,00');
 });
 ```
 
@@ -951,20 +955,20 @@ test('complete financial flow', async ({ page }) => {
 // lib/cache.ts
 export class CacheService {
   private redis: Redis;
-  
+
   constructor() {
     this.redis = new Redis(process.env.REDIS_URL!);
   }
-  
+
   async get<T>(key: string): Promise<T | null> {
     const cached = await this.redis.get(key);
     return cached ? JSON.parse(cached) : null;
   }
-  
+
   async set(key: string, value: any, ttl: number = 3600): Promise<void> {
     await this.redis.setex(key, ttl, JSON.stringify(value));
   }
-  
+
   async invalidate(pattern: string): Promise<void> {
     const keys = await this.redis.keys(pattern);
     if (keys.length > 0) {
@@ -976,17 +980,17 @@ export class CacheService {
 // Uso em serviços
 export const getCachedAppointments = async (date: string) => {
   const cacheKey = `appointments:${date}`;
-  
+
   let appointments = await cache.get<Appointment[]>(cacheKey);
-  
+
   if (!appointments) {
     appointments = await prisma.appointments.findMany({
-      where: { date: new Date(date) }
+      where: { date: new Date(date) },
     });
-    
+
     await cache.set(cacheKey, appointments, 300); // 5 minutos
   }
-  
+
   return appointments;
 };
 ```
@@ -995,18 +999,18 @@ export const getCachedAppointments = async (date: string) => {
 
 ```sql
 -- Índices para performance
-CREATE INDEX CONCURRENTLY idx_appointments_date_professional 
+CREATE INDEX CONCURRENTLY idx_appointments_date_professional
   ON appointments(date, professional_id);
 
-CREATE INDEX CONCURRENTLY idx_financial_transactions_date_type 
+CREATE INDEX CONCURRENTLY idx_financial_transactions_date_type
   ON financial_transactions(created_at, type);
 
-CREATE INDEX CONCURRENTLY idx_medical_records_patient_date 
+CREATE INDEX CONCURRENTLY idx_medical_records_patient_date
   ON medical_records_extended(patient_id, created_at DESC);
 
 -- Particionamento para tabelas grandes
-CREATE TABLE financial_transactions_2025 
-  PARTITION OF financial_transactions 
+CREATE TABLE financial_transactions_2025
+  PARTITION OF financial_transactions
   FOR VALUES FROM ('2025-01-01') TO ('2026-01-01');
 ```
 
@@ -1020,25 +1024,25 @@ export class MonitoringService {
     Sentry.addBreadcrumb({
       message: `Operation ${operation} took ${duration}ms`,
       level: 'info',
-      data: { operation, duration }
+      data: { operation, duration },
     });
   }
-  
+
   static trackError(error: Error, context: any) {
     Sentry.captureException(error, {
       tags: { component: context.component },
-      extra: context
+      extra: context,
     });
   }
-  
+
   static trackUserAction(action: string, userId: string) {
     // Analytics tracking
     posthog.capture({
       distinctId: userId,
       event: action,
       properties: {
-        timestamp: new Date().toISOString()
-      }
+        timestamp: new Date().toISOString(),
+      },
     });
   }
 }
@@ -1055,29 +1059,21 @@ export enum Permission {
   WRITE_PATIENTS = 'write:patients',
   READ_FINANCIAL = 'read:financial',
   WRITE_FINANCIAL = 'write:financial',
-  ADMIN_USERS = 'admin:users'
+  ADMIN_USERS = 'admin:users',
 }
 
 export enum Role {
   ADMIN = 'admin',
   DOCTOR = 'doctor',
   RECEPTIONIST = 'receptionist',
-  FINANCIAL = 'financial'
+  FINANCIAL = 'financial',
 }
 
 const rolePermissions: Record<Role, Permission[]> = {
   [Role.ADMIN]: Object.values(Permission),
-  [Role.DOCTOR]: [
-    Permission.READ_PATIENTS,
-    Permission.WRITE_PATIENTS
-  ],
-  [Role.RECEPTIONIST]: [
-    Permission.READ_PATIENTS
-  ],
-  [Role.FINANCIAL]: [
-    Permission.READ_FINANCIAL,
-    Permission.WRITE_FINANCIAL
-  ]
+  [Role.DOCTOR]: [Permission.READ_PATIENTS, Permission.WRITE_PATIENTS],
+  [Role.RECEPTIONIST]: [Permission.READ_PATIENTS],
+  [Role.FINANCIAL]: [Permission.READ_FINANCIAL, Permission.WRITE_FINANCIAL],
 };
 
 export const hasPermission = (userRole: Role, permission: Permission): boolean => {
@@ -1092,33 +1088,33 @@ export const hasPermission = (userRole: Role, permission: Permission): boolean =
 export class EncryptionService {
   private static algorithm = 'aes-256-gcm';
   private static key = Buffer.from(process.env.ENCRYPTION_KEY!, 'hex');
-  
+
   static encrypt(text: string): string {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipher(this.algorithm, this.key);
     cipher.setAAD(Buffer.from('fisioflow', 'utf8'));
-    
+
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     const authTag = cipher.getAuthTag();
-    
+
     return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted;
   }
-  
+
   static decrypt(encryptedData: string): string {
     const [ivHex, authTagHex, encrypted] = encryptedData.split(':');
-    
+
     const iv = Buffer.from(ivHex, 'hex');
     const authTag = Buffer.from(authTagHex, 'hex');
-    
+
     const decipher = crypto.createDecipher(this.algorithm, this.key);
     decipher.setAAD(Buffer.from('fisioflow', 'utf8'));
     decipher.setAuthTag(authTag);
-    
+
     let decrypted = decipher.update(encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
 }
@@ -1147,7 +1143,7 @@ jobs:
       - run: npm ci
       - run: npm run test
       - run: npm run test:e2e
-  
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
@@ -1180,4 +1176,5 @@ ENCRYPTION_KEY="..."
 
 ---
 
-*Este documento serve como guia técnico detalhado para a implementação das funcionalidades identificadas na análise do Feegow Clinic, adaptadas para as necessidades específicas do FisioFlow.*
+_Este documento serve como guia técnico detalhado para a implementação das funcionalidades
+identificadas na análise do Feegow Clinic, adaptadas para as necessidades específicas do FisioFlow._

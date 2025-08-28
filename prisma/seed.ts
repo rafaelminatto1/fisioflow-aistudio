@@ -85,16 +85,17 @@ async function main() {
         street: 'Rua das Flores, 123',
         city: 'São Paulo',
         state: 'SP',
-        zip: '01234-567'
+        zip: '01234-567',
       },
       emergencyContact: {
         name: 'Carlos Costa',
-        phone: '(11) 91234-5678'
+        phone: '(11) 91234-5678',
       },
       status: 'Active',
       lastVisit: new Date('2024-07-03'),
       allergies: 'Alergia a Dipirona',
-      medicalAlerts: 'Paciente com histórico de hipertensão. Monitorar pressão arterial.',
+      medicalAlerts:
+        'Paciente com histórico de hipertensão. Monitorar pressão arterial.',
       consentGiven: true,
       whatsappConsent: 'opt_in',
     },
@@ -112,11 +113,11 @@ async function main() {
         street: 'Avenida Copacabana, 456',
         city: 'Rio de Janeiro',
         state: 'RJ',
-        zip: '22345-678'
+        zip: '22345-678',
       },
       emergencyContact: {
         name: 'Fernanda Lima',
-        phone: '(21) 98765-4321'
+        phone: '(21) 98765-4321',
       },
       status: 'Active',
       lastVisit: new Date('2024-07-01'),
@@ -143,7 +144,7 @@ async function main() {
       endTime: new Date(tomorrow.getTime() + 60 * 60 * 1000), // 1 hora depois
       type: 'Sessao',
       status: 'Agendado',
-      value: 120.00,
+      value: 120.0,
       observations: 'Primeira sessão pós-cirúrgica',
     },
   });
@@ -161,14 +162,18 @@ async function main() {
       endTime: new Date(nextWeek.getTime() + 60 * 60 * 1000),
       type: 'Avaliacao',
       status: 'Agendado',
-      value: 150.00,
+      value: 150.0,
       observations: 'Avaliação inicial',
     },
   });
 
   console.log('📅 Agendamentos criados:');
-  console.log(`   ${appointment1.id} - ${patient1.name} com ${therapist1.name}`);
-  console.log(`   ${appointment2.id} - ${patient2.name} com ${therapist2.name}`);
+  console.log(
+    `   ${appointment1.id} - ${patient1.name} com ${therapist1.name}`
+  );
+  console.log(
+    `   ${appointment2.id} - ${patient2.name} com ${therapist2.name}`
+  );
 
   // Criar pontos de dor de exemplo
   await prisma.painPoint.create({
@@ -227,7 +232,7 @@ async function main() {
 }
 
 main()
-  .catch((e) => {
+  .catch(e => {
     console.error('❌ Erro durante o seed:', e);
     process.exit(1);
   })

@@ -1,6 +1,6 @@
 /**
  * FisioFlow - Next.js Middleware para Railway
- * 
+ *
  * Middleware principal que integra:
  * - Logs estruturados
  * - Monitoramento de performance
@@ -17,29 +17,59 @@ import edgeLogger from './lib/edge-logger';
 const MIDDLEWARE_CONFIG = {
   // Rate limiting
   rateLimit: {
-    enabled: (typeof process !== 'undefined' && process.env?.RATE_LIMIT_ENABLED) === 'true',
-    windowMs: parseInt((typeof process !== 'undefined' && process.env?.RATE_LIMIT_WINDOW) || '900000'), // 15 minutos
-    maxRequests: parseInt((typeof process !== 'undefined' && process.env?.RATE_LIMIT_MAX_REQUESTS) || '100'),
+    enabled:
+      (typeof process !== 'undefined' && process.env?.RATE_LIMIT_ENABLED) ===
+      'true',
+    windowMs: parseInt(
+      (typeof process !== 'undefined' && process.env?.RATE_LIMIT_WINDOW) ||
+        '900000'
+    ), // 15 minutos
+    maxRequests: parseInt(
+      (typeof process !== 'undefined' &&
+        process.env?.RATE_LIMIT_MAX_REQUESTS) ||
+        '100'
+    ),
   },
-  
+
   // CORS
   cors: {
-    enabled: (typeof process !== 'undefined' && process.env?.CORS_ENABLED) === 'true',
-    origins: (typeof process !== 'undefined' && process.env?.CORS_ORIGINS?.split(',')) || ['*'],
-    methods: (typeof process !== 'undefined' && process.env?.CORS_METHODS?.split(',')) || ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    headers: (typeof process !== 'undefined' && process.env?.CORS_HEADERS?.split(',')) || ['Content-Type', 'Authorization'],
+    enabled:
+      (typeof process !== 'undefined' && process.env?.CORS_ENABLED) === 'true',
+    origins: (typeof process !== 'undefined' &&
+      process.env?.CORS_ORIGINS?.split(',')) || ['*'],
+    methods: (typeof process !== 'undefined' &&
+      process.env?.CORS_METHODS?.split(',')) || [
+      'GET',
+      'POST',
+      'PUT',
+      'DELETE',
+      'OPTIONS',
+    ],
+    headers: (typeof process !== 'undefined' &&
+      process.env?.CORS_HEADERS?.split(',')) || [
+      'Content-Type',
+      'Authorization',
+    ],
   },
-  
+
   // Health check
   healthCheck: {
-    enabled: (typeof process !== 'undefined' && process.env?.HEALTH_CHECK_ENABLED) === 'true',
-    path: (typeof process !== 'undefined' && process.env?.HEALTH_CHECK_PATH) || '/health',
+    enabled:
+      (typeof process !== 'undefined' && process.env?.HEALTH_CHECK_ENABLED) ===
+      'true',
+    path:
+      (typeof process !== 'undefined' && process.env?.HEALTH_CHECK_PATH) ||
+      '/health',
   },
-  
+
   // Security
   security: {
-    helmet: (typeof process !== 'undefined' && process.env?.HELMET_ENABLED) === 'true',
-    csrf: (typeof process !== 'undefined' && process.env?.CSRF_PROTECTION) === 'true',
+    helmet:
+      (typeof process !== 'undefined' && process.env?.HELMET_ENABLED) ===
+      'true',
+    csrf:
+      (typeof process !== 'undefined' && process.env?.CSRF_PROTECTION) ===
+      'true',
   },
 };
 
@@ -59,23 +89,24 @@ function cleanupRateLimitCache() {
 // Rate limiting
 function checkRateLimit(request: NextRequest): boolean {
   if (!MIDDLEWARE_CONFIG.rateLimit.enabled) return true;
-  
-  const ip = request.headers.get('x-forwarded-for') || 
-             request.headers.get('x-real-ip') || 
-             'unknown';
-  
+
+  const ip =
+    request.headers.get('x-forwarded-for') ||
+    request.headers.get('x-real-ip') ||
+    'unknown';
+
   const now = Date.now();
   const windowMs = MIDDLEWARE_CONFIG.rateLimit.windowMs;
   const maxRequests = MIDDLEWARE_CONFIG.rateLimit.maxRequests;
-  
+
   // Limpar cache periodicamente
   if (Math.random() < 0.01) {
     cleanupRateLimitCache();
   }
-  
+
   const key = `rate_limit:${ip}`;
   const current = rateLimitCache.get(key);
-  
+
   if (!current || now > current.resetTime) {
     rateLimitCache.set(key, {
       count: 1,
@@ -83,46 +114,52 @@ function checkRateLimit(request: NextRequest): boolean {
     });
     return true;
   }
-  
+
   if (current.count >= maxRequests) {
     return false;
   }
-  
+
   current.count++;
   return true;
 }
 
 // CORS headers
-function addCorsHeaders(response: NextResponse, request: NextRequest): NextResponse {
+function addCorsHeaders(
+  response: NextResponse,
+  request: NextRequest
+): NextResponse {
   if (!MIDDLEWARE_CONFIG.cors.enabled) return response;
-  
+
   const origin = request.headers.get('origin');
   const { origins, methods, headers } = MIDDLEWARE_CONFIG.cors;
-  
+
   // Verificar origem
   if (origins.includes('*') || (origin && origins.includes(origin))) {
     response.headers.set('Access-Control-Allow-Origin', origin || '*');
   }
-  
+
   response.headers.set('Access-Control-Allow-Methods', methods.join(', '));
   response.headers.set('Access-Control-Allow-Headers', headers.join(', '));
   response.headers.set('Access-Control-Allow-Credentials', 'true');
   response.headers.set('Access-Control-Max-Age', '86400');
-  
+
   return response;
 }
 
 // Security headers
 function addSecurityHeaders(response: NextResponse): NextResponse {
   if (!MIDDLEWARE_CONFIG.security.helmet) return response;
-  
+
   // Helmet-like security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=()'
+  );
+
   // CSP para Railway
   const csp = [
     "default-src 'self'",
@@ -133,21 +170,21 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
     "connect-src 'self' https://api.neon.tech https://*.railway.app",
     "frame-ancestors 'none'",
   ].join('; ');
-  
+
   response.headers.set('Content-Security-Policy', csp);
-  
+
   return response;
 }
 
 // Health check
 function handleHealthCheck(request: NextRequest): NextResponse | null {
   if (!MIDDLEWARE_CONFIG.healthCheck.enabled) return null;
-  
+
   const { pathname } = new URL(request.url);
-  
+
   if (pathname === MIDDLEWARE_CONFIG.healthCheck.path) {
     const metrics = edgeLogger.getMetrics();
-    
+
     const healthData = {
       status: 'healthy',
       timestamp: new Date().toISOString(),
@@ -165,15 +202,15 @@ function handleHealthCheck(request: NextRequest): NextResponse | null {
       },
       checks: {
         database: 'healthy', // TODO: Implementar check real do DB
-        redis: 'healthy',    // TODO: Implementar check real do Redis
+        redis: 'healthy', // TODO: Implementar check real do Redis
       },
     };
-    
-    edgeLogger.info('Health check executado', { 
+
+    edgeLogger.info('Health check executado', {
       ip: request.headers.get('x-forwarded-for') || 'unknown',
       userAgent: request.headers.get('user-agent'),
     });
-    
+
     return NextResponse.json(healthData, {
       status: 200,
       headers: {
@@ -182,7 +219,7 @@ function handleHealthCheck(request: NextRequest): NextResponse | null {
       },
     });
   }
-  
+
   return null;
 }
 
@@ -190,11 +227,11 @@ function handleHealthCheck(request: NextRequest): NextResponse | null {
 export async function middleware(request: NextRequest) {
   return edgeLogger.measurePerformance('middleware_execution', async () => {
     const startTime = Date.now();
-    
+
     // Criar contexto de logging
     const logRequest = edgeLogger.createRequestMiddleware();
     const logResponse = logRequest(request);
-    
+
     try {
       // Health check
       const healthResponse = handleHealthCheck(request);
@@ -202,7 +239,7 @@ export async function middleware(request: NextRequest) {
         logResponse(200);
         return healthResponse;
       }
-      
+
       // Rate limiting
       if (!checkRateLimit(request)) {
         edgeLogger.warn('Rate limit excedido', {
@@ -210,41 +247,53 @@ export async function middleware(request: NextRequest) {
           userAgent: request.headers.get('user-agent'),
           url: request.url,
         });
-        
+
         const response = NextResponse.json(
           { error: 'Rate limit exceeded' },
           { status: 429 }
         );
-        
+
         logResponse(429);
         return addCorsHeaders(addSecurityHeaders(response), request);
       }
-      
+
       // Handle CORS preflight
       if (request.method === 'OPTIONS') {
         const response = new NextResponse(null, { status: 200 });
         logResponse(200);
         return addCorsHeaders(addSecurityHeaders(response), request);
       }
-      
+
       // Continuar com a requisição
       const response = NextResponse.next();
-      
+
       // Adicionar headers de segurança e CORS
-      const finalResponse = addCorsHeaders(addSecurityHeaders(response), request);
-      
+      const finalResponse = addCorsHeaders(
+        addSecurityHeaders(response),
+        request
+      );
+
       // Adicionar headers customizados do Railway
-      finalResponse.headers.set('X-Railway-Service', process.env.RAILWAY_SERVICE_NAME || 'fisioflow');
-      finalResponse.headers.set('X-Railway-Environment', process.env.RAILWAY_ENVIRONMENT || 'development');
-      
+      finalResponse.headers.set(
+        'X-Railway-Service',
+        process.env.RAILWAY_SERVICE_NAME || 'fisioflow'
+      );
+      finalResponse.headers.set(
+        'X-Railway-Environment',
+        process.env.RAILWAY_ENVIRONMENT || 'development'
+      );
+
       if (process.env.RAILWAY_DEPLOYMENT_ID) {
-        finalResponse.headers.set('X-Railway-Deployment', process.env.RAILWAY_DEPLOYMENT_ID);
+        finalResponse.headers.set(
+          'X-Railway-Deployment',
+          process.env.RAILWAY_DEPLOYMENT_ID
+        );
       }
-      
+
       // Log da resposta
       const duration = Date.now() - startTime;
       logResponse(finalResponse.status);
-      
+
       // Log de performance se demorou muito
       if (duration > 1000) {
         edgeLogger.warn('Requisição lenta detectada', {
@@ -253,21 +302,20 @@ export async function middleware(request: NextRequest) {
           duration,
         });
       }
-      
+
       return finalResponse;
-      
     } catch (error) {
       edgeLogger.error('Erro no middleware', error as Error, {
         url: request.url,
         method: request.method,
         userAgent: request.headers.get('user-agent'),
       });
-      
+
       const errorResponse = NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
       );
-      
+
       logResponse(500, error as Error);
       return addCorsHeaders(addSecurityHeaders(errorResponse), request);
     }

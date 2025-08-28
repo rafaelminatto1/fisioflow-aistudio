@@ -1,22 +1,22 @@
 // lib/cache-invalidation.ts - Intelligent Cache Invalidation System
-import { 
-  cache, 
-  patientCache, 
-  appointmentCache, 
-  reportCache, 
+import {
+  cache,
+  patientCache,
+  appointmentCache,
+  reportCache,
   analyticsCache,
   sessionCache,
-  queryCache 
+  queryCache,
 } from './cache';
 import { PrismaCache } from './prisma';
 import { sessionManager } from './session-cache';
 import edgeLogger from './edge-logger';
 
 export interface InvalidationRule {
-  trigger: string;              // The event that triggers invalidation
-  targets: string[];           // Cache keys/tags to invalidate
-  delay?: number;              // Optional delay before invalidation (ms)
-  cascade?: boolean;           // Whether to cascade to related data
+  trigger: string; // The event that triggers invalidation
+  targets: string[]; // Cache keys/tags to invalidate
+  delay?: number; // Optional delay before invalidation (ms)
+  cascade?: boolean; // Whether to cascade to related data
   condition?: (data: any) => boolean; // Optional condition to check
 }
 
@@ -33,7 +33,7 @@ export class CacheInvalidationManager {
   private rules: InvalidationRule[] = [];
   private eventQueue: InvalidationEvent[] = [];
   private processing = false;
-  
+
   constructor() {
     this.setupDefaultRules();
     this.startEventProcessor();
@@ -58,7 +58,12 @@ export class CacheInvalidationManager {
 
     this.addRule({
       trigger: 'patient:deleted',
-      targets: ['model:Patient', 'model:Appointment', 'model:Report', 'analytics:dashboard'],
+      targets: [
+        'model:Patient',
+        'model:Appointment',
+        'model:Report',
+        'analytics:dashboard',
+      ],
       cascade: true,
     });
 
@@ -134,7 +139,7 @@ export class CacheInvalidationManager {
    */
   addRule(rule: InvalidationRule): void {
     this.rules.push(rule);
-    edgeLogger.debug('Cache invalidation rule added', { 
+    edgeLogger.debug('Cache invalidation rule added', {
       trigger: rule.trigger,
       targets: rule.targets.length,
     });
@@ -147,11 +152,11 @@ export class CacheInvalidationManager {
     const initialLength = this.rules.length;
     this.rules = this.rules.filter(rule => rule.trigger !== trigger);
     const removedCount = initialLength - this.rules.length;
-    
+
     if (removedCount > 0) {
-      edgeLogger.info('Cache invalidation rules removed', { 
-        trigger, 
-        removedCount 
+      edgeLogger.info('Cache invalidation rules removed', {
+        trigger,
+        removedCount,
       });
     }
   }
@@ -161,11 +166,11 @@ export class CacheInvalidationManager {
    */
   async invalidate(event: InvalidationEvent): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
       // Add to event queue
       this.eventQueue.push(event);
-      
+
       // Process immediately if not already processing
       if (!this.processing) {
         await this.processEventQueue();
@@ -177,7 +182,6 @@ export class CacheInvalidationManager {
         entityId: event.entityId,
         processingTime: Date.now() - startTime,
       });
-
     } catch (error) {
       edgeLogger.error('Cache invalidation failed', error as Error, { event });
       throw error;
@@ -187,7 +191,11 @@ export class CacheInvalidationManager {
   /**
    * Smart invalidation based on entity relationships
    */
-  async smartInvalidate(entityType: string, entityId: string, operation: string): Promise<void> {
+  async smartInvalidate(
+    entityType: string,
+    entityId: string,
+    operation: string
+  ): Promise<void> {
     const event: InvalidationEvent = {
       type: `${entityType}:${operation}`,
       entityType,
@@ -203,11 +211,11 @@ export class CacheInvalidationManager {
    */
   async bulkInvalidate(events: InvalidationEvent[]): Promise<void> {
     const startTime = Date.now();
-    
+
     try {
       // Add all events to queue
       this.eventQueue.push(...events);
-      
+
       // Process queue
       await this.processEventQueue();
 
@@ -215,10 +223,9 @@ export class CacheInvalidationManager {
         eventCount: events.length,
         processingTime: Date.now() - startTime,
       });
-
     } catch (error) {
-      edgeLogger.error('Bulk cache invalidation failed', error as Error, { 
-        eventCount: events.length 
+      edgeLogger.error('Bulk cache invalidation failed', error as Error, {
+        eventCount: events.length,
       });
       throw error;
     }
@@ -227,7 +234,10 @@ export class CacheInvalidationManager {
   /**
    * Invalidate cache based on user context
    */
-  async invalidateUserContext(userId: string, context: string[]): Promise<void> {
+  async invalidateUserContext(
+    userId: string,
+    context: string[]
+  ): Promise<void> {
     const event: InvalidationEvent = {
       type: 'user:context_change',
       entityType: 'User',
@@ -249,7 +259,7 @@ export class CacheInvalidationManager {
         entityType: 'Schedule',
         timestamp: Date.now(),
       };
-      
+
       await this.invalidate(event);
     }, delay);
 
@@ -282,11 +292,13 @@ export class CacheInvalidationManager {
    * Process a single invalidation event
    */
   private async processEvent(event: InvalidationEvent): Promise<void> {
-    const matchingRules = this.rules.filter(rule => rule.trigger === event.type);
-    
+    const matchingRules = this.rules.filter(
+      rule => rule.trigger === event.type
+    );
+
     if (matchingRules.length === 0) {
-      edgeLogger.debug('No invalidation rules found for event', { 
-        eventType: event.type 
+      edgeLogger.debug('No invalidation rules found for event', {
+        eventType: event.type,
       });
       return;
     }
@@ -304,7 +316,6 @@ export class CacheInvalidationManager {
         } else {
           await this.executeRule(rule, event);
         }
-
       } catch (error) {
         edgeLogger.error('Error executing invalidation rule', error as Error, {
           trigger: rule.trigger,
@@ -317,7 +328,10 @@ export class CacheInvalidationManager {
   /**
    * Execute a specific invalidation rule
    */
-  private async executeRule(rule: InvalidationRule, event: InvalidationEvent): Promise<void> {
+  private async executeRule(
+    rule: InvalidationRule,
+    event: InvalidationEvent
+  ): Promise<void> {
     const startTime = Date.now();
     let invalidatedCount = 0;
 
@@ -339,7 +353,6 @@ export class CacheInvalidationManager {
         cascade: rule.cascade,
         executionTime: Date.now() - startTime,
       });
-
     } catch (error) {
       edgeLogger.error('Failed to execute invalidation rule', error as Error, {
         trigger: rule.trigger,
@@ -352,25 +365,29 @@ export class CacheInvalidationManager {
   /**
    * Invalidate a specific target (tag or key pattern)
    */
-  private async invalidateTarget(target: string, event: InvalidationEvent, cascade?: boolean): Promise<void> {
+  private async invalidateTarget(
+    target: string,
+    event: InvalidationEvent,
+    cascade?: boolean
+  ): Promise<void> {
     try {
       if (target.startsWith('model:')) {
         // Invalidate database model cache
         const modelName = target.replace('model:', '');
         await this.invalidateModelCache(modelName, event.entityId);
-        
       } else if (target.includes(':')) {
         // Invalidate specific cache manager by tag
         const [cacheType, tag] = target.split(':', 2);
         await this.invalidateCacheByType(cacheType, tag);
-        
       } else {
         // Invalidate generic tag across all caches
         await this.invalidateGenericTag(target);
       }
-
     } catch (error) {
-      edgeLogger.error('Failed to invalidate target', error as Error, { target, event });
+      edgeLogger.error('Failed to invalidate target', error as Error, {
+        target,
+        event,
+      });
       throw error;
     }
   }
@@ -378,7 +395,10 @@ export class CacheInvalidationManager {
   /**
    * Invalidate model cache
    */
-  private async invalidateModelCache(modelName: string, entityId?: string): Promise<void> {
+  private async invalidateModelCache(
+    modelName: string,
+    entityId?: string
+  ): Promise<void> {
     switch (modelName) {
       case 'Patient':
         if (entityId) {
@@ -387,7 +407,7 @@ export class CacheInvalidationManager {
           await PrismaCache.invalidatePatients();
         }
         break;
-        
+
       case 'Appointment':
         if (entityId) {
           await PrismaCache.invalidateAppointment(entityId);
@@ -395,18 +415,18 @@ export class CacheInvalidationManager {
           await PrismaCache.invalidateAppointments();
         }
         break;
-        
+
       case 'Report':
         await PrismaCache.invalidateReports();
         break;
-        
+
       case 'User':
         if (entityId) {
           await PrismaCache.invalidateUserData(entityId);
           await sessionManager.destroyUserSessions(entityId);
         }
         break;
-        
+
       default:
         edgeLogger.warn('Unknown model for cache invalidation', { modelName });
     }
@@ -415,32 +435,35 @@ export class CacheInvalidationManager {
   /**
    * Invalidate cache by type and tag
    */
-  private async invalidateCacheByType(cacheType: string, tag: string): Promise<void> {
+  private async invalidateCacheByType(
+    cacheType: string,
+    tag: string
+  ): Promise<void> {
     switch (cacheType) {
       case 'patients':
         await patientCache.invalidateTag(tag);
         break;
-        
+
       case 'appointments':
         await appointmentCache.invalidateTag(tag);
         break;
-        
+
       case 'reports':
         await reportCache.invalidateTag(tag);
         break;
-        
+
       case 'analytics':
         await analyticsCache.invalidateTag(tag);
         break;
-        
+
       case 'sessions':
         await sessionCache.invalidateTag(tag);
         break;
-        
+
       case 'queries':
         await queryCache.invalidateTag(tag);
         break;
-        
+
       default:
         await cache.invalidateTag(tag);
     }
@@ -473,12 +496,12 @@ export class CacheInvalidationManager {
           // Invalidate patient-related data
           await PrismaCache.invalidatePatientRelated(event.entityId);
           break;
-          
+
         case 'Appointment':
           // Invalidate appointment-related schedules
           await analyticsCache.invalidateTag('daily-schedule');
           break;
-          
+
         case 'User':
           // Invalidate user sessions and related data
           if (event.userId || event.entityId) {
@@ -493,9 +516,10 @@ export class CacheInvalidationManager {
         entityType: event.entityType,
         entityId: event.entityId,
       });
-
     } catch (error) {
-      edgeLogger.error('Cascade invalidation failed', error as Error, { event });
+      edgeLogger.error('Cascade invalidation failed', error as Error, {
+        event,
+      });
     }
   }
 
@@ -546,15 +570,27 @@ export const CacheInvalidation = {
 
   // Appointment operations
   async appointmentCreated(appointmentId: string): Promise<void> {
-    await cacheInvalidator.smartInvalidate('Appointment', appointmentId, 'created');
+    await cacheInvalidator.smartInvalidate(
+      'Appointment',
+      appointmentId,
+      'created'
+    );
   },
 
   async appointmentUpdated(appointmentId: string): Promise<void> {
-    await cacheInvalidator.smartInvalidate('Appointment', appointmentId, 'updated');
+    await cacheInvalidator.smartInvalidate(
+      'Appointment',
+      appointmentId,
+      'updated'
+    );
   },
 
   async appointmentCancelled(appointmentId: string): Promise<void> {
-    await cacheInvalidator.smartInvalidate('Appointment', appointmentId, 'cancelled');
+    await cacheInvalidator.smartInvalidate(
+      'Appointment',
+      appointmentId,
+      'cancelled'
+    );
   },
 
   // Report operations

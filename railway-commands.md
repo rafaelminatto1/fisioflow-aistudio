@@ -20,6 +20,7 @@
 ## 🔐 Instalação e Autenticação
 
 ### Instalação
+
 ```bash
 # Via npm (recomendado)
 npm install -g @railway/cli
@@ -36,6 +37,7 @@ railway help
 ```
 
 ### Autenticação
+
 ```bash
 # Login (abre browser)
 railway login
@@ -58,6 +60,7 @@ railway auth
 ## 🏗️ Gerenciamento de Projetos
 
 ### Criação e Configuração
+
 ```bash
 # Criar novo projeto
 railway init
@@ -82,6 +85,7 @@ railway unlink
 ```
 
 ### Configuração de Ambiente
+
 ```bash
 # Listar ambientes
 railway environments
@@ -102,6 +106,7 @@ railway environment delete staging
 ## 🚀 Deploy e Build
 
 ### Deploy Básico
+
 ```bash
 # Deploy simples
 railway up
@@ -121,6 +126,7 @@ railway up --build-arg NODE_ENV=production
 ```
 
 ### Gerenciamento de Deployments
+
 ```bash
 # Listar deployments
 railway deployments
@@ -142,6 +148,7 @@ railway restart
 ## 🔧 Variáveis de Ambiente
 
 ### Gerenciamento Básico
+
 ```bash
 # Listar variáveis
 railway variables
@@ -165,6 +172,7 @@ railway variables delete DATABASE_URL PORT
 ```
 
 ### Operações Avançadas
+
 ```bash
 # Exportar variáveis
 railway variables --json > variables.json
@@ -185,6 +193,7 @@ railway variables restore backup.json
 ## 📊 Logs e Monitoramento
 
 ### Visualização de Logs
+
 ```bash
 # Logs em tempo real
 railway logs
@@ -210,6 +219,7 @@ railway logs --tail 100
 ```
 
 ### Monitoramento
+
 ```bash
 # Métricas de uso
 railway usage
@@ -232,6 +242,7 @@ railway health
 ## 🌐 Domínios e URLs
 
 ### Gerenciamento de Domínios
+
 ```bash
 # Ver domínio atual
 railway domain
@@ -252,6 +263,7 @@ railway domain add --subdomain api
 ```
 
 ### URLs e Certificados
+
 ```bash
 # Gerar URL temporária
 railway url --generate
@@ -268,6 +280,7 @@ railway ssl renew meusite.com
 ## 🗄️ Banco de Dados
 
 ### Conexão e Gerenciamento
+
 ```bash
 # Conectar ao banco
 railway connect postgres
@@ -289,6 +302,7 @@ railway run "npm run migrate"
 ```
 
 ### Backup e Restore
+
 ```bash
 # Backup automático
 railway db backup
@@ -306,6 +320,7 @@ railway db restore --backup <backup-id>
 ## ⏪ Rollback e Recuperação
 
 ### Rollback
+
 ```bash
 # Rollback para deployment anterior
 railway rollback
@@ -321,6 +336,7 @@ railway rollback --confirm
 ```
 
 ### Recuperação
+
 ```bash
 # Restart serviço
 railway restart
@@ -339,6 +355,7 @@ railway redeploy <deployment-id>
 ## 💻 Desenvolvimento
 
 ### Execução Local
+
 ```bash
 # Executar comando no container
 railway run "npm start"
@@ -354,6 +371,7 @@ railway run --local "npm run dev"
 ```
 
 ### Sincronização
+
 ```bash
 # Conectar com GitHub
 railway connect github
@@ -371,6 +389,7 @@ railway sync
 ## ⚙️ Configuração Avançada
 
 ### Configuração Global
+
 ```bash
 # Ver configuração
 railway config
@@ -385,6 +404,7 @@ railway config reset
 ```
 
 ### Debug e Troubleshooting
+
 ```bash
 # Modo debug
 RAILWAY_DEBUG=1 railway up
@@ -403,6 +423,7 @@ railway update
 ```
 
 ### Plugins e Extensões
+
 ```bash
 # Listar plugins
 railway plugins
@@ -443,6 +464,7 @@ railway docs deploy
 ## 📝 Exemplos Práticos
 
 ### Deploy Completo
+
 ```bash
 # 1. Setup inicial
 railway login
@@ -460,6 +482,7 @@ railway logs --follow
 ```
 
 ### Troubleshooting
+
 ```bash
 # Verificar status
 railway status
@@ -476,6 +499,7 @@ railway rollback
 ```
 
 ### Manutenção
+
 ```bash
 # Backup antes de mudanças
 railway db backup
@@ -514,6 +538,6 @@ railway status --all
 
 ---
 
-**📚 Documentação Oficial**: [docs.railway.app](https://docs.railway.app)
-**🆘 Suporte**: [help.railway.app](https://help.railway.app)
-**💬 Comunidade**: [Discord Railway](https://discord.gg/railway)
+**📚 Documentação Oficial**: [docs.railway.app](https://docs.railway.app) **🆘 Suporte**:
+[help.railway.app](https://help.railway.app) **💬 Comunidade**:
+[Discord Railway](https://discord.gg/railway)

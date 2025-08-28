@@ -8,7 +8,7 @@ const mockNextApp = {
   post: jest.fn(),
   put: jest.fn(),
   delete: jest.fn(),
-  patch: jest.fn()
+  patch: jest.fn(),
 };
 
 describe('API Integration Tests', () => {
@@ -20,7 +20,7 @@ describe('API Integration Tests', () => {
   beforeAll(async () => {
     // Setup test data and authentication
     console.log('Setting up integration tests...');
-    
+
     // Create test auth token (mock)
     authToken = 'test-auth-token-123';
   });
@@ -28,11 +28,11 @@ describe('API Integration Tests', () => {
   afterAll(async () => {
     // Cleanup test data
     console.log('Cleaning up test data...');
-    
+
     if (testAppointmentId) {
       // Clean up test appointment
     }
-    
+
     if (testPatientId) {
       // Clean up test patient
     }
@@ -42,7 +42,7 @@ describe('API Integration Tests', () => {
     test('POST /api/auth/login - should authenticate user with valid credentials', async () => {
       const loginData = {
         email: 'test@fisioflow.com.br',
-        password: 'testpassword123'
+        password: 'testpassword123',
       };
 
       const response = await request(baseURL)
@@ -51,7 +51,7 @@ describe('API Integration Tests', () => {
         .expect('Content-Type', /json/);
 
       expect(response.status).toBeOneOf([200, 401]); // 401 if test user doesn't exist
-      
+
       if (response.status === 200) {
         expect(response.body).toHaveProperty('user');
         expect(response.body.user).toHaveProperty('email', loginData.email);
@@ -61,7 +61,7 @@ describe('API Integration Tests', () => {
     test('POST /api/auth/login - should reject invalid credentials', async () => {
       const invalidLogin = {
         email: 'invalid@test.com',
-        password: 'wrongpassword'
+        password: 'wrongpassword',
       };
 
       const response = await request(baseURL)
@@ -80,7 +80,7 @@ describe('API Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBeOneOf([200, 401]);
-      
+
       if (response.status === 200) {
         expect(response.body).toBeInstanceOf(Array);
         if (response.body.length > 0) {
@@ -100,7 +100,7 @@ describe('API Integration Tests', () => {
         cpf: '12345678901',
         address: 'Test Address',
         medicalHistory: 'Test medical history',
-        status: 'Active'
+        status: 'Active',
       };
 
       const response = await request(baseURL)
@@ -129,7 +129,7 @@ describe('API Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBeOneOf([200, 401, 404]);
-      
+
       if (response.status === 200) {
         expect(response.body).toHaveProperty('id', testPatientId);
         expect(response.body).toHaveProperty('name');
@@ -144,7 +144,7 @@ describe('API Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBeOneOf([200, 401]);
-      
+
       if (response.status === 200) {
         expect(response.body).toBeInstanceOf(Array);
         if (response.body.length > 0) {
@@ -157,7 +157,9 @@ describe('API Integration Tests', () => {
 
     test('POST /api/appointments - should create new appointment', async () => {
       if (!testPatientId) {
-        console.log('Skipping appointment creation - no test patient available');
+        console.log(
+          'Skipping appointment creation - no test patient available'
+        );
         return;
       }
 
@@ -172,7 +174,7 @@ describe('API Integration Tests', () => {
         endTime: new Date(tomorrow.getTime() + 60 * 60 * 1000).toISOString(),
         type: 'Fisioterapia',
         status: 'Agendado',
-        notes: 'Test appointment integration'
+        notes: 'Test appointment integration',
       };
 
       const response = await request(baseURL)
@@ -199,14 +201,14 @@ describe('API Integration Tests', () => {
         .set('Authorization', `Bearer ${authToken}`);
 
       expect(response.status).toBeOneOf([200, 401]);
-      
+
       if (response.status === 200) {
         expect(response.body).toHaveProperty('overview');
         expect(response.body).toHaveProperty('patientInsights');
         expect(response.body).toHaveProperty('performance');
         expect(response.body).toHaveProperty('alerts');
         expect(response.body).toHaveProperty('predictions');
-        
+
         expect(response.body.overview).toHaveProperty('totalPatients');
         expect(response.body.overview).toHaveProperty('activePatients');
         expect(response.body.overview).toHaveProperty('completionRate');
@@ -216,35 +218,32 @@ describe('API Integration Tests', () => {
 
   describe('Health Check API', () => {
     test('GET /api/health - should return system health status', async () => {
-      const response = await request(baseURL)
-        .get('/api/health');
+      const response = await request(baseURL).get('/api/health');
 
       expect(response.status).toBe(200);
       expect(response.body).toHaveProperty('status');
       expect(response.body).toHaveProperty('timestamp');
       expect(response.body).toHaveProperty('services');
-      
-      expect(['healthy', 'unhealthy', 'degraded']).toContain(response.body.status);
+
+      expect(['healthy', 'unhealthy', 'degraded']).toContain(
+        response.body.status
+      );
     });
   });
 
   describe('Performance Tests', () => {
     test('API response times should be under 2 seconds', async () => {
-      const endpoints = [
-        '/api/health',
-        '/api/pacientes',
-        '/api/appointments'
-      ];
+      const endpoints = ['/api/health', '/api/pacientes', '/api/appointments'];
 
       for (const endpoint of endpoints) {
         const startTime = Date.now();
-        
+
         const response = await request(baseURL)
           .get(endpoint)
           .set('Authorization', `Bearer ${authToken}`);
-        
+
         const responseTime = Date.now() - startTime;
-        
+
         console.log(`${endpoint}: ${responseTime}ms`);
         expect(responseTime).toBeLessThan(2000); // 2 seconds max
         expect(response.status).toBeOneOf([200, 401, 403]); // Valid status codes
@@ -252,14 +251,16 @@ describe('API Integration Tests', () => {
     });
 
     test('Concurrent requests should not cause errors', async () => {
-      const concurrentRequests = Array(5).fill().map(() =>
-        request(baseURL)
-          .get('/api/health')
-          .set('Authorization', `Bearer ${authToken}`)
-      );
+      const concurrentRequests = Array(5)
+        .fill()
+        .map(() =>
+          request(baseURL)
+            .get('/api/health')
+            .set('Authorization', `Bearer ${authToken}`)
+        );
 
       const responses = await Promise.all(concurrentRequests);
-      
+
       responses.forEach((response, index) => {
         expect(response.status).toBe(200);
         console.log(`Concurrent request ${index + 1}: ${response.status}`);
@@ -280,7 +281,7 @@ describe('API Integration Tests', () => {
 
     test('Missing required fields should return validation error', async () => {
       const incompletePatient = {
-        name: 'Test Patient'
+        name: 'Test Patient',
         // Missing required fields like email, phone, etc.
       };
 
@@ -304,9 +305,8 @@ describe('API Integration Tests', () => {
 
   describe('Security Tests', () => {
     test('Unauthorized requests should return 401', async () => {
-      const response = await request(baseURL)
-        .get('/api/pacientes');
-        // No authorization header
+      const response = await request(baseURL).get('/api/pacientes');
+      // No authorization header
 
       expect(response.status).toBe(401);
     });
@@ -322,7 +322,7 @@ describe('API Integration Tests', () => {
     test('SQL injection attempts should be blocked', async () => {
       const maliciousInput = {
         name: "'; DROP TABLE patients; --",
-        email: 'malicious@test.com'
+        email: 'malicious@test.com',
       };
 
       const response = await request(baseURL)
@@ -332,7 +332,7 @@ describe('API Integration Tests', () => {
 
       // Should either create safely or reject
       expect(response.status).toBeOneOf([201, 400, 401, 422]);
-      
+
       // Verify system is still working
       const healthResponse = await request(baseURL).get('/api/health');
       expect(healthResponse.status).toBe(200);
@@ -345,7 +345,7 @@ describe('API Integration Tests', () => {
         name: 'Test Patient',
         email: 'invalid-email-format',
         phone: '11999999999',
-        dateOfBirth: '1990-01-01'
+        dateOfBirth: '1990-01-01',
       };
 
       const response = await request(baseURL)
@@ -361,7 +361,7 @@ describe('API Integration Tests', () => {
         name: 'Test Patient',
         email: 'valid@email.com',
         phone: 'invalid-phone',
-        dateOfBirth: '1990-01-01'
+        dateOfBirth: '1990-01-01',
       };
 
       const response = await request(baseURL)
@@ -377,7 +377,7 @@ describe('API Integration Tests', () => {
         name: 'Test Patient',
         email: 'valid@email.com',
         phone: '11999999999',
-        dateOfBirth: 'invalid-date'
+        dateOfBirth: 'invalid-date',
       };
 
       const response = await request(baseURL)

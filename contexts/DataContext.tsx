@@ -1,4 +1,11 @@
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  ReactNode,
+  useCallback,
+} from 'react';
 import { Patient, Therapist, Appointment } from '../types';
 import * as therapistService from '../services/therapistService';
 import * as appointmentService from '../services/appointmentService';
@@ -18,7 +25,9 @@ interface DataContextType {
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
 
-export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const DataProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [therapists, setTherapists] = useState<Therapist[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -31,23 +40,28 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-      const promises: [Promise<Therapist[]>, Promise<Appointment[]>, Promise<Patient[]>?] = [
+      const promises: [
+        Promise<Therapist[]>,
+        Promise<Appointment[]>,
+        Promise<Patient[]>?,
+      ] = [
         therapistService.getTherapists(),
         appointmentService.getAppointments(ninetyDaysAgo, new Date()),
       ];
-      
+
       if (fetchPatients) {
         promises.push(patientService.getAllPatients());
       }
 
-      const [therapistsData, appointmentsData, patientsData] = await Promise.all(promises);
-      
+      const [therapistsData, appointmentsData, patientsData] =
+        await Promise.all(promises);
+
       setTherapists(therapistsData);
       setAppointments(appointmentsData);
       if (patientsData) {
         setPatients(patientsData);
       }
-      
+
       setError(null);
     } catch (err) {
       setError(err as Error);
@@ -59,13 +73,12 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const loadAllPatients = useCallback(async () => {
     if (patients.length > 0) return;
     try {
-        const patientsData = await patientService.getAllPatients();
-        setPatients(patientsData);
+      const patientsData = await patientService.getAllPatients();
+      setPatients(patientsData);
     } catch (err) {
-        setError(err as Error);
+      setError(err as Error);
     }
   }, [patients.length]);
-
 
   useEffect(() => {
     fetchData(false);
@@ -74,13 +87,13 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Event listener to keep context in sync
   useEffect(() => {
     const handleDataChange = () => {
-        // Refetch context data, including patients if they were already loaded
-        fetchData(patients.length > 0);
+      // Refetch context data, including patients if they were already loaded
+      fetchData(patients.length > 0);
     };
 
     eventService.on('patients:changed', handleDataChange);
     eventService.on('appointments:changed', handleDataChange);
-    
+
     return () => {
       eventService.off('patients:changed', handleDataChange);
       eventService.off('appointments:changed', handleDataChange);
@@ -90,21 +103,27 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   if (isLoading && therapists.length === 0) {
     return <PageLoader />;
   }
-  
+
   if (error) {
-    return <div className="flex items-center justify-center h-screen text-red-500">Falha ao carregar dados essenciais: {error.message}</div>;
+    return (
+      <div className='flex items-center justify-center h-screen text-red-500'>
+        Falha ao carregar dados essenciais: {error.message}
+      </div>
+    );
   }
 
   return (
-    <DataContext.Provider value={{
-      patients,
-      therapists,
-      appointments,
-      isLoading,
-      error,
-      refetch: () => fetchData(true),
-      loadAllPatients,
-    }}>
+    <DataContext.Provider
+      value={{
+        patients,
+        therapists,
+        appointments,
+        isLoading,
+        error,
+        refetch: () => fetchData(true),
+        loadAllPatients,
+      }}
+    >
       {children}
     </DataContext.Provider>
   );

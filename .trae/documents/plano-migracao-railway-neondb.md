@@ -4,19 +4,19 @@
 
 ### 1.1 Stack Tecnológica Identificada
 
-* **Frontend**: Next.js 14.2.5 com App Router
+- **Frontend**: Next.js 14.2.5 com App Router
 
-* **Autenticação**: NextAuth.js v5.0.0-beta.19
+- **Autenticação**: NextAuth.js v5.0.0-beta.19
 
-* **Banco de Dados**: PostgreSQL com Prisma ORM v5.17.0
+- **Banco de Dados**: PostgreSQL com Prisma ORM v5.17.0
 
-* **Cache**: Redis v4.7.0
+- **Cache**: Redis v4.7.0
 
-* **UI**: Tailwind CSS + Lucide React
+- **UI**: Tailwind CSS + Lucide React
 
-* **Validação**: Zod + React Hook Form
+- **Validação**: Zod + React Hook Form
 
-* **Estado**: SWR para cache de dados
+- **Estado**: SWR para cache de dados
 
 ### 1.2 Estrutura do Projeto
 
@@ -33,15 +33,15 @@ fisioflow-aistudio/
 
 ### 1.3 Dependências Críticas
 
-* **Prisma**: ORM principal para PostgreSQL
+- **Prisma**: ORM principal para PostgreSQL
 
-* **NextAuth**: Sistema de autenticação
+- **NextAuth**: Sistema de autenticação
 
-* **Redis**: Cache e sessões
+- **Redis**: Cache e sessões
 
-* **bcryptjs**: Hash de senhas
+- **bcryptjs**: Hash de senhas
 
-* **SWR**: Cache de dados no frontend
+- **SWR**: Cache de dados no frontend
 
 ## 2. Configuração Técnica
 
@@ -114,7 +114,7 @@ export const FEATURE_FLAGS = {
   AI_ASSISTANT: process.env.ENABLE_AI === 'true',
   ADVANCED_ANALYTICS: process.env.ENABLE_ANALYTICS === 'true',
   WHATSAPP_INTEGRATION: process.env.ENABLE_WHATSAPP === 'true',
-  PAYMENT_GATEWAY: process.env.ENABLE_PAYMENTS === 'true'
+  PAYMENT_GATEWAY: process.env.ENABLE_PAYMENTS === 'true',
 } as const;
 ```
 
@@ -160,12 +160,12 @@ module.exports = {
           50: '#f8fafc',
           500: '#64748b',
           600: '#475569',
-        }
-      }
+        },
+      },
     },
   },
   plugins: [require('@tailwindcss/forms')],
-}
+};
 ```
 
 ## 3. Configuração do Railway
@@ -326,13 +326,14 @@ datasource db {
 
 ```typescript
 // lib/prisma.ts
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-}
+  prisma: PrismaClient | undefined;
+};
 
-export const prisma = globalForPrisma.prisma ??
+export const prisma =
+  globalForPrisma.prisma ??
   new PrismaClient({
     log: ['query'],
     datasources: {
@@ -340,9 +341,9 @@ export const prisma = globalForPrisma.prisma ??
         url: process.env.DATABASE_URL,
       },
     },
-  })
+  });
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
+if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
 
 // Connection pooling configuration
 export const prismaEdge = new PrismaClient({
@@ -351,7 +352,7 @@ export const prismaEdge = new PrismaClient({
       url: process.env.DIRECT_URL,
     },
   },
-})
+});
 ```
 
 ### 4.2 Otimização de Queries
@@ -360,16 +361,16 @@ export const prismaEdge = new PrismaClient({
 
 ```sql
 -- Índices para performance
-CREATE INDEX CONCURRENTLY idx_appointments_patient_date 
+CREATE INDEX CONCURRENTLY idx_appointments_patient_date
 ON appointments(patient_id, start_time DESC);
 
-CREATE INDEX CONCURRENTLY idx_pain_points_patient_created 
+CREATE INDEX CONCURRENTLY idx_pain_points_patient_created
 ON pain_points(patient_id, created_at DESC);
 
-CREATE INDEX CONCURRENTLY idx_metric_results_patient_measured 
+CREATE INDEX CONCURRENTLY idx_metric_results_patient_measured
 ON metric_results(patient_id, measured_at DESC);
 
-CREATE INDEX CONCURRENTLY idx_users_email_role 
+CREATE INDEX CONCURRENTLY idx_users_email_role
 ON users(email, role);
 ```
 
@@ -392,35 +393,35 @@ export class OptimizedQueries {
         lastVisit: true,
         _count: {
           select: {
-            appointments: true
-          }
-        }
+            appointments: true,
+          },
+        },
       },
       orderBy: {
-        updatedAt: 'desc'
-      }
-    })
+        updatedAt: 'desc',
+      },
+    });
   }
 
   // Dashboard stats com uma query
   static async getDashboardStats() {
     const [patients, appointments, revenue] = await Promise.all([
       prisma.patient.count({ where: { status: 'Active' } }),
-      prisma.appointment.count({ 
-        where: { 
-          startTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) }
-        }
+      prisma.appointment.count({
+        where: {
+          startTime: { gte: new Date(new Date().setHours(0, 0, 0, 0)) },
+        },
       }),
       prisma.appointment.aggregate({
         _sum: { value: true },
         where: {
           paymentStatus: 'paid',
-          startTime: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) }
-        }
-      })
-    ])
+          startTime: { gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1) },
+        },
+      }),
+    ]);
 
-    return { patients, appointments, revenue: revenue._sum.value || 0 }
+    return { patients, appointments, revenue: revenue._sum.value || 0 };
   }
 }
 ```
@@ -483,22 +484,22 @@ echo "✅ Staging pronto!"
 
 ```typescript
 // tests/integration/auth.test.ts
-import { test, expect } from '@playwright/test'
+import { test, expect } from '@playwright/test';
 
 test.describe('Authentication Flow', () => {
   test('should login successfully', async ({ page }) => {
-    await page.goto('/login')
-    await page.fill('[name="email"]', 'admin@fisioflow.com')
-    await page.fill('[name="password"]', 'password123')
-    await page.click('[type="submit"]')
-    await expect(page).toHaveURL('/dashboard')
-  })
+    await page.goto('/login');
+    await page.fill('[name="email"]', 'admin@fisioflow.com');
+    await page.fill('[name="password"]', 'password123');
+    await page.click('[type="submit"]');
+    await expect(page).toHaveURL('/dashboard');
+  });
 
   test('should redirect unauthenticated users', async ({ page }) => {
-    await page.goto('/dashboard')
-    await expect(page).toHaveURL('/login')
-  })
-})
+    await page.goto('/dashboard');
+    await expect(page).toHaveURL('/login');
+  });
+});
 ```
 
 ### 5.2 Verificação de Compatibilidade
@@ -548,34 +549,34 @@ echo "✅ Verificação concluída!"
 
 ```typescript
 // app/api/health/route.ts
-import { NextResponse } from 'next/server'
-import { prisma } from '@/lib/prisma'
+import { NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
     // Verificar conexão com banco
-    await prisma.$queryRaw`SELECT 1`
-    
+    await prisma.$queryRaw`SELECT 1`;
+
     // Verificar Redis (se configurado)
     // await redis.ping()
-    
+
     return NextResponse.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
       services: {
         database: 'connected',
-        redis: 'connected'
-      }
-    })
+        redis: 'connected',
+      },
+    });
   } catch (error) {
     return NextResponse.json(
       {
         status: 'unhealthy',
         timestamp: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Unknown error'
+        error: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
-    )
+    );
   }
 }
 ```
@@ -584,45 +585,45 @@ export async function GET() {
 
 ### Semana 1: Preparação
 
-* [ ] Setup do Neon DB
+- [ ] Setup do Neon DB
 
-* [ ] Configuração do Railway
+- [ ] Configuração do Railway
 
-* [ ] Migração do schema Prisma
+- [ ] Migração do schema Prisma
 
-* [ ] Configuração de variáveis de ambiente
+- [ ] Configuração de variáveis de ambiente
 
 ### Semana 2: Deploy e Testes
 
-* [ ] Deploy inicial no Railway
+- [ ] Deploy inicial no Railway
 
-* [ ] Configuração de domínio
+- [ ] Configuração de domínio
 
-* [ ] Testes de integração
+- [ ] Testes de integração
 
-* [ ] Otimização de performance
+- [ ] Otimização de performance
 
 ### Semana 3: Validação
 
-* [ ] Testes de carga
+- [ ] Testes de carga
 
-* [ ] Monitoramento
+- [ ] Monitoramento
 
-* [ ] Documentação final
+- [ ] Documentação final
 
-* [ ] Go-live
+- [ ] Go-live
 
 ## 7. Monitoramento e Alertas
 
 ### 7.1 Métricas Essenciais
 
-* Response time < 200ms
+- Response time < 200ms
 
-* Uptime > 99.9%
+- Uptime > 99.9%
 
-* Error rate < 0.1%
+- Error rate < 0.1%
 
-* Database connections < 80% do pool
+- Database connections < 80% do pool
 
 ### 7.2 Configuração de Alertas
 
@@ -631,17 +632,17 @@ export async function GET() {
 export const alerts = {
   highErrorRate: {
     threshold: 0.05, // 5%
-    window: '5m'
+    window: '5m',
   },
   slowResponse: {
     threshold: 1000, // 1s
-    window: '1m'
+    window: '1m',
   },
   highMemoryUsage: {
     threshold: 0.85, // 85%
-    window: '5m'
-  }
-}
+    window: '5m',
+  },
+};
 ```
 
 ## 8. Plano de Rollback
@@ -670,27 +671,26 @@ railway status
 echo "✅ Rollback concluído!"
 ```
 
-***
+---
 
 **Estimativa de Custos Mensais:**
 
-* Railway Pro: $20/mês
+- Railway Pro: $20/mês
 
-* Neon DB Pro: $19/mês
+- Neon DB Pro: $19/mês
 
-* Upstash Redis: $10/mês
+- Upstash Redis: $10/mês
 
-* **Total**: \~$49/mês
+- **Total**: \~$49/mês
 
 **Benefícios Esperados:**
 
-* 🚀 Deploy automatizado
+- 🚀 Deploy automatizado
 
-* 📈 Escalabilidade automática
+- 📈 Escalabilidade automática
 
-* 🔒 Backup automático
+- 🔒 Backup automático
 
-* 📊 Monitoramento integrado
+- 📊 Monitoramento integrado
 
-* 💰 Custo otimizado
-
+- 💰 Custo otimizado

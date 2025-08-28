@@ -1,10 +1,12 @@
 # Automação do .env.local
 
-Este documento descreve como usar os scripts de automação para configurar automaticamente o arquivo `.env.local` usando as CLIs do Railway e Neon DB.
+Este documento descreve como usar os scripts de automação para configurar automaticamente o arquivo
+`.env.local` usando as CLIs do Railway e Neon DB.
 
 ## 📋 Visão Geral
 
 Os scripts de automação permitem:
+
 - ✅ Obter credenciais reais do Railway e Neon DB via CLI
 - ✅ Atualizar automaticamente o arquivo `.env.local`
 - ✅ Validar configurações e testar conexões
@@ -13,12 +15,14 @@ Os scripts de automação permitem:
 ## 🚀 Início Rápido
 
 ### 1. Configuração Automática Completa
+
 ```bash
 # Configura Railway e Neon DB automaticamente
 npm run env:auto-setup
 ```
 
 ### 2. Configuração Individual
+
 ```bash
 # Apenas Railway
 npm run env:setup-railway
@@ -28,6 +32,7 @@ npm run env:setup-neon
 ```
 
 ### 3. Validação das Configurações
+
 ```bash
 # Valida todas as configurações e testa conexões
 npm run env:validate-config
@@ -37,39 +42,40 @@ npm run env:validate-config
 
 ### Configuração Principal
 
-| Comando | Descrição |
-|---------|----------|
-| `npm run env:update-from-cli` | Script principal de automação |
-| `npm run env:auto-setup` | Configura Railway + Neon DB automaticamente |
-| `npm run env:setup-railway` | Configura apenas Railway |
-| `npm run env:setup-neon` | Configura apenas Neon DB |
+| Comando                       | Descrição                                   |
+| ----------------------------- | ------------------------------------------- |
+| `npm run env:update-from-cli` | Script principal de automação               |
+| `npm run env:auto-setup`      | Configura Railway + Neon DB automaticamente |
+| `npm run env:setup-railway`   | Configura apenas Railway                    |
+| `npm run env:setup-neon`      | Configura apenas Neon DB                    |
 
 ### Verificação e Status
 
-| Comando | Descrição |
-|---------|----------|
-| `npm run env:verify-cli` | Verifica se as CLIs estão instaladas |
-| `npm run env:status` | Mostra status das configurações |
-| `npm run env:validate-config` | Valida configurações e testa conexões |
-| `npm run env:test-connections` | Testa conexões com Railway e Neon DB |
+| Comando                        | Descrição                             |
+| ------------------------------ | ------------------------------------- |
+| `npm run env:verify-cli`       | Verifica se as CLIs estão instaladas  |
+| `npm run env:status`           | Mostra status das configurações       |
+| `npm run env:validate-config`  | Valida configurações e testa conexões |
+| `npm run env:test-connections` | Testa conexões com Railway e Neon DB  |
 
 ### Comandos Existentes (Mantidos)
 
-| Comando | Descrição |
-|---------|----------|
-| `npm run env:setup` | Configuração manual do ambiente |
-| `npm run env:export` | Exporta variáveis de ambiente |
-| `npm run env:validate` | Validação básica do ambiente |
+| Comando                | Descrição                       |
+| ---------------------- | ------------------------------- |
+| `npm run env:setup`    | Configuração manual do ambiente |
+| `npm run env:export`   | Exporta variáveis de ambiente   |
+| `npm run env:validate` | Validação básica do ambiente    |
 
 ## 🛠️ Pré-requisitos
 
 ### CLIs Necessárias
 
 1. **Railway CLI**
+
    ```bash
    # Windows (PowerShell)
    iwr https://railway.app/install.ps1 | iex
-   
+
    # macOS/Linux
    curl -fsSL https://railway.app/install.sh | sh
    ```
@@ -82,6 +88,7 @@ npm run env:validate-config
 ### Login nas CLIs
 
 1. **Railway**
+
    ```bash
    railway login
    ```
@@ -108,6 +115,7 @@ O script `setup-railway.js` automatiza:
   - `RAILWAY_STAGING_DOMAIN`
 
 **Uso:**
+
 ```bash
 npm run env:setup-railway
 ```
@@ -127,6 +135,7 @@ O script `setup-neon.js` automatiza:
   - `NEON_DATABASE_URL_STAGING`
 
 **Uso:**
+
 ```bash
 npm run env:setup-neon
 ```
@@ -142,6 +151,7 @@ O script `update-env-from-cli.js` combina ambos:
 - ✅ Valida configurações
 
 **Uso:**
+
 ```bash
 npm run env:update-from-cli
 ```
@@ -157,6 +167,7 @@ O script `validate-env-config.js` verifica:
 - ✅ Relatório detalhado
 
 **Uso:**
+
 ```bash
 npm run env:validate-config
 ```
@@ -175,6 +186,7 @@ scripts/
 ## 📝 Variáveis Configuradas
 
 ### Railway
+
 ```env
 RAILWAY_API_KEY=rwy_xxx...
 RAILWAY_PROJECT_ID=xxx-xxx-xxx
@@ -183,6 +195,7 @@ RAILWAY_STAGING_DOMAIN=myapp-staging.railway.app
 ```
 
 ### Neon DB
+
 ```env
 NEON_API_KEY=neon_xxx...
 NEON_PROJECT_ID=xxx-xxx-xxx
@@ -193,12 +206,14 @@ NEON_DATABASE_URL_STAGING=postgresql://user:pass@host-staging/db
 ## 🚨 Solução de Problemas
 
 ### CLI não encontrada
+
 ```bash
 # Verifica se as CLIs estão instaladas
 npm run env:verify-cli
 ```
 
 ### Erro de autenticação
+
 ```bash
 # Re-autentica no Railway
 railway login
@@ -208,6 +223,7 @@ neon auth
 ```
 
 ### Validação falha
+
 ```bash
 # Executa validação detalhada
 npm run env:validate-config
@@ -217,6 +233,7 @@ npm run env:status
 ```
 
 ### Projeto não encontrado
+
 1. Verifique se você tem acesso ao projeto
 2. Execute `railway projects` ou `neon projects list`
 3. Confirme o nome/ID do projeto
@@ -224,12 +241,14 @@ npm run env:status
 ## 🔄 Fluxo de Trabalho Recomendado
 
 1. **Primeira configuração:**
+
    ```bash
    npm run env:auto-setup
    npm run env:validate-config
    ```
 
 2. **Atualização de credenciais:**
+
    ```bash
    npm run env:update-from-cli
    npm run env:test-connections
@@ -304,4 +323,5 @@ Se encontrar problemas:
 
 ---
 
-**Nota:** Esta automação foi criada para simplificar a configuração do ambiente de desenvolvimento. Para produção, sempre revise as credenciais e configurações antes do deploy.
+**Nota:** Esta automação foi criada para simplificar a configuração do ambiente de desenvolvimento.
+Para produção, sempre revise as credenciais e configurações antes do deploy.

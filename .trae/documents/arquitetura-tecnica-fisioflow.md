@@ -13,19 +13,19 @@ graph TD
     F --> H[NextAuth.js]
     D --> I[Upstash Redis]
     D --> J[Cloudinary API]
-    
+
     subgraph "Frontend Layer"
         D
         E
     end
-    
+
     subgraph "Backend Services"
         F
         G
         H
         I
     end
-    
+
     subgraph "External Services"
         J
     end
@@ -43,20 +43,20 @@ graph TD
 
 ## 3. Definições de Rotas
 
-| Rota | Propósito |
-|------|----------|
-| `/` | Página inicial com redirecionamento baseado em auth |
-| `/login` | Página de autenticação otimizada |
-| `/dashboard` | Dashboard principal para terapeutas |
-| `/pacientes` | Listagem e gestão de pacientes |
-| `/pacientes/[id]` | Detalhes específicos do paciente |
-| `/agenda` | Sistema de agendamento |
-| `/teleconsulta` | Interface de teleconsulta |
-| `/portal` | Portal do paciente |
-| `/partner` | Portal do educador físico |
-| `/api/auth/[...nextauth]` | Endpoints de autenticação |
-| `/api/pacientes` | API REST para pacientes |
-| `/api/appointments` | API REST para agendamentos |
+| Rota                      | Propósito                                           |
+| ------------------------- | --------------------------------------------------- |
+| `/`                       | Página inicial com redirecionamento baseado em auth |
+| `/login`                  | Página de autenticação otimizada                    |
+| `/dashboard`              | Dashboard principal para terapeutas                 |
+| `/pacientes`              | Listagem e gestão de pacientes                      |
+| `/pacientes/[id]`         | Detalhes específicos do paciente                    |
+| `/agenda`                 | Sistema de agendamento                              |
+| `/teleconsulta`           | Interface de teleconsulta                           |
+| `/portal`                 | Portal do paciente                                  |
+| `/partner`                | Portal do educador físico                           |
+| `/api/auth/[...nextauth]` | Endpoints de autenticação                           |
+| `/api/pacientes`          | API REST para pacientes                             |
+| `/api/appointments`       | API REST para agendamentos                          |
 
 ## 4. Definições de API
 
@@ -64,20 +64,15 @@ graph TD
 
 **POST /api/auth/signin**
 
-Request:
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| email | string | true | Email do usuário |
-| password | string | true | Senha do usuário |
-| csrfToken | string | true | Token CSRF |
+Request: | Param | Type | Required | Description | |-------|------|----------|-------------| | email
+| string | true | Email do usuário | | password | string | true | Senha do usuário | | csrfToken |
+string | true | Token CSRF |
 
-Response:
-| Param | Type | Description |
-|-------|------|-------------|
-| user | User | Dados do usuário autenticado |
-| expires | string | Data de expiração da sessão |
+Response: | Param | Type | Description | |-------|------|-------------| | user | User | Dados do
+usuário autenticado | | expires | string | Data de expiração da sessão |
 
 Example:
+
 ```json
 {
   "user": {
@@ -94,15 +89,13 @@ Example:
 
 **GET /api/pacientes**
 
-Query Parameters:
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| page | number | false | Número da página (default: 1) |
-| limit | number | false | Itens por página (default: 10) |
-| search | string | false | Termo de busca |
-| status | string | false | Filtro por status |
+Query Parameters: | Param | Type | Required | Description |
+|-------|------|----------|-------------| | page | number | false | Número da página (default: 1) |
+| limit | number | false | Itens por página (default: 10) | | search | string | false | Termo de
+busca | | status | string | false | Filtro por status |
 
 Response:
+
 ```json
 {
   "patients": [
@@ -126,6 +119,7 @@ Response:
 **POST /api/pacientes**
 
 Request:
+
 ```json
 {
   "name": "Maria Santos",
@@ -146,17 +140,15 @@ Request:
 
 **GET /api/appointments**
 
-Query Parameters:
-| Param | Type | Required | Description |
-|-------|------|----------|-------------|
-| startDate | string | true | Data inicial (ISO) |
-| endDate | string | true | Data final (ISO) |
-| therapistId | string | false | ID do terapeuta |
-| patientId | string | false | ID do paciente |
+Query Parameters: | Param | Type | Required | Description |
+|-------|------|----------|-------------| | startDate | string | true | Data inicial (ISO) | |
+endDate | string | true | Data final (ISO) | | therapistId | string | false | ID do terapeuta | |
+patientId | string | false | ID do paciente |
 
 **POST /api/appointments**
 
 Request:
+
 ```json
 {
   "patientId": "uuid",
@@ -177,24 +169,24 @@ graph TD
     C --> D[Service Layer]
     D --> E[Repository Layer]
     E --> F[(Neon DB)]
-    
+
     B --> G[Auth Middleware]
     B --> H[Rate Limiting]
     B --> I[CORS Handler]
-    
+
     D --> J[Cache Service]
     J --> K[(Redis Cache)]
-    
+
     subgraph "Application Layer"
         A
         B
         C
     end
-    
+
     subgraph "Business Logic"
         D
     end
-    
+
     subgraph "Data Layer"
         E
         F
@@ -215,7 +207,7 @@ erDiagram
     APPOINTMENT ||--o{ SOAP_NOTE : documents
     USER ||--o{ COMMUNICATION_LOG : creates
     PATIENT ||--o{ COMMUNICATION_LOG : receives
-    
+
     USER {
         uuid id PK
         string name
@@ -226,7 +218,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     PATIENT {
         uuid id PK
         string name
@@ -241,7 +233,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     APPOINTMENT {
         uuid id PK
         uuid patient_id FK
@@ -255,7 +247,7 @@ erDiagram
         text observations
         timestamp created_at
     }
-    
+
     PAIN_POINT {
         uuid id PK
         uuid patient_id FK
@@ -267,7 +259,7 @@ erDiagram
         enum body_part
         timestamp created_at
     }
-    
+
     METRIC_RESULT {
         uuid id PK
         uuid patient_id FK
@@ -276,7 +268,7 @@ erDiagram
         string unit
         timestamp measured_at
     }
-    
+
     SOAP_NOTE {
         uuid id PK
         uuid appointment_id FK
@@ -286,7 +278,7 @@ erDiagram
         text plan
         timestamp created_at
     }
-    
+
     COMMUNICATION_LOG {
         uuid id PK
         uuid patient_id FK
@@ -415,7 +407,7 @@ ALTER TABLE communication_logs ENABLE ROW LEVEL SECURITY;
 
 -- Políticas de acesso
 CREATE POLICY "Users can view their own data" ON patients
-    FOR SELECT USING (auth.uid()::text = id::text OR 
+    FOR SELECT USING (auth.uid()::text = id::text OR
                      EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('Admin', 'Fisioterapeuta')));
 
 CREATE POLICY "Therapists can manage appointments" ON appointments
@@ -435,16 +427,16 @@ INSERT INTO users (name, email, role, avatar_url) VALUES
 
 ```typescript
 // middleware.ts
-import { withAuth } from "next-auth/middleware";
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import { withAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 
 export default withAuth(
   function middleware(req: NextRequest) {
     // Rate limiting
     const ip = req.ip ?? '127.0.0.1';
     const rateLimitKey = `rate_limit:${ip}`;
-    
+
     // CSRF protection
     if (req.method === 'POST') {
       const csrfToken = req.headers.get('x-csrf-token');
@@ -452,7 +444,7 @@ export default withAuth(
         return new NextResponse('CSRF token missing', { status: 403 });
       }
     }
-    
+
     return NextResponse.next();
   },
   {
@@ -460,19 +452,19 @@ export default withAuth(
       authorized: ({ token, req }) => {
         // Verificar se o usuário tem permissão para acessar a rota
         const { pathname } = req.nextUrl;
-        
+
         if (pathname.startsWith('/admin')) {
           return token?.role === 'Admin';
         }
-        
+
         if (pathname.startsWith('/portal')) {
           return token?.role === 'Paciente';
         }
-        
+
         if (pathname.startsWith('/partner')) {
           return token?.role === 'EducadorFisico';
         }
-        
+
         return !!token;
       },
     },
@@ -488,8 +480,8 @@ export const config = {
     '/portal/:path*',
     '/partner/:path*',
     '/api/pacientes/:path*',
-    '/api/appointments/:path*'
-  ]
+    '/api/appointments/:path*',
+  ],
 };
 ```
 
@@ -497,43 +489,39 @@ export const config = {
 
 ```typescript
 // app/api/auth/[...nextauth]/route.ts
-import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
 import { Pool } from 'pg';
 import bcrypt from 'bcryptjs';
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL!,
-  ssl: { rejectUnauthorized: false }
+  ssl: { rejectUnauthorized: false },
 });
 
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
-      name: "credentials",
+      name: 'credentials',
       credentials: {
-        email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
           return null;
         }
 
-        const result = await pool.query(
-          'SELECT * FROM users WHERE email = $1',
-          [credentials.email]
-        );
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [
+          credentials.email,
+        ]);
         const user = result.rows[0];
 
         if (!user || !user.password_hash) {
           return null;
         }
 
-        const isValidPassword = await bcrypt.compare(
-          credentials.password,
-          user.password_hash
-        );
+        const isValidPassword = await bcrypt.compare(credentials.password, user.password_hash);
 
         if (!isValidPassword) {
           return null;
@@ -544,13 +532,13 @@ const handler = NextAuth({
           email: user.email,
           name: user.name,
           role: user.role,
-          avatarUrl: user.avatar_url
+          avatarUrl: user.avatar_url,
         };
-      }
-    })
+      },
+    }),
   ],
   session: {
-    strategy: "jwt",
+    strategy: 'jwt',
     maxAge: 24 * 60 * 60, // 24 horas
   },
   callbacks: {
@@ -566,15 +554,16 @@ const handler = NextAuth({
       session.user.role = token.role as string;
       session.user.avatarUrl = token.avatarUrl as string;
       return session;
-    }
+    },
   },
   pages: {
     signIn: '/login',
-    error: '/login'
-  }
+    error: '/login',
+  },
 });
 
 export { handler as GET, handler as POST };
 ```
 
-Esta arquitetura técnica fornece uma base sólida e escalável para o sistema FisioFlow, com foco em performance, segurança e manutenibilidade.
+Esta arquitetura técnica fornece uma base sólida e escalável para o sistema FisioFlow, com foco em
+performance, segurança e manutenibilidade.

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const cursor = searchParams.get('cursor') || undefined;
   const searchTerm = searchParams.get('q') || '';
   const status = searchParams.get('status') || '';
-  
+
   const cacheKey = `${CACHE_KEY_PREFIX}cursor=${cursor}&q=${searchTerm}&status=${status}`;
 
   try {
@@ -28,14 +28,14 @@ export async function GET(request: NextRequest) {
     if (cachedData) {
       return NextResponse.json(JSON.parse(cachedData));
     }
-    
+
     // 2. Se não houver cache, busca no banco
     const where = {
       OR: [
         { name: { contains: searchTerm, mode: 'insensitive' as const } },
         { cpf: { contains: searchTerm, mode: 'insensitive' as const } },
       ],
-      ...(status && status !== 'All' ? { status } : {})
+      ...(status && status !== 'All' ? { status } : {}),
     };
 
     const patients = await cachedPrisma.client.patient.findMany({
@@ -54,16 +54,19 @@ export async function GET(request: NextRequest) {
         createdAt: 'desc',
       },
     });
-    
-    const nextCursor = patients.length === take ? patients[patients.length - 1].id : null;
-    
+
+    const nextCursor =
+      patients.length === take ? patients[patients.length - 1].id : null;
+
     const responseData = {
       items: patients,
       nextCursor,
     };
-    
+
     // 3. Salva o resultado no cache antes de retornar
-    await redis.set(cacheKey, JSON.stringify(responseData), { EX: CACHE_TTL_SECONDS });
+    await redis.set(cacheKey, JSON.stringify(responseData), {
+      EX: CACHE_TTL_SECONDS,
+    });
 
     return NextResponse.json(responseData);
   } catch (error) {
@@ -85,20 +88,33 @@ export async function POST(request: NextRequest) {
       data: {
         name: validatedData.name,
         cpf: validatedData.cpf,
-        birthDate: validatedData.birthDate ? new Date(validatedData.birthDate) : null,
+        birthDate: validatedData.birthDate
+          ? new Date(validatedData.birthDate)
+          : null,
         phone: validatedData.phone,
         email: validatedData.email,
-        address: validatedData.addressZip || validatedData.addressStreet || validatedData.addressNumber || validatedData.addressCity || validatedData.addressState ? {
-          zip: validatedData.addressZip,
-          street: validatedData.addressStreet,
-          number: validatedData.addressNumber,
-          city: validatedData.addressCity,
-          state: validatedData.addressState,
-        } : undefined,
-        emergencyContact: validatedData.emergencyContactName || validatedData.emergencyContactPhone ? {
-          name: validatedData.emergencyContactName,
-          phone: validatedData.emergencyContactPhone,
-        } : undefined,
+        address:
+          validatedData.addressZip ||
+          validatedData.addressStreet ||
+          validatedData.addressNumber ||
+          validatedData.addressCity ||
+          validatedData.addressState
+            ? {
+                zip: validatedData.addressZip,
+                street: validatedData.addressStreet,
+                number: validatedData.addressNumber,
+                city: validatedData.addressCity,
+                state: validatedData.addressState,
+              }
+            : undefined,
+        emergencyContact:
+          validatedData.emergencyContactName ||
+          validatedData.emergencyContactPhone
+            ? {
+                name: validatedData.emergencyContactName,
+                phone: validatedData.emergencyContactPhone,
+              }
+            : undefined,
         allergies: validatedData.allergies,
         medicalAlerts: validatedData.medicalAlerts,
         consentGiven: validatedData.consentGiven,
@@ -111,7 +127,7 @@ export async function POST(request: NextRequest) {
     // Como não temos keys() na interface, vamos usar flushAll() ou implementar uma estratégia diferente
     // Por enquanto, vamos limpar todo o cache para simplicidade
     await redis.flushAll();
-    
+
     return NextResponse.json(newPatient, { status: 201 });
   } catch (error) {
     console.error('[API_PACIENTES_POST]', error);

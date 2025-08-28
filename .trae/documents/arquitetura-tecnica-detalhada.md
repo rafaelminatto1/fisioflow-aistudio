@@ -16,22 +16,22 @@ graph TD
     F --> I[OpenAI API]
     C --> J[Redis Cache]
     C --> K[File Storage]
-    
+
     subgraph "Frontend Layer"
         B
     end
-    
+
     subgraph "API Layer"
         C
         F
     end
-    
+
     subgraph "Data Layer"
         D
         E
         J
     end
-    
+
     subgraph "External Services"
         G
         H
@@ -768,23 +768,23 @@ export abstract class BaseService {
   protected prisma: PrismaClient;
   protected redis: Redis;
   protected logger: Logger;
-  
+
   constructor() {
     this.prisma = new PrismaClient();
     this.redis = new Redis(process.env.REDIS_URL!);
     this.logger = new Logger(this.constructor.name);
   }
-  
+
   protected async withTransaction<T>(fn: (tx: PrismaClient) => Promise<T>): Promise<T> {
     return await this.prisma.$transaction(fn);
   }
-  
+
   protected async cache<T>(key: string, fn: () => Promise<T>, ttl: number = 3600): Promise<T> {
     const cached = await this.redis.get(key);
     if (cached) {
       return JSON.parse(cached);
     }
-    
+
     const result = await fn();
     await this.redis.setex(key, ttl, JSON.stringify(result));
     return result;
@@ -794,46 +794,53 @@ export abstract class BaseService {
 // services/scheduling/SchedulingService.ts
 export class SchedulingService extends BaseService {
   async createAppointment(data: CreateAppointmentData): Promise<Appointment> {
-    return await this.withTransaction(async (tx) => {
+    return await this.withTransaction(async tx => {
       // Verificar disponibilidade
       const conflicts = await this.checkConflicts(data, tx);
       if (conflicts.length > 0) {
         throw new ConflictError('Horário não disponível');
       }
-      
+
       // Criar agendamento
       const appointment = await tx.appointment.create({
         data: {
           ...data,
-          status: 'SCHEDULED'
+          status: 'SCHEDULED',
         },
         include: {
           patient: true,
           therapist: true,
-          room: true
-        }
+          room: true,
+        },
       });
-      
+
       // Enviar confirmação
       await this.sendConfirmation(appointment);
-      
+
       // Invalidar cache
       await this.invalidateScheduleCache(data.therapistId, data.startTime);
-      
+
       return appointment;
     });
   }
-  
+
   async getOptimalSlots(criteria: SlotCriteria): Promise<TimeSlot[]> {
     const cacheKey = `optimal-slots:${JSON.stringify(criteria)}`;
-    
-    return await this.cache(cacheKey, async () => {
-      const algorithm = new SchedulingAlgorithm();
-      return await algorithm.findOptimalSlots(criteria);
-    }, 1800); // 30 minutos
+
+    return await this.cache(
+      cacheKey,
+      async () => {
+        const algorithm = new SchedulingAlgorithm();
+        return await algorithm.findOptimalSlots(criteria);
+      },
+      1800
+    ); // 30 minutos
   }
-  
-  private async checkConflicts(data: CreateAppointmentData, tx: PrismaClient): Promise<Appointment[]> {
+
+  private async checkConflicts(
+    data: CreateAppointmentData,
+    tx: PrismaClient
+  ): Promise<Appointment[]> {
     return await tx.appointment.findMany({
       where: {
         AND: [
@@ -841,28 +848,22 @@ export class SchedulingService extends BaseService {
             OR: [
               { therapistId: data.therapistId },
               { roomId: data.roomId },
-              { equipmentIds: { hasSome: data.equipmentIds } }
-            ]
+              { equipmentIds: { hasSome: data.equipmentIds } },
+            ],
           },
           {
             OR: [
               {
-                AND: [
-                  { startTime: { lte: data.startTime } },
-                  { endTime: { gt: data.startTime } }
-                ]
+                AND: [{ startTime: { lte: data.startTime } }, { endTime: { gt: data.startTime } }],
               },
               {
-                AND: [
-                  { startTime: { lt: data.endTime } },
-                  { endTime: { gte: data.endTime } }
-                ]
-              }
-            ]
+                AND: [{ startTime: { lt: data.endTime } }, { endTime: { gte: data.endTime } }],
+              },
+            ],
           },
-          { status: { notIn: ['CANCELLED', 'NO_SHOW'] } }
-        ]
-      }
+          { status: { notIn: ['CANCELLED', 'NO_SHOW'] } },
+        ],
+      },
     });
   }
 }
@@ -870,45 +871,43 @@ export class SchedulingService extends BaseService {
 // services/medical/MedicalRecordService.ts
 export class MedicalRecordService extends BaseService {
   async createAssessment(data: CreateAssessmentData): Promise<PhysioAssessment> {
-    return await this.withTransaction(async (tx) => {
+    return await this.withTransaction(async tx => {
       const assessment = await tx.physioAssessment.create({
         data,
         include: {
           patient: true,
-          therapist: true
-        }
+          therapist: true,
+        },
       });
-      
+
       // Análise com IA
       if (data.posturalImages?.length > 0) {
         const aiAnalysis = await this.analyzePosturalImages(data.posturalImages);
         await tx.physioAssessment.update({
           where: { id: assessment.id },
-          data: { aiAnalysis }
+          data: { aiAnalysis },
         });
       }
-      
+
       // Auditoria
       await this.logAudit({
         action: 'CREATE_ASSESSMENT',
         resourceId: assessment.id,
-        newValues: assessment
+        newValues: assessment,
       });
-      
+
       return assessment;
     });
   }
-  
+
   private async analyzePosturalImages(imageUrls: string[]): Promise<any> {
     const aiService = new PhysioAIService();
-    const analyses = await Promise.all(
-      imageUrls.map(url => aiService.analyzePosturalImage(url))
-    );
-    
+    const analyses = await Promise.all(imageUrls.map(url => aiService.analyzePosturalImage(url)));
+
     return {
       individualAnalyses: analyses,
       overallAssessment: await aiService.generateOverallAssessment(analyses),
-      recommendations: await aiService.generateRecommendations(analyses)
+      recommendations: await aiService.generateRecommendations(analyses),
     };
   }
 }
@@ -916,11 +915,11 @@ export class MedicalRecordService extends BaseService {
 // services/ai/PhysioAIService.ts
 export class PhysioAIService {
   private mcpService: MCPService;
-  
+
   constructor() {
     this.mcpService = new MCPService();
   }
-  
+
   async analyzePosturalImage(imageUrl: string): Promise<PosturalAnalysis> {
     const prompt = `
       Analise esta imagem postural de um paciente de fisioterapia.
@@ -933,11 +932,11 @@ export class PhysioAIService {
       
       Responda em formato JSON estruturado.
     `;
-    
+
     const response = await this.mcpService.analyzeImage('gemini', imageUrl, prompt);
     return JSON.parse(response);
   }
-  
+
   async generateTreatmentPlan(assessment: PhysioAssessment): Promise<TreatmentPlan> {
     const prompt = `
       Baseado na seguinte avaliação fisioterapêutica, gere um plano de tratamento detalhado:
@@ -955,11 +954,11 @@ export class PhysioAIService {
       5. Critérios de progressão
       6. Prognóstico
     `;
-    
+
     const response = await this.mcpService.generateContent('claude', prompt);
     return JSON.parse(response);
   }
-  
+
   async suggestExercises(condition: string, limitations: string[]): Promise<Exercise[]> {
     const prompt = `
       Sugira exercícios terapêuticos específicos para:
@@ -974,7 +973,7 @@ export class PhysioAIService {
       5. Contraindicações
       6. Equipamentos necessários
     `;
-    
+
     const response = await this.mcpService.generateContent('openai', prompt);
     return JSON.parse(response);
   }
@@ -988,18 +987,18 @@ export class PhysioAIService {
 export class SchedulingAlgorithm {
   async findOptimalSlots(criteria: SlotCriteria): Promise<TimeSlot[]> {
     const { therapistId, date, duration, equipmentNeeded, patientPreferences } = criteria;
-    
+
     // Buscar disponibilidade do terapeuta
     const therapistAvailability = await this.getTherapistAvailability(therapistId, date);
-    
+
     // Buscar disponibilidade de equipamentos
-    const equipmentAvailability = equipmentNeeded 
+    const equipmentAvailability = equipmentNeeded
       ? await this.getEquipmentAvailability(equipmentNeeded, date)
       : null;
-    
+
     // Buscar agendamentos existentes
     const existingAppointments = await this.getExistingAppointments(therapistId, date);
-    
+
     // Calcular slots disponíveis
     const availableSlots = this.calculateAvailableSlots(
       therapistAvailability,
@@ -1007,40 +1006,40 @@ export class SchedulingAlgorithm {
       existingAppointments,
       duration
     );
-    
+
     // Aplicar algoritmo de otimização
     return this.optimizeSlots(availableSlots, patientPreferences);
   }
-  
+
   private optimizeSlots(slots: TimeSlot[], preferences: PatientPreferences): TimeSlot[] {
     return slots
       .map(slot => ({
         ...slot,
-        score: this.calculateSlotScore(slot, preferences)
+        score: this.calculateSlotScore(slot, preferences),
       }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 5); // Top 5 melhores opções
   }
-  
+
   private calculateSlotScore(slot: TimeSlot, preferences: PatientPreferences): number {
     let score = 100;
-    
+
     // Preferência de horário
     if (preferences.preferredTimes) {
-      const timeMatch = preferences.preferredTimes.some(time => 
+      const timeMatch = preferences.preferredTimes.some(time =>
         this.isTimeInRange(slot.startTime, time.start, time.end)
       );
       score += timeMatch ? 20 : -10;
     }
-    
+
     // Evitar horários de pico
     if (this.isPeakHour(slot.startTime)) {
       score -= 5;
     }
-    
+
     // Otimizar intervalos entre consultas
     score += this.calculateIntervalOptimization(slot);
-    
+
     return score;
   }
 }
@@ -1059,25 +1058,25 @@ interface AdvancedSchedulerProps {
   equipmentFilter?: string[];
 }
 
-export function AdvancedScheduler({ 
-  viewType, 
-  therapistId, 
-  roomId, 
-  equipmentFilter 
+export function AdvancedScheduler({
+  viewType,
+  therapistId,
+  roomId,
+  equipmentFilter
 }: AdvancedSchedulerProps) {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const { data: scheduleData, mutate } = useSWR(
     ['schedule', viewType, therapistId, selectedDate],
     () => fetchScheduleData({ viewType, therapistId, date: selectedDate }),
     { refreshInterval: 30000 } // Atualizar a cada 30 segundos
   );
-  
+
   const handleAppointmentDrop = useCallback(async (
-    appointment: Appointment, 
+    appointment: Appointment,
     newStartTime: Date
   ) => {
     setIsLoading(true);
@@ -1091,7 +1090,7 @@ export function AdvancedScheduler({
       setIsLoading(false);
     }
   }, [mutate]);
-  
+
   const handleSlotClick = useCallback((slot: TimeSlot) => {
     // Abrir modal de novo agendamento
     openAppointmentModal({
@@ -1100,19 +1099,19 @@ export function AdvancedScheduler({
       roomId: slot.roomId
     });
   }, []);
-  
+
   return (
     <div className="h-full flex flex-col">
-      <SchedulerHeader 
+      <SchedulerHeader
         viewType={viewType}
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
         onViewTypeChange={setViewType}
       />
-      
+
       <div className="flex-1 overflow-hidden">
         {viewType === 'day' && (
-          <DayView 
+          <DayView
             appointments={scheduleData?.appointments || []}
             therapists={scheduleData?.therapists || []}
             rooms={scheduleData?.rooms || []}
@@ -1121,18 +1120,18 @@ export function AdvancedScheduler({
             isLoading={isLoading}
           />
         )}
-        
+
         {viewType === 'week' && (
-          <WeekView 
+          <WeekView
             appointments={scheduleData?.appointments || []}
             therapists={scheduleData?.therapists || []}
             onAppointmentDrop={handleAppointmentDrop}
             onSlotClick={handleSlotClick}
           />
         )}
-        
+
         {viewType === 'month' && (
-          <MonthView 
+          <MonthView
             appointments={scheduleData?.appointments || []}
             onDateClick={(date) => {
               setSelectedDate(date);
@@ -1141,7 +1140,7 @@ export function AdvancedScheduler({
           />
         )}
       </div>
-      
+
       <WaitingQueueSidebar />
     </div>
   );
@@ -1157,24 +1156,24 @@ interface DayViewProps {
   isLoading: boolean;
 }
 
-export function DayView({ 
-  appointments, 
-  therapists, 
-  rooms, 
-  onAppointmentDrop, 
+export function DayView({
+  appointments,
+  therapists,
+  rooms,
+  onAppointmentDrop,
   onSlotClick,
-  isLoading 
+  isLoading
 }: DayViewProps) {
-  const timeSlots = useMemo(() => 
+  const timeSlots = useMemo(() =>
     generateTimeSlots(8, 18, 30), // 8h às 18h, slots de 30min
     []
   );
-  
-  const appointmentsByTherapist = useMemo(() => 
+
+  const appointmentsByTherapist = useMemo(() =>
     groupBy(appointments, 'therapistId'),
     [appointments]
   );
-  
+
   return (
     <div className="grid grid-cols-[200px_1fr] h-full">
       {/* Coluna de horários */}
@@ -1188,7 +1187,7 @@ export function DayView({
           </div>
         ))}
       </div>
-      
+
       {/* Grid de terapeutas */}
       <div className="overflow-x-auto">
         <div className="grid" style={{ gridTemplateColumns: `repeat(${therapists.length}, 1fr)` }}>
@@ -1201,14 +1200,14 @@ export function DayView({
               </div>
             </div>
           ))}
-          
+
           {/* Grid de slots */}
-          {timeSlots.map(time => 
+          {timeSlots.map(time =>
             therapists.map(therapist => {
               const appointment = appointmentsByTherapist[therapist.id]?.find(
                 apt => format(apt.startTime, 'HH:mm') === time
               );
-              
+
               return (
                 <TimeSlot
                   key={`${therapist.id}-${time}`}
@@ -1241,43 +1240,43 @@ interface IntelligentMedicalRecordProps {
   appointmentId?: string;
 }
 
-export function IntelligentMedicalRecord({ 
-  patientId, 
-  appointmentId 
+export function IntelligentMedicalRecord({
+  patientId,
+  appointmentId
 }: IntelligentMedicalRecordProps) {
   const [activeTab, setActiveTab] = useState<'assessment' | 'sessions' | 'exercises'>('assessment');
   const [isAIAnalyzing, setIsAIAnalyzing] = useState(false);
   const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
-  
+
   const { data: patient } = useSWR(['patient', patientId], () => fetchPatient(patientId));
   const { data: assessments } = useSWR(
-    ['assessments', patientId], 
+    ['assessments', patientId],
     () => fetchAssessments(patientId)
   );
-  
+
   const handleImageUpload = useCallback(async (files: File[]) => {
     setIsAIAnalyzing(true);
     try {
       const uploadPromises = files.map(file => uploadImage(file));
       const imageUrls = await Promise.all(uploadPromises);
-      
+
       // Análise com IA
-      const analysisPromises = imageUrls.map(url => 
+      const analysisPromises = imageUrls.map(url =>
         analyzePosturalImage(url)
       );
       const analyses = await Promise.all(analysisPromises);
-      
+
       // Gerar sugestões
       const suggestions = await generateAISuggestions(analyses);
       setAiSuggestions(suggestions);
-      
+
     } catch (error) {
       toast.error('Erro na análise das imagens');
     } finally {
       setIsAIAnalyzing(false);
     }
   }, []);
-  
+
   return (
     <div className="h-full flex flex-col">
       <div className="border-b border-gray-200">
@@ -1314,7 +1313,7 @@ export function IntelligentMedicalRecord({
           </button>
         </nav>
       </div>
-      
+
       <div className="flex-1 overflow-hidden">
         {activeTab === 'assessment' && (
           <AssessmentTab
@@ -1325,14 +1324,14 @@ export function IntelligentMedicalRecord({
             aiSuggestions={aiSuggestions}
           />
         )}
-        
+
         {activeTab === 'sessions' && (
           <SessionsTab
             patientId={patientId}
             assessments={assessments}
           />
         )}
-        
+
         {activeTab === 'exercises' && (
           <ExercisesTab
             patientId={patientId}
@@ -1352,22 +1351,22 @@ interface PosturalAnalysisProps {
   isAnalyzing: boolean;
 }
 
-export function PosturalAnalysis({ 
-  images, 
-  analysis, 
-  onImageUpload, 
-  isAnalyzing 
+export function PosturalAnalysis({
+  images,
+  analysis,
+  onImageUpload,
+  isAnalyzing
 }: PosturalAnalysisProps) {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
-  
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-medium text-gray-900">Análise Postural</h3>
         <ImageUploadButton onUpload={onImageUpload} />
       </div>
-      
+
       {images.length > 0 && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Galeria de imagens */}
@@ -1390,7 +1389,7 @@ export function PosturalAnalysis({
               ))}
             </div>
           </div>
-          
+
           {/* Análise da IA */}
           <div className="space-y-4">
             <h4 className="font-medium text-gray-900">Análise da IA</h4>
@@ -1411,7 +1410,7 @@ export function PosturalAnalysis({
                     ))}
                   </ul>
                 </div>
-                
+
                 <div className="bg-green-50 p-4 rounded-lg">
                   <h5 className="font-medium text-green-900 mb-2">Recomendações</h5>
                   <ul className="space-y-1">
@@ -1422,7 +1421,7 @@ export function PosturalAnalysis({
                     ))}
                   </ul>
                 </div>
-                
+
                 <div className="bg-yellow-50 p-4 rounded-lg">
                   <h5 className="font-medium text-yellow-900 mb-2">Nível de Severidade</h5>
                   <div className="flex items-center space-x-2">
@@ -1442,7 +1441,7 @@ export function PosturalAnalysis({
           </div>
         </div>
       )}
-      
+
       {/* Modal de imagem ampliada */}
       {selectedImage && (
         <ImageModal
@@ -1466,19 +1465,19 @@ export function PosturalAnalysis({
 export class CacheManager {
   private redis: Redis;
   private memoryCache: Map<string, { data: any; expires: number }>;
-  
+
   constructor() {
     this.redis = new Redis(process.env.REDIS_URL!);
     this.memoryCache = new Map();
   }
-  
+
   async get<T>(key: string): Promise<T | null> {
     // Tentar cache em memória primeiro
     const memoryResult = this.memoryCache.get(key);
     if (memoryResult && memoryResult.expires > Date.now()) {
       return memoryResult.data;
     }
-    
+
     // Tentar Redis
     const redisResult = await this.redis.get(key);
     if (redisResult) {
@@ -1486,32 +1485,32 @@ export class CacheManager {
       // Armazenar em memória para próximas consultas
       this.memoryCache.set(key, {
         data,
-        expires: Date.now() + 60000 // 1 minuto
+        expires: Date.now() + 60000, // 1 minuto
       });
       return data;
     }
-    
+
     return null;
   }
-  
+
   async set(key: string, value: any, ttl: number = 3600): Promise<void> {
     // Armazenar no Redis
     await this.redis.setex(key, ttl, JSON.stringify(value));
-    
+
     // Armazenar em memória
     this.memoryCache.set(key, {
       data: value,
-      expires: Date.now() + Math.min(ttl * 1000, 300000) // Max 5 minutos
+      expires: Date.now() + Math.min(ttl * 1000, 300000), // Max 5 minutos
     });
   }
-  
+
   async invalidate(pattern: string): Promise<void> {
     // Invalidar Redis
     const keys = await this.redis.keys(pattern);
     if (keys.length > 0) {
       await this.redis.del(...keys);
     }
-    
+
     // Invalidar memória
     for (const key of this.memoryCache.keys()) {
       if (key.match(pattern)) {
@@ -1533,25 +1532,29 @@ export function useOptimizedQuery<T>(
 ) {
   const cacheKey = Array.isArray(key) ? key.join(':') : key;
   const cacheManager = useMemo(() => new CacheManager(), []);
-  
-  return useSWR(cacheKey, async () => {
-    // Tentar cache primeiro
-    const cached = await cacheManager.get<T>(cacheKey);
-    if (cached) {
-      return cached;
+
+  return useSWR(
+    cacheKey,
+    async () => {
+      // Tentar cache primeiro
+      const cached = await cacheManager.get<T>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+
+      // Buscar dados
+      const data = await fetcher();
+
+      // Armazenar no cache
+      await cacheManager.set(cacheKey, data, options.cacheTime || 3600);
+
+      return data;
+    },
+    {
+      revalidateOnFocus: options.refetchOnWindowFocus ?? false,
+      dedupingInterval: options.staleTime || 60000,
     }
-    
-    // Buscar dados
-    const data = await fetcher();
-    
-    // Armazenar no cache
-    await cacheManager.set(cacheKey, data, options.cacheTime || 3600);
-    
-    return data;
-  }, {
-    revalidateOnFocus: options.refetchOnWindowFocus ?? false,
-    dedupingInterval: options.staleTime || 60000
-  });
+  );
 }
 ```
 
@@ -1573,7 +1576,7 @@ FOR VALUES FROM ('2024-01-01') TO ('2025-01-01');
 
 -- Views materializadas para relatórios
 CREATE MATERIALIZED VIEW therapist_performance AS
-SELECT 
+SELECT
     t.id,
     u.name,
     COUNT(a.id) as total_appointments,
@@ -1614,26 +1617,26 @@ export enum Permission {
   CREATE_PATIENTS = 'create:patients',
   UPDATE_PATIENTS = 'update:patients',
   DELETE_PATIENTS = 'delete:patients',
-  
+
   // Agendamentos
   VIEW_APPOINTMENTS = 'view:appointments',
   CREATE_APPOINTMENTS = 'create:appointments',
   UPDATE_APPOINTMENTS = 'update:appointments',
   CANCEL_APPOINTMENTS = 'cancel:appointments',
-  
+
   // Prontuários
   VIEW_MEDICAL_RECORDS = 'view:medical_records',
   CREATE_MEDICAL_RECORDS = 'create:medical_records',
   UPDATE_MEDICAL_RECORDS = 'update:medical_records',
-  
+
   // Financeiro
   VIEW_FINANCIAL = 'view:financial',
   MANAGE_FINANCIAL = 'manage:financial',
-  
+
   // Administração
   MANAGE_USERS = 'manage:users',
   VIEW_REPORTS = 'view:reports',
-  SYSTEM_CONFIG = 'system:config'
+  SYSTEM_CONFIG = 'system:config',
 }
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
@@ -1647,7 +1650,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.VIEW_MEDICAL_RECORDS,
     Permission.CREATE_MEDICAL_RECORDS,
     Permission.UPDATE_MEDICAL_RECORDS,
-    Permission.VIEW_FINANCIAL
+    Permission.VIEW_FINANCIAL,
   ],
   RECEPTIONIST: [
     Permission.VIEW_PATIENTS,
@@ -1657,12 +1660,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     Permission.CREATE_APPOINTMENTS,
     Permission.UPDATE_APPOINTMENTS,
     Permission.CANCEL_APPOINTMENTS,
-    Permission.VIEW_FINANCIAL
+    Permission.VIEW_FINANCIAL,
   ],
-  PATIENT: [
-    Permission.VIEW_APPOINTMENTS,
-    Permission.VIEW_MEDICAL_RECORDS
-  ]
+  PATIENT: [Permission.VIEW_APPOINTMENTS, Permission.VIEW_MEDICAL_RECORDS],
 };
 
 export function hasPermission(userRole: UserRole, permission: Permission): boolean {
@@ -1672,7 +1672,7 @@ export function hasPermission(userRole: UserRole, permission: Permission): boole
 export function requirePermission(permission: Permission) {
   return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
     const originalMethod = descriptor.value;
-    
+
     descriptor.value = async function (...args: any[]) {
       const session = await getServerSession();
       if (!session?.user?.role || !hasPermission(session.user.role, permission)) {
@@ -1698,34 +1698,34 @@ export class DataEncryption {
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipher(ALGORITHM, KEY);
     cipher.setAAD(Buffer.from('fisioflow', 'utf8'));
-    
+
     let encrypted = cipher.update(text, 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    
+
     const tag = cipher.getAuthTag();
-    
+
     return {
       encrypted,
       iv: iv.toString('hex'),
-      tag: tag.toString('hex')
+      tag: tag.toString('hex'),
     };
   }
-  
+
   static decrypt(encryptedData: { encrypted: string; iv: string; tag: string }): string {
     const decipher = crypto.createDecipher(ALGORITHM, KEY);
     decipher.setAAD(Buffer.from('fisioflow', 'utf8'));
     decipher.setAuthTag(Buffer.from(encryptedData.tag, 'hex'));
-    
+
     let decrypted = decipher.update(encryptedData.encrypted, 'hex', 'utf8');
     decrypted += decipher.final('utf8');
-    
+
     return decrypted;
   }
-  
+
   static hashPassword(password: string): Promise<string> {
     return bcrypt.hash(password, 12);
   }
-  
+
   static verifyPassword(password: string, hash: string): Promise<boolean> {
     return bcrypt.compare(password, hash);
   }
@@ -1734,25 +1734,25 @@ export class DataEncryption {
 // Middleware para criptografia automática de campos sensíveis
 export function encryptSensitiveFields(data: any, fields: string[]): any {
   const result = { ...data };
-  
+
   fields.forEach(field => {
     if (result[field]) {
       result[field] = DataEncryption.encrypt(result[field]);
     }
   });
-  
+
   return result;
 }
 
 export function decryptSensitiveFields(data: any, fields: string[]): any {
   const result = { ...data };
-  
+
   fields.forEach(field => {
     if (result[field] && typeof result[field] === 'object') {
       result[field] = DataEncryption.decrypt(result[field]);
     }
   });
-  
+
   return result;
 }
 ```
@@ -1765,7 +1765,7 @@ import winston from 'winston';
 
 export class Logger {
   private logger: winston.Logger;
-  
+
   constructor(service: string) {
     this.logger = winston.createLogger({
       level: process.env.LOG_LEVEL || 'info',
@@ -1779,24 +1779,24 @@ export class Logger {
         new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
         new winston.transports.File({ filename: 'logs/combined.log' }),
         new winston.transports.Console({
-          format: winston.format.simple()
-        })
-      ]
+          format: winston.format.simple(),
+        }),
+      ],
     });
   }
-  
+
   info(message: string, meta?: any) {
     this.logger.info(message, meta);
   }
-  
+
   error(message: string, error?: Error, meta?: any) {
     this.logger.error(message, { error: error?.stack, ...meta });
   }
-  
+
   warn(message: string, meta?: any) {
     this.logger.warn(message, meta);
   }
-  
+
   debug(message: string, meta?: any) {
     this.logger.debug(message, meta);
   }
@@ -1806,27 +1806,27 @@ export class Logger {
 export class MetricsCollector {
   private static instance: MetricsCollector;
   private metrics: Map<string, number> = new Map();
-  
+
   static getInstance(): MetricsCollector {
     if (!MetricsCollector.instance) {
       MetricsCollector.instance = new MetricsCollector();
     }
     return MetricsCollector.instance;
   }
-  
+
   increment(metric: string, value: number = 1) {
     const current = this.metrics.get(metric) || 0;
     this.metrics.set(metric, current + value);
   }
-  
+
   gauge(metric: string, value: number) {
     this.metrics.set(metric, value);
   }
-  
+
   timing(metric: string, duration: number) {
     this.metrics.set(`${metric}_duration`, duration);
   }
-  
+
   getMetrics(): Record<string, number> {
     return Object.fromEntries(this.metrics);
   }
@@ -1837,7 +1837,7 @@ export function withMetrics(handler: any) {
   return async (req: any, res: any) => {
     const start = Date.now();
     const metrics = MetricsCollector.getInstance();
-    
+
     try {
       const result = await handler(req, res);
       metrics.increment('api_requests_total');
@@ -1865,28 +1865,28 @@ export class TestHelpers {
         email: `test-${Date.now()}@example.com`,
         name: 'Test User',
         role,
-        passwordHash: await DataEncryption.hashPassword('password123')
-      }
+        passwordHash: await DataEncryption.hashPassword('password123'),
+      },
     });
   }
-  
+
   static async createTestPatient(userId?: string): Promise<Patient> {
     const user = userId ? { id: userId } : await this.createTestUser('PATIENT');
-    
+
     return await prisma.patient.create({
       data: {
         userId: user.id,
         cpf: `${Math.random().toString().substr(2, 11)}`,
         birthDate: new Date('1990-01-01'),
-        gender: 'M'
-      }
+        gender: 'M',
+      },
     });
   }
-  
+
   static async createTestAppointment(overrides: Partial<Appointment> = {}): Promise<Appointment> {
     const patient = await this.createTestPatient();
     const therapist = await this.createTestTherapist();
-    
+
     return await prisma.appointment.create({
       data: {
         patientId: patient.id,
@@ -1895,40 +1895,40 @@ export class TestHelpers {
         endTime: new Date(Date.now() + 86400000 + 3600000), // Tomorrow + 1 hour
         type: 'consultation',
         status: 'SCHEDULED',
-        ...overrides
-      }
+        ...overrides,
+      },
     });
   }
-  
+
   static async cleanupTestData(): Promise<void> {
     await prisma.appointment.deleteMany({
       where: {
         patient: {
           user: {
             email: {
-              startsWith: 'test-'
-            }
-          }
-        }
-      }
+              startsWith: 'test-',
+            },
+          },
+        },
+      },
     });
-    
+
     await prisma.patient.deleteMany({
       where: {
         user: {
           email: {
-            startsWith: 'test-'
-          }
-        }
-      }
+            startsWith: 'test-',
+          },
+        },
+      },
     });
-    
+
     await prisma.user.deleteMany({
       where: {
         email: {
-          startsWith: 'test-'
-        }
-      }
+          startsWith: 'test-',
+        },
+      },
     });
   }
 }
@@ -1936,54 +1936,54 @@ export class TestHelpers {
 // tests/services/SchedulingService.test.ts
 describe('SchedulingService', () => {
   let schedulingService: SchedulingService;
-  
+
   beforeEach(async () => {
     schedulingService = new SchedulingService();
     await TestHelpers.cleanupTestData();
   });
-  
+
   afterEach(async () => {
     await TestHelpers.cleanupTestData();
   });
-  
+
   describe('createAppointment', () => {
     it('should create appointment successfully', async () => {
       const patient = await TestHelpers.createTestPatient();
       const therapist = await TestHelpers.createTestTherapist();
-      
+
       const appointmentData = {
         patientId: patient.id,
         therapistId: therapist.id,
         startTime: new Date(Date.now() + 86400000),
         endTime: new Date(Date.now() + 86400000 + 3600000),
-        type: 'consultation'
+        type: 'consultation',
       };
-      
+
       const appointment = await schedulingService.createAppointment(appointmentData);
-      
+
       expect(appointment).toBeDefined();
       expect(appointment.status).toBe('SCHEDULED');
       expect(appointment.patientId).toBe(patient.id);
     });
-    
+
     it('should throw error for conflicting appointments', async () => {
       const existingAppointment = await TestHelpers.createTestAppointment();
-      
+
       const conflictingData = {
         patientId: existingAppointment.patientId,
         therapistId: existingAppointment.therapistId,
         startTime: existingAppointment.startTime,
         endTime: existingAppointment.endTime,
-        type: 'consultation'
+        type: 'consultation',
       };
-      
-      await expect(
-        schedulingService.createAppointment(conflictingData)
-      ).rejects.toThrow('Horário não disponível');
+
+      await expect(schedulingService.createAppointment(conflictingData)).rejects.toThrow(
+        'Horário não disponível'
+      );
     });
-   });
- });
- ```
+  });
+});
+```
 
 ## 9. Deploy e CI/CD
 
@@ -2006,7 +2006,7 @@ env:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -2014,41 +2014,38 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fisioflow_test
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Run type checking
         run: npm run type-check
-      
+
       - name: Run linting
         run: npm run lint
-      
+
       - name: Run unit tests
         run: npm run test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fisioflow_test
-      
+
       - name: Run integration tests
         run: npm run test:integration
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fisioflow_test
-      
+
       - name: Build application
         run: npm run build
         env:
@@ -2060,29 +2057,29 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-      
+
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      
+
       - name: Deploy to Railway
         run: railway up --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      
+
       - name: Run database migrations
         run: railway run npx prisma migrate deploy
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      
+
       - name: Health check
         run: |
           sleep 30
@@ -2159,9 +2156,9 @@ async function healthCheck() {
   const checks = {
     database: false,
     redis: false,
-    api: false
+    api: false,
   };
-  
+
   try {
     // Verificar conexão com banco
     await prisma.$queryRaw`SELECT 1`;
@@ -2170,7 +2167,7 @@ async function healthCheck() {
   } catch (error) {
     console.error('❌ Database connection: FAILED', error);
   }
-  
+
   try {
     // Verificar Redis
     await redis.ping();
@@ -2179,7 +2176,7 @@ async function healthCheck() {
   } catch (error) {
     console.error('❌ Redis connection: FAILED', error);
   }
-  
+
   try {
     // Verificar API
     const response = await fetch(`${process.env.NEXTAUTH_URL}/api/health`);
@@ -2190,9 +2187,9 @@ async function healthCheck() {
   } catch (error) {
     console.error('❌ API health: FAILED', error);
   }
-  
+
   const allHealthy = Object.values(checks).every(Boolean);
-  
+
   if (allHealthy) {
     console.log('🎉 All systems operational');
     process.exit(0);
@@ -2214,19 +2211,18 @@ const execAsync = promisify(exec);
 async function backupDatabase() {
   const timestamp = format(new Date(), 'yyyy-MM-dd-HH-mm-ss');
   const backupFile = `backup-${timestamp}.sql`;
-  
+
   try {
     const command = `pg_dump ${process.env.DATABASE_URL} > backups/${backupFile}`;
     await execAsync(command);
-    
+
     console.log(`✅ Database backup created: ${backupFile}`);
-    
+
     // Upload para storage (opcional)
     if (process.env.BACKUP_STORAGE_URL) {
       await uploadToStorage(`backups/${backupFile}`);
       console.log(`✅ Backup uploaded to storage`);
     }
-    
   } catch (error) {
     console.error('❌ Backup failed:', error);
     process.exit(1);
@@ -2251,12 +2247,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
-  
+
   try {
     const metrics = MetricsCollector.getInstance();
     const systemMetrics = await getSystemMetrics();
     const businessMetrics = await getBusinessMetrics();
-    
+
     res.json({
       system: systemMetrics,
       business: businessMetrics,
@@ -2278,7 +2274,7 @@ async function getSystemMetrics() {
 
 async function getBusinessMetrics() {
   const prisma = new PrismaClient();
-  
+
   const [totalPatients, totalAppointments, todayAppointments] = await Promise.all([
     prisma.patient.count(),
     prisma.appointment.count(),
@@ -2291,7 +2287,7 @@ async function getBusinessMetrics() {
       }
     })
   ]);
-  
+
   return {
     totalPatients,
     totalAppointments,
@@ -2307,70 +2303,73 @@ async function getBusinessMetrics() {
 export class AlertManager {
   private static instance: AlertManager;
   private webhookUrl: string;
-  
+
   constructor() {
     this.webhookUrl = process.env.SLACK_WEBHOOK_URL || '';
   }
-  
+
   static getInstance(): AlertManager {
     if (!AlertManager.instance) {
       AlertManager.instance = new AlertManager();
     }
     return AlertManager.instance;
   }
-  
+
   async sendAlert(level: 'info' | 'warning' | 'error', message: string, details?: any) {
     const alert = {
       level,
       message,
       details,
       timestamp: new Date().toISOString(),
-      service: 'FisioFlow'
+      service: 'FisioFlow',
     };
-    
+
     // Log local
     console.log(`[ALERT:${level.toUpperCase()}] ${message}`, details);
-    
+
     // Enviar para Slack (se configurado)
     if (this.webhookUrl && level !== 'info') {
       await this.sendSlackNotification(alert);
     }
-    
+
     // Salvar no banco para histórico
     await this.saveAlertToDatabase(alert);
   }
-  
+
   private async sendSlackNotification(alert: any) {
-    const color = {
-      warning: '#ffcc00',
-      error: '#ff0000'
-    }[alert.level] || '#00ff00';
-    
+    const color =
+      {
+        warning: '#ffcc00',
+        error: '#ff0000',
+      }[alert.level] || '#00ff00';
+
     const payload = {
-      attachments: [{
-        color,
-        title: `🚨 ${alert.service} Alert`,
-        text: alert.message,
-        fields: [
-          {
-            title: 'Level',
-            value: alert.level.toUpperCase(),
-            short: true
-          },
-          {
-            title: 'Timestamp',
-            value: alert.timestamp,
-            short: true
-          }
-        ]
-      }]
+      attachments: [
+        {
+          color,
+          title: `🚨 ${alert.service} Alert`,
+          text: alert.message,
+          fields: [
+            {
+              title: 'Level',
+              value: alert.level.toUpperCase(),
+              short: true,
+            },
+            {
+              title: 'Timestamp',
+              value: alert.timestamp,
+              short: true,
+            },
+          ],
+        },
+      ],
     };
-    
+
     try {
       await fetch(this.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
     } catch (error) {
       console.error('Failed to send Slack notification:', error);
@@ -2381,7 +2380,8 @@ export class AlertManager {
 
 ## 11. Conclusão
 
-Esta arquitetura técnica detalhada fornece uma base sólida para o desenvolvimento e evolução do FisioFlow, incorporando:
+Esta arquitetura técnica detalhada fornece uma base sólida para o desenvolvimento e evolução do
+FisioFlow, incorporando:
 
 - **Escalabilidade**: Arquitetura modular que permite crescimento
 - **Segurança**: Implementação de RBAC, criptografia e auditoria
@@ -2404,4 +2404,3 @@ Esta arquitetura técnica detalhada fornece uma base sólida para o desenvolvime
 - Realizar testes contínuos com usuários reais
 - Monitorar performance e otimizar conforme necessário
 - Manter documentação atualizada
-

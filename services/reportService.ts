@@ -1,53 +1,74 @@
 // services/reportService.ts
 import { MedicalReport, Patient } from '../types';
-import { mockMedicalReports, mockUsers, mockPatients, mockSoapNotes, mockClinicInfo, mockTherapists } from '../data/mockData';
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import {
+  mockMedicalReports,
+  mockUsers,
+  mockPatients,
+  mockSoapNotes,
+  mockClinicInfo,
+  mockTherapists,
+} from '../data/mockData';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import html2pdf from 'html2pdf.js';
 
 if (!process.env.API_KEY) {
   // In a real app, you might have a fallback or a more user-friendly error.
   // For this context, we'll log an error.
-  console.error("API_KEY is not set in environment variables.");
+  console.error('API_KEY is not set in environment variables.');
 }
 
 const ai = new GoogleGenerativeAI(process.env.API_KEY!);
-
 
 let reports: MedicalReport[] = [...mockMedicalReports];
 
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
-export const getReportsByPatientId = async (patientId: string): Promise<MedicalReport[]> => {
-    await delay(300);
-    return reports.filter(r => r.patientId === patientId).sort((a, b) => b.generatedAt.getTime() - a.generatedAt.getTime());
+export const getReportsByPatientId = async (
+  patientId: string
+): Promise<MedicalReport[]> => {
+  await delay(300);
+  return reports
+    .filter(r => r.patientId === patientId)
+    .sort((a, b) => b.generatedAt.getTime() - a.generatedAt.getTime());
 };
 
-export const getReportById = async (reportId: number): Promise<MedicalReport | undefined> => {
-    await delay(300);
-    return reports.find(r => r.id === reportId);
+export const getReportById = async (
+  reportId: number
+): Promise<MedicalReport | undefined> => {
+  await delay(300);
+  return reports.find(r => r.id === reportId);
 };
 
-export const updateReport = async (reportId: number, data: Partial<Omit<MedicalReport, 'id'>>): Promise<MedicalReport> => {
-    await delay(400);
-    const index = reports.findIndex(r => r.id === reportId);
-    if (index === -1) {
-        throw new Error("Relatório não encontrado.");
-    }
-    reports[index] = { ...reports[index], ...data };
-    return reports[index];
+export const updateReport = async (
+  reportId: number,
+  data: Partial<Omit<MedicalReport, 'id'>>
+): Promise<MedicalReport> => {
+  await delay(400);
+  const index = reports.findIndex(r => r.id === reportId);
+  if (index === -1) {
+    throw new Error('Relatório não encontrado.');
+  }
+  reports[index] = { ...reports[index], ...data };
+  return reports[index];
 };
 
-export const generateReport = async (patientId: string, recipientDoctor: string, recipientCrm: string): Promise<MedicalReport> => {
-    await delay(1000); // Simulate network and data fetching time
+export const generateReport = async (
+  patientId: string,
+  recipientDoctor: string,
+  recipientCrm: string
+): Promise<MedicalReport> => {
+  await delay(1000); // Simulate network and data fetching time
 
-    const patient = mockPatients.find(p => p.id === patientId);
-    const notes = mockSoapNotes.filter(n => n.patientId === patientId).slice(0, 3); // Get last 3 notes
+  const patient = mockPatients.find(p => p.id === patientId);
+  const notes = mockSoapNotes
+    .filter(n => n.patientId === patientId)
+    .slice(0, 3); // Get last 3 notes
 
-    if (!patient) {
-        throw new Error("Paciente não encontrado.");
-    }
-    
-    const prompt = `
+  if (!patient) {
+    throw new Error('Paciente não encontrado.');
+  }
+
+  const prompt = `
         CONTEXTO: Você é um fisioterapeuta experiente criando um relatório médico profissional para o Dr(a). ${recipientDoctor || 'Colega Médico'} (CRM: ${recipientCrm || 'A informar'}).
 
         DADOS DO PACIENTE:
@@ -56,12 +77,16 @@ export const generateReport = async (patientId: string, recipientDoctor: string,
         Histórico Médico Relevante: ${patient.medicalAlerts || 'Nenhum'}
         
         ÚLTIMAS EVOLUÇÕES (Formato SOAP):
-        ${notes.map(n => `
+        ${notes
+          .map(
+            n => `
         Data: ${n.date}
         Subjetivo: ${n.subjective}
         Avaliação: ${n.assessment}
         Plano: ${n.plan}
-        ---`).join('\n')}
+        ---`
+          )
+          .join('\n')}
         
         INSTRUÇÕES:
         1. Crie um relatório médico conciso e profissional em português brasileiro.
@@ -70,52 +95,58 @@ export const generateReport = async (patientId: string, recipientDoctor: string,
         4. Seja objetivo e factual, baseando-se estritamente nos dados fornecidos. Não invente informações.
         5. Sintetize as evoluções em um parágrafo coeso na seção "Evolução Clínica".
     `;
-    
-    try {
-         const model = ai.getGenerativeModel({ model: "gemini-1.5-flash" });
-         const response = await model.generateContent(prompt);
 
-        const newReport: MedicalReport = {
-            id: Date.now(),
-            patientId,
-            therapistId: mockUsers.find(u => u.role === 'Fisioterapeuta')?.id || 'user_1',
-            title: `Relatório Médico - ${patient.name}`,
-            aiGeneratedContent: response.response.text(),
-            content: response.response.text().replace(/\*\*(.*?)\*\*/g, '<h3>$1</h3>').replace(/\n/g, '<br>'),
-            status: 'draft',
-            recipientDoctor,
-            recipientCrm,
-            generatedAt: new Date(),
-        };
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const response = await model.generateContent(prompt);
 
-        reports.unshift(newReport);
-        return newReport;
+    const newReport: MedicalReport = {
+      id: Date.now(),
+      patientId,
+      therapistId:
+        mockUsers.find(u => u.role === 'Fisioterapeuta')?.id || 'user_1',
+      title: `Relatório Médico - ${patient.name}`,
+      aiGeneratedContent: response.response.text(),
+      content: response.response
+        .text()
+        .replace(/\*\*(.*?)\*\*/g, '<h3>$1</h3>')
+        .replace(/\n/g, '<br>'),
+      status: 'draft',
+      recipientDoctor,
+      recipientCrm,
+      generatedAt: new Date(),
+    };
 
-    } catch (error) {
-        console.error("Error generating report with Gemini:", error);
-        throw new Error("Falha ao se comunicar com a IA para gerar o relatório.");
-    }
+    reports.unshift(newReport);
+    return newReport;
+  } catch (error) {
+    console.error('Error generating report with Gemini:', error);
+    throw new Error('Falha ao se comunicar com a IA para gerar o relatório.');
+  }
 };
 
 export const sendReport = async (reportId: number): Promise<MedicalReport> => {
-    await delay(300);
-    const index = reports.findIndex(r => r.id === reportId);
-    if (index === -1) {
-        throw new Error("Relatório não encontrado.");
-    }
-    if (reports[index].status !== 'finalized') {
-        throw new Error("Apenas relatórios finalizados podem ser enviados.");
-    }
-    reports[index].status = 'sent';
-    return reports[index];
+  await delay(300);
+  const index = reports.findIndex(r => r.id === reportId);
+  if (index === -1) {
+    throw new Error('Relatório não encontrado.');
+  }
+  if (reports[index].status !== 'finalized') {
+    throw new Error('Apenas relatórios finalizados podem ser enviados.');
+  }
+  reports[index].status = 'sent';
+  return reports[index];
 };
 
-export const generatePdf = async (report: MedicalReport, patient: Patient): Promise<void> => {
-    const therapist = mockTherapists.find(t => t.id === report.therapistId);
-    const therapistCrefito = '12345-F'; // Mock CREFITO
+export const generatePdf = async (
+  report: MedicalReport,
+  patient: Patient
+): Promise<void> => {
+  const therapist = mockTherapists.find(t => t.id === report.therapistId);
+  const therapistCrefito = '12345-F'; // Mock CREFITO
 
-    const pdfElement = document.createElement('div');
-    pdfElement.innerHTML = `
+  const pdfElement = document.createElement('div');
+  pdfElement.innerHTML = `
         <div style="font-family: Arial, sans-serif; padding: 40px; color: #333; font-size: 12px; line-height: 1.6;">
             <header style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid #0ea5e9; padding-bottom: 15px; margin-bottom: 25px;">
                 <div>
@@ -161,13 +192,13 @@ export const generatePdf = async (report: MedicalReport, patient: Patient): Prom
         </div>
     `;
 
-    const opt = {
-        margin:       [0.5, 0.5, 0.5, 0.5],
-        filename:     `relatorio-${patient.name.replace(/\s/g, '_')}-${report.id}.pdf`,
-        image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true },
-        jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
+  const opt = {
+    margin: [0.5, 0.5, 0.5, 0.5],
+    filename: `relatorio-${patient.name.replace(/\s/g, '_')}-${report.id}.pdf`,
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' },
+  };
 
-    return html2pdf().set(opt).from(pdfElement).save();
+  return html2pdf().set(opt).from(pdfElement).save();
 };

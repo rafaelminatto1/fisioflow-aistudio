@@ -1,19 +1,19 @@
 /**
- * Edge Runtime Compatible Logger
- * Substitui o winston para compatibilidade com Next.js Edge Runtime
+ * Edge Logger - Sistema de logging compatível com Edge Runtime
+ * Otimizado para Railway e Vercel Edge Functions
  */
 
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
-
 interface LogEntry {
-  level: LogLevel;
-  message: string;
   timestamp: string;
-  metadata?: Record<string, unknown>;
-  error?: Error;
+  level: 'info' | 'warn' | 'error' | 'debug';
+  message: string;
+  data?: any;
+  requestId?: string;
+  ip?: string;
+  userAgent?: string;
 }
 
-interface LoggerMetrics {
+interface Metrics {
   requestCount: number;
   errorCount: number;
   errorRate: number;
@@ -22,10 +22,9 @@ interface LoggerMetrics {
 }
 
 class EdgeLogger {
-  private metrics: LoggerMetrics;
-  private logLevel: LogLevel;
-  private serviceName: string;
-  private environment: string;
+  private metrics: Metrics;
+  private logs: LogEntry[] = [];
+  private maxLogs = 1000; // Limite para evitar memory leak
 
   constructor() {
     this.metrics = {
@@ -33,184 +32,184 @@ class EdgeLogger {
       errorCount: 0,
       errorRate: 0,
       uptime: 0,
-      startTime: Date.now()
+      startTime: Date.now(),
     };
-    
-    // Usar valores padrão seguros para Edge Runtime
-    this.logLevel = 'info';
-    this.serviceName = 'fisioflow';
-    this.environment = 'development';
-    
-    // Tentar acessar process.env de forma segura
-    if (typeof process !== 'undefined' && process.env) {
-      this.logLevel = (process.env.LOG_LEVEL as LogLevel) || 'info';
-      this.serviceName = process.env.RAILWAY_SERVICE_NAME || 'fisioflow';
-      this.environment = process.env.RAILWAY_ENVIRONMENT || process.env.NODE_ENV || 'development';
-    }
   }
 
-  private shouldLog(level: LogLevel): boolean {
-    const levels = ['debug', 'info', 'warn', 'error'];
-    return levels.indexOf(level) >= levels.indexOf(this.logLevel);
-  }
-
-  private formatLog(entry: LogEntry): string {
-    const { level, message, timestamp, metadata, error } = entry;
-    
-    const logData = {
-      timestamp,
-      level: level.toUpperCase(),
-      service: this.serviceName,
-      environment: this.environment,
-      message,
-      ...(metadata && { metadata }),
-      ...(error && { 
-        error: {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        }
-      })
-    };
-
-    return JSON.stringify(logData);
-  }
-
-  private log(level: LogLevel, message: string, error?: Error, metadata?: Record<string, unknown>): void {
-    if (!this.shouldLog(level)) return;
-
+  private log(
+    level: LogEntry['level'],
+    message: string,
+    data?: any,
+    context?: any
+  ) {
     const entry: LogEntry = {
+      timestamp: new Date().toISOString(),
       level,
       message,
-      timestamp: new Date().toISOString(),
-      metadata,
-      error
+      data,
+      ...context,
     };
 
-    const formattedLog = this.formatLog(entry);
+    // Adicionar ao buffer interno
+    this.logs.push(entry);
 
-    // Usar console apropriado para cada nível
-    switch (level) {
-      case 'debug':
-        console.debug(formattedLog);
-        break;
-      case 'info':
-        console.info(formattedLog);
-        break;
-      case 'warn':
-        console.warn(formattedLog);
-        break;
-      case 'error':
-        console.error(formattedLog);
-        this.metrics.errorCount++;
-        break;
+    // Manter apenas os últimos logs
+    if (this.logs.length > this.maxLogs) {
+      this.logs = this.logs.slice(-this.maxLogs);
+    }
+
+    // Log no console em desenvolvimento
+    if (
+      typeof process !== 'undefined' &&
+      process.env.NODE_ENV === 'development'
+    ) {
+      const logMethod =
+        level === 'error'
+          ? console.error
+          : level === 'warn'
+            ? console.warn
+            : console.log;
+
+      logMethod(`[${level.toUpperCase()}] ${message}`, data || '');
     }
 
     // Atualizar métricas
+    if (level === 'error') {
+      this.metrics.errorCount++;
+    }
+
     this.updateMetrics();
   }
 
-  private updateMetrics(): void {
-    this.metrics.requestCount++;
+  private updateMetrics() {
     this.metrics.uptime = Date.now() - this.metrics.startTime;
-    this.metrics.errorRate = this.metrics.requestCount > 0 
-      ? (this.metrics.errorCount / this.metrics.requestCount) * 100 
-      : 0;
+    this.metrics.errorRate =
+      this.metrics.requestCount > 0
+        ? (this.metrics.errorCount / this.metrics.requestCount) * 100
+        : 0;
   }
 
-  // Métodos públicos
-  debug(message: string, metadata?: Record<string, unknown>): void {
-    this.log('debug', message, undefined, metadata);
+  info(message: string, data?: any) {
+    this.log('info', message, data);
   }
 
-  info(message: string, metadata?: Record<string, unknown>): void {
-    this.log('info', message, undefined, metadata);
+  warn(message: string, data?: any) {
+    this.log('warn', message, data);
   }
 
-  warn(message: string, metadata?: Record<string, unknown>): void {
-    this.log('warn', message, undefined, metadata);
+  error(message: string, data?: any) {
+    this.log('error', message, data);
   }
 
-  error(message: string, error?: Error, metadata?: Record<string, unknown>): void {
-    this.log('error', message, error, metadata);
+  debug(message: string, data?: any) {
+    this.log('debug', message, data);
   }
 
-  getMetrics(): LoggerMetrics {
-    return {
-      ...this.metrics,
-      uptime: Date.now() - this.metrics.startTime
-    };
+  getMetrics(): Metrics {
+    this.updateMetrics();
+    return { ...this.metrics };
   }
 
-  // Middleware para requisições
+  getLogs(level?: LogEntry['level'], limit = 100): LogEntry[] {
+    let filteredLogs = this.logs;
+
+    if (level) {
+      filteredLogs = this.logs.filter(log => log.level === level);
+    }
+
+    return filteredLogs.slice(-limit);
+  }
+
   createRequestMiddleware() {
-    return (request: Request) => {
+    const requestId = this.generateRequestId();
+
+    return (request: any) => {
+      this.metrics.requestCount++;
+
       const startTime = Date.now();
-      const requestId = Math.random().toString(36).substring(7);
-      
-      // Log da requisição
-      this.info('Requisição recebida', {
+      const ip =
+        request.headers?.get?.('x-forwarded-for') ||
+        request.headers?.get?.('x-real-ip') ||
+        'unknown';
+      const userAgent = request.headers?.get?.('user-agent') || 'unknown';
+
+      this.info('Request iniciado', {
         requestId,
         method: request.method,
         url: request.url,
-        userAgent: request.headers.get('user-agent'),
-        ip: request.headers.get('x-forwarded-for') || 'unknown'
+        ip,
+        userAgent,
       });
 
-      // Retorna função para log da resposta
-      return (status: number, error?: Error) => {
+      return (statusCode: number, responseData?: any) => {
         const duration = Date.now() - startTime;
-        
-        if (error) {
-          this.error('Erro na requisição', error, {
-            requestId,
-            status,
-            duration,
-            method: request.method,
-            url: request.url
-          });
+
+        const logData = {
+          requestId,
+          statusCode,
+          duration,
+          ip,
+          userAgent,
+          responseData,
+        };
+
+        if (statusCode >= 400) {
+          this.error(`Request falhou com status ${statusCode}`, logData);
         } else {
-          this.info('Resposta enviada', {
-            requestId,
-            status,
-            duration,
-            method: request.method,
-            url: request.url
-          });
+          this.info(`Request concluído em ${duration}ms`, logData);
         }
       };
     };
   }
 
-  // Performance measurement compatível com Edge Runtime
-  measurePerformance<T>(operation: string, fn: () => T | Promise<T>): T | Promise<T> {
+  async measurePerformance<T>(
+    operation: string,
+    fn: () => Promise<T>
+  ): Promise<T> {
     const startTime = Date.now();
-    
+
     try {
-      const result = fn();
-      
-      if (result instanceof Promise) {
-        return result
-          .then((value) => {
-            const duration = Date.now() - startTime;
-            this.debug(`Performance: ${operation}`, { duration });
-            return value;
-          })
-          .catch((error) => {
-            const duration = Date.now() - startTime;
-            this.error(`Performance error: ${operation}`, error, { duration });
-            throw error;
-          });
-      } else {
-        const duration = Date.now() - startTime;
-        this.debug(`Performance: ${operation}`, { duration });
-        return result;
-      }
+      const result = await fn();
+      const duration = Date.now() - startTime;
+
+      this.info(`Operação '${operation}' concluída`, { duration });
+      return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      this.error(`Performance error: ${operation}`, error as Error, { duration });
+
+      this.error(`Operação '${operation}' falhou`, {
+        duration,
+        error: error instanceof Error ? error.message : String(error),
+      });
+
       throw error;
     }
+  }
+
+  private generateRequestId(): string {
+    return (
+      Math.random().toString(36).substring(2, 15) +
+      Math.random().toString(36).substring(2, 15)
+    );
+  }
+
+  // Método para exportar logs (útil para debugging)
+  exportLogs(): string {
+    return JSON.stringify(
+      {
+        metrics: this.getMetrics(),
+        logs: this.getLogs(),
+        timestamp: new Date().toISOString(),
+      },
+      null,
+      2
+    );
+  }
+
+  // Limpar logs antigos
+  clearLogs() {
+    this.logs = [];
+    this.info('Logs limpos');
   }
 }
 
@@ -218,4 +217,4 @@ class EdgeLogger {
 const edgeLogger = new EdgeLogger();
 
 export default edgeLogger;
-export { EdgeLogger, type LogLevel, type LoggerMetrics };
+export type { LogEntry, Metrics };

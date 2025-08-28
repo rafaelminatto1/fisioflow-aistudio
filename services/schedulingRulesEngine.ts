@@ -21,28 +21,36 @@ export interface ValidationResult {
  */
 export async function validateAppointment(
   newAppointment: NewAppointment,
-  patientAppointments: Appointment[],
+  patientAppointments: Appointment[]
 ): Promise<ValidationResult> {
   const result: ValidationResult = {
     warnings: [],
     suggestions: [],
   };
-  
+
   // Simulate a small async delay, like a quick DB check.
   await new Promise(resolve => setTimeout(resolve, 150));
 
   // --- RULE 1: Duplicate Booking Warning ---
   // Find any existing appointments scheduled for today or later.
   const futureAppointments = patientAppointments.filter(
-    (app) => app.startTime >= new Date(new Date().setHours(0, 0, 0, 0))
+    app => app.startTime >= new Date(new Date().setHours(0, 0, 0, 0))
   );
 
   if (futureAppointments.length > 0) {
     // Sort to find the very next appointment to warn about.
-    futureAppointments.sort((a,b) => a.startTime.getTime() - b.startTime.getTime());
+    futureAppointments.sort(
+      (a, b) => a.startTime.getTime() - b.startTime.getTime()
+    );
     const nextAppointment = futureAppointments[0];
-    const formattedDate = nextAppointment.startTime.toLocaleDateString('pt-BR', {day: '2-digit', month: '2-digit'});
-    const formattedTime = nextAppointment.startTime.toLocaleTimeString('pt-BR', {hour: '2-digit', minute: '2-digit'});
+    const formattedDate = nextAppointment.startTime.toLocaleDateString(
+      'pt-BR',
+      { day: '2-digit', month: '2-digit' }
+    );
+    const formattedTime = nextAppointment.startTime.toLocaleTimeString(
+      'pt-BR',
+      { hour: '2-digit', minute: '2-digit' }
+    );
     result.warnings.push(
       `Paciente já possui uma sessão futura agendada para ${formattedDate} às ${formattedTime}.`
     );
@@ -51,11 +59,7 @@ export async function validateAppointment(
   // --- RULE 2: Package Ending Suggestion ---
   const sessionNum = newAppointment.sessionNumber;
   const totalSessionsNum = newAppointment.totalSessions;
-  if (
-    sessionNum &&
-    totalSessionsNum &&
-    sessionNum === totalSessionsNum
-  ) {
+  if (sessionNum && totalSessionsNum && sessionNum === totalSessionsNum) {
     result.suggestions.push(
       'Esta é a última sessão do pacote. Lembre-se de discutir a renovação do tratamento com o paciente.'
     );
@@ -70,7 +74,7 @@ export async function validateAppointment(
 
   // --- RULE 4: Pending Payment Warning ---
   const hasPendingPayments = patientAppointments.some(
-    (app) => app.paymentStatus === 'pending'
+    app => app.paymentStatus === 'pending'
   );
 
   if (hasPendingPayments) {

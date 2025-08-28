@@ -1,6 +1,10 @@
 // hooks/useClinicalAnalytics.ts
 import { useState, useEffect } from 'react';
-import { mockSoapNotes, mockAppointments, mockPatients } from '../data/mockData';
+import {
+  mockSoapNotes,
+  mockAppointments,
+  mockPatients,
+} from '../data/mockData';
 import { AppointmentStatus } from '../types';
 
 interface Kpis {
@@ -23,7 +27,9 @@ const useClinicalAnalytics = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [painEvolution, setPainEvolution] = useState<PainEvolutionData[]>([]);
-  const [successByPathology, setSuccessByPathology] = useState<SuccessByPathologyData[]>([]);
+  const [successByPathology, setSuccessByPathology] = useState<
+    SuccessByPathologyData[]
+  >([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -33,13 +39,31 @@ const useClinicalAnalytics = () => {
       // Calculate KPIs
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
-      const dischargedPatients = mockPatients.filter(p => p.status === 'Discharged' && new Date(p.lastVisit) > ninetyDaysAgo).length;
-      const activePatients = mockPatients.filter(p => p.status === 'Active').length;
-      const dischargeRate = activePatients > 0 ? Math.round((dischargedPatients / (dischargedPatients + activePatients)) * 100) : 0;
-      
-      const completedAppointments = mockAppointments.filter(a => a.status === AppointmentStatus.Completed);
-      const uniquePatientsWithSessions = new Set(completedAppointments.map(a => a.patientId));
-      const avgSessions = uniquePatientsWithSessions.size > 0 ? Math.round(completedAppointments.length / uniquePatientsWithSessions.size) : 0;
+      const dischargedPatients = mockPatients.filter(
+        p => p.status === 'Discharged' && new Date(p.lastVisit) > ninetyDaysAgo
+      ).length;
+      const activePatients = mockPatients.filter(
+        p => p.status === 'Active'
+      ).length;
+      const dischargeRate =
+        activePatients > 0
+          ? Math.round(
+              (dischargedPatients / (dischargedPatients + activePatients)) * 100
+            )
+          : 0;
+
+      const completedAppointments = mockAppointments.filter(
+        a => a.status === AppointmentStatus.Completed
+      );
+      const uniquePatientsWithSessions = new Set(
+        completedAppointments.map(a => a.patientId)
+      );
+      const avgSessions =
+        uniquePatientsWithSessions.size > 0
+          ? Math.round(
+              completedAppointments.length / uniquePatientsWithSessions.size
+            )
+          : 0;
 
       const calculatedKpis: Kpis = {
         dischargeRate,

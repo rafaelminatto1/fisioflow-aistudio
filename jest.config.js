@@ -9,10 +9,10 @@ const createJestConfig = nextJest({
 const customJestConfig = {
   // Add more setup options before each test is run
   setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-  
+
   // if using TypeScript with a baseUrl set to the root directory then you need the below for alias' to work
   moduleDirectories: ['node_modules', '<rootDir>/'],
-  
+
   // Handle module aliases (the same way Next.js does)
   moduleNameMapping: {
     '^@/(.*)$': '<rootDir>/$1',
@@ -31,7 +31,7 @@ const customJestConfig = {
     '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}'
+    '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
   ],
 
   // Coverage configuration

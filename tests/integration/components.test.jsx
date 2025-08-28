@@ -1,6 +1,12 @@
 // tests/integration/components.test.jsx
 import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { jest } from '@jest/globals';
 import '@testing-library/jest-dom';
@@ -26,10 +32,10 @@ jest.mock('next-auth/react', () => ({
         id: 'test-user-id',
         name: 'Test User',
         email: 'test@fisioflow.com.br',
-        role: 'therapist'
-      }
+        role: 'therapist',
+      },
     },
-    status: 'authenticated'
+    status: 'authenticated',
   }),
   signIn: jest.fn(),
   signOut: jest.fn(),
@@ -49,7 +55,7 @@ describe('Component Integration Tests', () => {
   beforeEach(() => {
     // Reset mocks before each test
     jest.clearAllMocks();
-    
+
     // Setup default fetch mock
     fetch.mockResolvedValue({
       ok: true,
@@ -68,12 +74,12 @@ describe('Component Integration Tests', () => {
       cpf: '12345678901',
       address: 'Rua Test, 123',
       medicalHistory: 'Histórico médico teste',
-      status: 'Active'
+      status: 'Active',
     };
 
     test('should render patient form with all fields', () => {
       render(<PatientForm />);
-      
+
       expect(screen.getByLabelText(/nome/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/email/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/telefone/i)).toBeInTheDocument();
@@ -85,19 +91,19 @@ describe('Component Integration Tests', () => {
     test('should fill and submit patient form', async () => {
       const user = userEvent.setup();
       const mockOnSubmit = jest.fn();
-      
+
       render(<PatientForm onSubmit={mockOnSubmit} />);
-      
+
       // Fill form fields
       await user.type(screen.getByLabelText(/nome/i), mockPatient.name);
       await user.type(screen.getByLabelText(/email/i), mockPatient.email);
       await user.type(screen.getByLabelText(/telefone/i), mockPatient.phone);
       await user.type(screen.getByLabelText(/cpf/i), mockPatient.cpf);
       await user.type(screen.getByLabelText(/endereço/i), mockPatient.address);
-      
+
       // Submit form
       await user.click(screen.getByRole('button', { name: /salvar/i }));
-      
+
       await waitFor(() => {
         expect(mockOnSubmit).toHaveBeenCalledWith(
           expect.objectContaining({
@@ -105,7 +111,7 @@ describe('Component Integration Tests', () => {
             email: mockPatient.email,
             phone: mockPatient.phone,
             cpf: mockPatient.cpf,
-            address: mockPatient.address
+            address: mockPatient.address,
           })
         );
       });
@@ -113,12 +119,12 @@ describe('Component Integration Tests', () => {
 
     test('should show validation errors for empty required fields', async () => {
       const user = userEvent.setup();
-      
+
       render(<PatientForm />);
-      
+
       // Try to submit empty form
       await user.click(screen.getByRole('button', { name: /salvar/i }));
-      
+
       await waitFor(() => {
         expect(screen.getByText(/nome é obrigatório/i)).toBeInTheDocument();
         expect(screen.getByText(/email é obrigatório/i)).toBeInTheDocument();
@@ -127,7 +133,7 @@ describe('Component Integration Tests', () => {
 
     test('should populate form when editing existing patient', () => {
       render(<PatientForm patient={mockPatient} isEditing={true} />);
-      
+
       expect(screen.getByDisplayValue(mockPatient.name)).toBeInTheDocument();
       expect(screen.getByDisplayValue(mockPatient.email)).toBeInTheDocument();
       expect(screen.getByDisplayValue(mockPatient.phone)).toBeInTheDocument();
@@ -143,12 +149,12 @@ describe('Component Integration Tests', () => {
       endTime: '2024-02-15T11:00:00Z',
       type: 'Fisioterapia',
       status: 'Agendado',
-      notes: 'Consulta de rotina'
+      notes: 'Consulta de rotina',
     };
 
     const mockPatients = [
       { id: 'patient-1', name: 'João Silva' },
-      { id: 'patient-2', name: 'Maria Santos' }
+      { id: 'patient-2', name: 'Maria Santos' },
     ];
 
     test('should render appointment modal when open', () => {
@@ -159,7 +165,7 @@ describe('Component Integration Tests', () => {
           patients={mockPatients}
         />
       );
-      
+
       expect(screen.getByText(/nova consulta/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/paciente/i)).toBeInTheDocument();
       expect(screen.getByLabelText(/data/i)).toBeInTheDocument();
@@ -174,14 +180,14 @@ describe('Component Integration Tests', () => {
           patients={mockPatients}
         />
       );
-      
+
       expect(screen.queryByText(/nova consulta/i)).not.toBeInTheDocument();
     });
 
     test('should select patient and schedule appointment', async () => {
       const user = userEvent.setup();
       const mockOnSave = jest.fn();
-      
+
       render(
         <AppointmentFormModal
           isOpen={true}
@@ -190,26 +196,26 @@ describe('Component Integration Tests', () => {
           patients={mockPatients}
         />
       );
-      
+
       // Select patient
       await user.click(screen.getByLabelText(/paciente/i));
       await user.selectOptions(screen.getByLabelText(/paciente/i), 'patient-1');
-      
+
       // Fill date and time
       await user.type(screen.getByLabelText(/data/i), '2024-02-15');
       await user.type(screen.getByLabelText(/horário/i), '10:00');
-      
+
       // Select type
       await user.selectOptions(screen.getByLabelText(/tipo/i), 'Fisioterapia');
-      
+
       // Save appointment
       await user.click(screen.getByRole('button', { name: /salvar/i }));
-      
+
       await waitFor(() => {
         expect(mockOnSave).toHaveBeenCalledWith(
           expect.objectContaining({
             patientId: 'patient-1',
-            type: 'Fisioterapia'
+            type: 'Fisioterapia',
           })
         );
       });
@@ -223,7 +229,7 @@ describe('Component Integration Tests', () => {
         activePatients: 120,
         completionRate: 85,
         avgSessionsPerPatient: 8.5,
-        monthlyGrowth: 12
+        monthlyGrowth: 12,
       },
       patientInsights: [
         {
@@ -232,19 +238,24 @@ describe('Component Integration Tests', () => {
           riskLevel: 'high',
           recoveryProgress: 65,
           attendanceRate: 80,
-          painTrend: 'improving'
-        }
+          painTrend: 'improving',
+        },
       ],
       performance: {
         weeklyAppointments: [
-          { week: '2024-01-01', appointments: 50, completed: 45, noShow: 5 }
+          { week: '2024-01-01', appointments: 50, completed: 45, noShow: 5 },
         ],
         treatmentSuccess: [
-          { treatmentType: 'Fisioterapia', successRate: 90, avgDuration: 12, patientCount: 50 }
+          {
+            treatmentType: 'Fisioterapia',
+            successRate: 90,
+            avgDuration: 12,
+            patientCount: 50,
+          },
         ],
         painReductionTrends: [
-          { month: 'Jan', avgPainReduction: 45, patientsSurvey: 30 }
-        ]
+          { month: 'Jan', avgPainReduction: 45, patientsSurvey: 30 },
+        ],
       },
       alerts: [
         {
@@ -253,21 +264,25 @@ describe('Component Integration Tests', () => {
           message: 'Paciente com alto índice de faltas',
           patientName: 'João Silva',
           actionRequired: 'Entrar em contato',
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       ],
       predictions: {
         dischargeCandidates: [
-          { patientName: 'Maria Silva', probability: 92, expectedDate: '2024-02-15' }
+          {
+            patientName: 'Maria Silva',
+            probability: 92,
+            expectedDate: '2024-02-15',
+          },
         ],
         riskPatients: [
           {
             patientName: 'Pedro Oliveira',
             riskFactors: ['Faltas frequentes'],
-            recommendedActions: ['Reagendar consulta']
-          }
-        ]
-      }
+            recommendedActions: ['Reagendar consulta'],
+          },
+        ],
+      },
     };
 
     beforeEach(() => {
@@ -279,14 +294,14 @@ describe('Component Integration Tests', () => {
     });
 
     test('should render dashboard loading state initially', () => {
-      render(<AdvancedDashboard userId="test-user-id" />);
-      
+      render(<AdvancedDashboard userId='test-user-id' />);
+
       expect(screen.getByText(/carregando dashboard/i)).toBeInTheDocument();
     });
 
     test('should render dashboard with data after loading', async () => {
-      render(<AdvancedDashboard userId="test-user-id" />);
-      
+      render(<AdvancedDashboard userId='test-user-id' />);
+
       await waitFor(() => {
         expect(screen.getByText(/dashboard avançado/i)).toBeInTheDocument();
         expect(screen.getByText(/120/)).toBeInTheDocument(); // Active patients
@@ -295,26 +310,28 @@ describe('Component Integration Tests', () => {
     });
 
     test('should show alerts section when alerts exist', async () => {
-      render(<AdvancedDashboard userId="test-user-id" />);
-      
+      render(<AdvancedDashboard userId='test-user-id' />);
+
       await waitFor(() => {
         expect(screen.getByText(/alertas inteligentes/i)).toBeInTheDocument();
-        expect(screen.getByText(/paciente com alto índice de faltas/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/paciente com alto índice de faltas/i)
+        ).toBeInTheDocument();
       });
     });
 
     test('should switch between dashboard tabs', async () => {
       const user = userEvent.setup();
-      
-      render(<AdvancedDashboard userId="test-user-id" />);
-      
+
+      render(<AdvancedDashboard userId='test-user-id' />);
+
       await waitFor(() => {
         expect(screen.getByText(/performance/i)).toBeInTheDocument();
       });
-      
+
       // Click on Patients tab
       await user.click(screen.getByRole('tab', { name: /pacientes/i }));
-      
+
       await waitFor(() => {
         expect(screen.getByText(/distribuição de risco/i)).toBeInTheDocument();
       });
@@ -322,15 +339,17 @@ describe('Component Integration Tests', () => {
 
     test('should handle refresh action', async () => {
       const user = userEvent.setup();
-      
-      render(<AdvancedDashboard userId="test-user-id" />);
-      
+
+      render(<AdvancedDashboard userId='test-user-id' />);
+
       await waitFor(() => {
-        expect(screen.getByRole('button', { name: /atualizar/i })).toBeInTheDocument();
+        expect(
+          screen.getByRole('button', { name: /atualizar/i })
+        ).toBeInTheDocument();
       });
-      
+
       await user.click(screen.getByRole('button', { name: /atualizar/i }));
-      
+
       // Should make additional fetch call
       expect(fetch).toHaveBeenCalledTimes(2);
     });
@@ -339,7 +358,7 @@ describe('Component Integration Tests', () => {
   describe('Sidebar Component', () => {
     test('should render navigation items', () => {
       render(<Sidebar />);
-      
+
       expect(screen.getByText(/dashboard/i)).toBeInTheDocument();
       expect(screen.getByText(/pacientes/i)).toBeInTheDocument();
       expect(screen.getByText(/agenda/i)).toBeInTheDocument();
@@ -347,20 +366,20 @@ describe('Component Integration Tests', () => {
 
     test('should highlight current page', () => {
       mockRouter.pathname = '/dashboard';
-      
+
       render(<Sidebar />);
-      
+
       const dashboardLink = screen.getByText(/dashboard/i).closest('a');
       expect(dashboardLink).toHaveClass('bg-blue-100'); // Active state class
     });
 
     test('should navigate when menu item clicked', async () => {
       const user = userEvent.setup();
-      
+
       render(<Sidebar />);
-      
+
       await user.click(screen.getByText(/pacientes/i));
-      
+
       expect(mockRouter.push).toHaveBeenCalledWith('/pacientes');
     });
   });
@@ -374,12 +393,12 @@ describe('Component Integration Tests', () => {
       unit: 'graus',
       targetValue: 120,
       measuredAt: new Date().toISOString(),
-      notes: 'Boa evolução'
+      notes: 'Boa evolução',
     };
 
     test('should render metric information', () => {
       render(<MetricTrackerCard metric={mockMetric} />);
-      
+
       expect(screen.getByText(/flexão do joelho/i)).toBeInTheDocument();
       expect(screen.getByText(/90/)).toBeInTheDocument();
       expect(screen.getByText(/graus/)).toBeInTheDocument();
@@ -388,7 +407,7 @@ describe('Component Integration Tests', () => {
 
     test('should show progress bar', () => {
       render(<MetricTrackerCard metric={mockMetric} />);
-      
+
       const progressBar = screen.getByRole('progressbar');
       expect(progressBar).toBeInTheDocument();
       expect(progressBar).toHaveAttribute('aria-valuenow', '75'); // 90/120 = 75%
@@ -397,23 +416,25 @@ describe('Component Integration Tests', () => {
     test('should handle edit metric action', async () => {
       const user = userEvent.setup();
       const mockOnEdit = jest.fn();
-      
+
       render(<MetricTrackerCard metric={mockMetric} onEdit={mockOnEdit} />);
-      
+
       await user.click(screen.getByRole('button', { name: /editar/i }));
-      
+
       expect(mockOnEdit).toHaveBeenCalledWith(mockMetric);
     });
 
     test('should show different colors based on progress', () => {
       const lowProgressMetric = { ...mockMetric, value: 30 }; // 25% progress
-      const { rerender } = render(<MetricTrackerCard metric={lowProgressMetric} />);
-      
+      const { rerender } = render(
+        <MetricTrackerCard metric={lowProgressMetric} />
+      );
+
       expect(screen.getByRole('progressbar')).toHaveClass('bg-red-200'); // Low progress
-      
+
       const highProgressMetric = { ...mockMetric, value: 110 }; // 92% progress
       rerender(<MetricTrackerCard metric={highProgressMetric} />);
-      
+
       expect(screen.getByRole('progressbar')).toHaveClass('bg-green-200'); // High progress
     });
   });
@@ -421,24 +442,24 @@ describe('Component Integration Tests', () => {
   describe('Integration Workflows', () => {
     test('Patient creation workflow', async () => {
       const user = userEvent.setup();
-      
+
       // Mock successful patient creation
       fetch.mockResolvedValue({
         ok: true,
         json: async () => ({ id: 'new-patient-id', name: 'Novo Paciente' }),
         status: 201,
       });
-      
+
       render(<PatientForm onSubmit={jest.fn()} />);
-      
+
       // Fill patient form
       await user.type(screen.getByLabelText(/nome/i), 'Novo Paciente');
       await user.type(screen.getByLabelText(/email/i), 'novo@email.com');
       await user.type(screen.getByLabelText(/telefone/i), '11999999999');
-      
+
       // Submit form
       await user.click(screen.getByRole('button', { name: /salvar/i }));
-      
+
       // Should show success state or redirect
       await waitFor(() => {
         expect(fetch).toHaveBeenCalledWith(
@@ -456,17 +477,15 @@ describe('Component Integration Tests', () => {
 
     test('Appointment scheduling workflow', async () => {
       const user = userEvent.setup();
-      const mockPatients = [
-        { id: 'patient-1', name: 'João Silva' }
-      ];
-      
+      const mockPatients = [{ id: 'patient-1', name: 'João Silva' }];
+
       // Mock successful appointment creation
       fetch.mockResolvedValue({
         ok: true,
         json: async () => ({ id: 'new-appointment-id' }),
         status: 201,
       });
-      
+
       render(
         <AppointmentFormModal
           isOpen={true}
@@ -474,20 +493,20 @@ describe('Component Integration Tests', () => {
           patients={mockPatients}
         />
       );
-      
+
       // Fill appointment form
       await user.selectOptions(screen.getByLabelText(/paciente/i), 'patient-1');
       await user.type(screen.getByLabelText(/data/i), '2024-02-15');
       await user.type(screen.getByLabelText(/horário/i), '10:00');
-      
+
       // Save appointment
       await user.click(screen.getByRole('button', { name: /salvar/i }));
-      
+
       await waitFor(() => {
         expect(fetch).toHaveBeenCalledWith(
           '/api/appointments',
           expect.objectContaining({
-            method: 'POST'
+            method: 'POST',
           })
         );
       });
@@ -498,28 +517,35 @@ describe('Component Integration Tests', () => {
     test('should handle API errors gracefully', async () => {
       // Mock API error
       fetch.mockRejectedValue(new Error('Network error'));
-      
-      render(<AdvancedDashboard userId="test-user-id" />);
-      
+
+      render(<AdvancedDashboard userId='test-user-id' />);
+
       await waitFor(() => {
-        expect(screen.getByText(/não foi possível carregar/i)).toBeInTheDocument();
+        expect(
+          screen.getByText(/não foi possível carregar/i)
+        ).toBeInTheDocument();
       });
     });
 
     test('should show loading states during API calls', async () => {
       // Mock slow API response
-      fetch.mockImplementation(() => 
-        new Promise(resolve => 
-          setTimeout(() => resolve({
-            ok: true,
-            json: async () => ({}),
-            status: 200,
-          }), 1000)
-        )
+      fetch.mockImplementation(
+        () =>
+          new Promise(resolve =>
+            setTimeout(
+              () =>
+                resolve({
+                  ok: true,
+                  json: async () => ({}),
+                  status: 200,
+                }),
+              1000
+            )
+          )
       );
-      
-      render(<AdvancedDashboard userId="test-user-id" />);
-      
+
+      render(<AdvancedDashboard userId='test-user-id' />);
+
       expect(screen.getByText(/carregando dashboard/i)).toBeInTheDocument();
     });
   });

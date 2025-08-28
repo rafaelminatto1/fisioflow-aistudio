@@ -5,33 +5,42 @@ import { NextRequest } from 'next/server';
 const prisma = new PrismaClient({
   datasources: {
     db: {
-      url: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/fisioflow_test'
-    }
-  }
+      url:
+        process.env.DATABASE_URL ||
+        'postgresql://test:test@localhost:5432/fisioflow_test',
+    },
+  },
 });
 
 // Helper para criar requisições de teste
-export function createTestRequest(url: string, options: RequestInit = {}): NextRequest {
+export function createTestRequest(
+  url: string,
+  options: RequestInit = {}
+): NextRequest {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   return new NextRequest(`${baseUrl}${url}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
       'User-Agent': 'FisioFlow-Test/1.0',
-      ...options.headers
+      ...options.headers,
     },
-    ...options
+    ...options,
   });
 }
 
 // Helper para autenticação em testes
-export function createAuthenticatedRequest(url: string, token: string, options: RequestInit = {}): NextRequest {
+export function createAuthenticatedRequest(
+  url: string,
+  token: string,
+  options: RequestInit = {}
+): NextRequest {
   return createTestRequest(url, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${token}`,
-      ...options.headers
-    }
+      Authorization: `Bearer ${token}`,
+      ...options.headers,
+    },
   });
 }
 
@@ -55,16 +64,22 @@ export async function cleanupDatabase() {
 export const setupTestEnvironment = async () => {
   try {
     // Verificar conexão com banco apenas se DATABASE_URL estiver configurada
-    if (process.env.DATABASE_URL && !process.env.DATABASE_URL.includes('localhost')) {
+    if (
+      process.env.DATABASE_URL &&
+      !process.env.DATABASE_URL.includes('localhost')
+    ) {
       await prisma.$connect();
       console.log('✅ Conexão com banco de dados estabelecida para testes');
     } else {
       console.log('📝 Usando mocks para testes (banco não configurado)');
     }
-    
+
     return true;
   } catch (error) {
-    console.warn('⚠️ Erro ao conectar com banco de dados, usando mocks:', error.message);
+    console.warn(
+      '⚠️ Erro ao conectar com banco de dados, usando mocks:',
+      error.message
+    );
     return false;
   }
 };

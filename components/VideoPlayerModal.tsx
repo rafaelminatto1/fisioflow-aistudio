@@ -8,18 +8,23 @@ interface VideoPlayerModalProps {
   title?: string;
 }
 
-const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isOpen, onClose, videoUrl, title }) => {
+const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({
+  isOpen,
+  onClose,
+  videoUrl,
+  title,
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     if (isOpen && videoRef.current) {
       videoRef.current.play().catch(error => {
         // Autoplay might be blocked by the browser, which is fine. The user can click play.
-        console.warn("Video autoplay was prevented:", error);
+        console.warn('Video autoplay was prevented:', error);
       });
     }
   }, [isOpen]);
-  
+
   // Close on Escape key press
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -40,34 +45,36 @@ const VideoPlayerModal: React.FC<VideoPlayerModalProps> = ({ isOpen, onClose, vi
   if (!isOpen) return null;
 
   return (
-    <div 
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in" 
-        onClick={onClose}
-        aria-modal="true"
-        role="dialog"
+    <div
+      className='fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fade-in'
+      onClick={onClose}
+      aria-modal='true'
+      role='dialog'
     >
-      <div 
-        className="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in-up" 
+      <div
+        className='bg-slate-900 rounded-2xl shadow-2xl w-full max-w-3xl flex flex-col overflow-hidden animate-fade-in-up'
         onClick={e => e.stopPropagation()}
       >
-        <header className="flex items-center justify-between p-4 border-b border-slate-700">
-          <h3 className="font-bold text-lg text-slate-100 truncate pr-4">{title}</h3>
-          <button 
-            onClick={onClose} 
-            className="p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white"
-            aria-label="Fechar player de vídeo"
+        <header className='flex items-center justify-between p-4 border-b border-slate-700'>
+          <h3 className='font-bold text-lg text-slate-100 truncate pr-4'>
+            {title}
+          </h3>
+          <button
+            onClick={onClose}
+            className='p-2 rounded-full hover:bg-slate-800 text-slate-400 hover:text-white'
+            aria-label='Fechar player de vídeo'
           >
-            <X className="w-5 h-5" />
+            <X className='w-5 h-5' />
           </button>
         </header>
-        <div className="p-1 bg-black">
+        <div className='p-1 bg-black'>
           <video
             ref={videoRef}
             src={videoUrl}
             controls
             autoPlay
             loop
-            className="w-full max-h-[75vh] rounded-lg focus:outline-none"
+            className='w-full max-h-[75vh] rounded-lg focus:outline-none'
             aria-label={`Vídeo de demonstração para ${title}`}
           >
             Seu navegador não suporta a tag de vídeo.

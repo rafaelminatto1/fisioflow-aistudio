@@ -15,7 +15,9 @@ export async function createPatient(data: PatientFormData) {
   const validationResult = patientFormSchema.safeParse(data);
   if (!validationResult.success) {
     // Em um app real, retornaríamos os erros de forma estruturada
-    throw new Error('Dados inválidos: ' + validationResult.error.flatten().fieldErrors);
+    throw new Error(
+      'Dados inválidos: ' + validationResult.error.flatten().fieldErrors
+    );
   }
 
   const { ...patientData } = validationResult.data;
@@ -25,7 +27,9 @@ export async function createPatient(data: PatientFormData) {
     await cachedPrisma.client.patient.create({
       data: {
         ...patientData,
-        birthDate: patientData.birthDate ? new Date(patientData.birthDate) : null,
+        birthDate: patientData.birthDate
+          ? new Date(patientData.birthDate)
+          : null,
       },
     });
   } catch (error: any) {
@@ -41,7 +45,6 @@ export async function createPatient(data: PatientFormData) {
   revalidatePath('/pacientes');
 }
 
-
 /**
  * Atualiza um paciente existente no banco de dados.
  * @param id - O ID do paciente a ser atualizado.
@@ -54,13 +57,15 @@ export async function updatePatient(id: string, data: PatientFormData) {
   }
 
   const { ...patientData } = validationResult.data;
-  
+
   try {
     await cachedPrisma.client.patient.update({
       where: { id },
       data: {
         ...patientData,
-        birthDate: patientData.birthDate ? new Date(patientData.birthDate) : null,
+        birthDate: patientData.birthDate
+          ? new Date(patientData.birthDate)
+          : null,
       },
     });
   } catch (error: any) {

@@ -10,16 +10,14 @@ const logger = winston.createLogger({
     winston.format.timestamp(),
     winston.format.json()
   ),
-  transports: [
-    new winston.transports.Console(),
-  ],
+  transports: [new winston.transports.Console()],
 });
 
 // --- Instância Axios Configurada ---
 const api = axios.create({
   // Em um app Next.js, isso viria de process.env.NEXT_PUBLIC_API_URL
   // Para este projeto, vamos usar o valor de desenvolvimento padrão.
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000', 
+  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000',
   withCredentials: true, // Essencial para CORS com credenciais
   headers: {
     'Content-Type': 'application/json',
@@ -33,13 +31,13 @@ const INITIAL_DELAY_MS = 200;
 
 // Estendendo a configuração do Axios para incluir a contagem de retries
 interface RetryConfig extends InternalAxiosRequestConfig {
-    retries?: number;
+  retries?: number;
 }
 
 api.interceptors.response.use(
   // Retorna a resposta diretamente se for bem-sucedida
-  (response) => response,
-  
+  response => response,
+
   // Lida com erros
   async (error: AxiosError) => {
     const config = error.config as RetryConfig;
@@ -48,18 +46,22 @@ api.interceptors.response.use(
     config.retries = config.retries || 0;
 
     // --- Lógica de Retry com Exponential Backoff ---
-    
+
     // Condições para tentar novamente: erro de rede ou erro de servidor (5xx)
-    const shouldRetry = !error.response || (error.response.status >= 500 && error.response.status <= 599);
+    const shouldRetry =
+      !error.response ||
+      (error.response.status >= 500 && error.response.status <= 599);
 
     if (config.retries < MAX_RETRIES && shouldRetry) {
       config.retries += 1;
-      
+
       // Calcula o tempo de espera (ex: 200ms, 400ms, 800ms)
       const delay = Math.pow(2, config.retries) * INITIAL_DELAY_MS;
-      
-      logger.warn(`[API Retry] Tentativa ${config.retries}/${MAX_RETRIES}. Tentando novamente em ${delay}ms...`);
-      
+
+      logger.warn(
+        `[API Retry] Tentativa ${config.retries}/${MAX_RETRIES}. Tentando novamente em ${delay}ms...`
+      );
+
       // Espera o tempo calculado antes de tentar novamente
       await new Promise(resolve => setTimeout(resolve, delay));
 
@@ -68,7 +70,7 @@ api.interceptors.response.use(
     }
 
     // --- Tratamento Padronizado de Erros ---
-    
+
     // Se não for possível fazer retry, rejeita a promise com um erro padronizado
     const customError = {
       message: 'Ocorreu um erro de comunicação com o servidor.',
@@ -80,29 +82,33 @@ api.interceptors.response.use(
       // Erro vindo da API do Flask (com o formato que definimos)
       customError.status = error.response.status;
       customError.data = error.response.data;
-      customError.message = (error.response.data as any)?.error?.message || error.message;
+      customError.message =
+        (error.response.data as any)?.error?.message || error.message;
     } else if (error.request) {
       // Erro de rede (sem resposta do servidor)
-      customError.message = 'Não foi possível conectar ao servidor. Verifique sua conexão com a internet e se o backend está rodando.';
+      customError.message =
+        'Não foi possível conectar ao servidor. Verifique sua conexão com a internet e se o backend está rodando.';
     }
 
     return Promise.reject(customError);
   }
 );
 
-
 // --- Funções de API Expostas ---
 
 export interface Session {
-    id: number;
-    topic: string;
-    mentor: string;
+  id: number;
+  topic: string;
+  mentor: string;
 }
 
 /**
  * Verifica a saúde da API do Flask.
  */
-export const checkApiHealth = async (): Promise<{ status: string, service: string }> => {
+export const checkApiHealth = async (): Promise<{
+  status: string;
+  service: string;
+}> => {
   try {
     const response = await api.get('/health');
     return response.data;

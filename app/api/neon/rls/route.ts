@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@/lib/auth';
-import { createPrismaWithRLS, verifyRLSSetup, getAuditLogs } from '@/lib/rls-middleware';
+import {
+  createPrismaWithRLS,
+  verifyRLSSetup,
+  getAuditLogs,
+} from '@/lib/rls-middleware';
 import fs from 'fs';
 import path from 'path';
 
@@ -11,7 +15,7 @@ import path from 'path';
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -124,9 +128,14 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('RLS API Error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
@@ -140,7 +149,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -167,7 +176,8 @@ export async function POST(request: NextRequest) {
           if (currentStatus.isConfigured) {
             return NextResponse.json({
               success: false,
-              error: 'RLS is already configured. Use force=true to reconfigure.',
+              error:
+                'RLS is already configured. Use force=true to reconfigure.',
               data: currentStatus,
             });
           }
@@ -175,7 +185,7 @@ export async function POST(request: NextRequest) {
 
         // Read and execute RLS setup script
         const scriptPath = path.join(process.cwd(), 'scripts', 'setup-rls.sql');
-        
+
         if (!fs.existsSync(scriptPath)) {
           return NextResponse.json(
             { error: 'RLS setup script not found' },
@@ -184,12 +194,17 @@ export async function POST(request: NextRequest) {
         }
 
         const sqlScript = fs.readFileSync(scriptPath, 'utf-8');
-        
+
         // Split script into individual statements
         const statements = sqlScript
           .split(';')
           .map(stmt => stmt.trim())
-          .filter(stmt => stmt.length > 0 && !stmt.startsWith('--') && !stmt.startsWith('PRINT'));
+          .filter(
+            stmt =>
+              stmt.length > 0 &&
+              !stmt.startsWith('--') &&
+              !stmt.startsWith('PRINT')
+          );
 
         const prisma = createPrismaWithRLS();
         const results = [];
@@ -203,13 +218,14 @@ export async function POST(request: NextRequest) {
               await prisma.$executeRawUnsafe(statement);
               results.push({ statement: i + 1, status: 'success' });
             } catch (error) {
-              const errorMsg = error instanceof Error ? error.message : 'Unknown error';
-              errors.push({ 
-                statement: i + 1, 
+              const errorMsg =
+                error instanceof Error ? error.message : 'Unknown error';
+              errors.push({
+                statement: i + 1,
                 error: errorMsg,
-                sql: statement.substring(0, 100) + '...' 
+                sql: statement.substring(0, 100) + '...',
               });
-              
+
               // Continue with other statements unless it's a critical error
               if (!force && errorMsg.includes('already exists')) {
                 continue;
@@ -239,11 +255,11 @@ export async function POST(request: NextRequest) {
         const resetPrisma = createPrismaWithRLS();
         try {
           // Get all policies
-          const policies = await resetPrisma.$queryRaw`
+          const policies = (await resetPrisma.$queryRaw`
             SELECT policyname, tablename 
             FROM pg_policies 
             WHERE schemaname = 'public'
-          ` as { policyname: string; tablename: string }[];
+          `) as { policyname: string; tablename: string }[];
 
           // Drop all policies
           for (const policy of policies) {
@@ -253,19 +269,39 @@ export async function POST(request: NextRequest) {
           }
 
           // Disable RLS on all tables
-          const tables = ['User', 'Patient', 'Appointment', 'PainPoint', 'MetricResult', 'SoapNote', 'AuditLog'];
+          const tables = [
+            'User',
+            'Patient',
+            'Appointment',
+            'PainPoint',
+            'MetricResult',
+            'SoapNote',
+            'AuditLog',
+          ];
           for (const table of tables) {
-            await resetPrisma.$executeRawUnsafe(`ALTER TABLE "${table}" DISABLE ROW LEVEL SECURITY`);
+            await resetPrisma.$executeRawUnsafe(
+              `ALTER TABLE "${table}" DISABLE ROW LEVEL SECURITY`
+            );
           }
 
           // Drop utility functions
-          await resetPrisma.$executeRawUnsafe('DROP FUNCTION IF EXISTS set_current_user(text, text)');
-          await resetPrisma.$executeRawUnsafe('DROP FUNCTION IF EXISTS clear_current_user()');
-          await resetPrisma.$executeRawUnsafe('DROP FUNCTION IF EXISTS get_current_user_role()');
-          await resetPrisma.$executeRawUnsafe('DROP FUNCTION IF EXISTS audit_trigger_function()');
+          await resetPrisma.$executeRawUnsafe(
+            'DROP FUNCTION IF EXISTS set_current_user(text, text)'
+          );
+          await resetPrisma.$executeRawUnsafe(
+            'DROP FUNCTION IF EXISTS clear_current_user()'
+          );
+          await resetPrisma.$executeRawUnsafe(
+            'DROP FUNCTION IF EXISTS get_current_user_role()'
+          );
+          await resetPrisma.$executeRawUnsafe(
+            'DROP FUNCTION IF EXISTS audit_trigger_function()'
+          );
 
           // Drop audit table
-          await resetPrisma.$executeRawUnsafe('DROP TABLE IF EXISTS "AuditLog"');
+          await resetPrisma.$executeRawUnsafe(
+            'DROP TABLE IF EXISTS "AuditLog"'
+          );
 
           return NextResponse.json({
             success: true,
@@ -287,18 +323,34 @@ export async function POST(request: NextRequest) {
 
           // Test 1: Set user context
           try {
-            await testPrisma.setUserContext({ userId: 'test-user-123', userEmail: 'test@example.com' });
+            await testPrisma.setUserContext({
+              userId: 'test-user-123',
+              userEmail: 'test@example.com',
+            });
             testResults.push({ test: 'Set user context', status: 'success' });
           } catch (error) {
-            testResults.push({ test: 'Set user context', status: 'failed', error: error instanceof Error ? error.message : String(error) });
+            testResults.push({
+              test: 'Set user context',
+              status: 'failed',
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
 
           // Test 2: Check current user
           try {
-            const currentUser = await testPrisma.$queryRaw`SELECT current_setting('app.current_user_id', true) as user_id`;
-            testResults.push({ test: 'Get current user', status: 'success', data: currentUser });
+            const currentUser =
+              await testPrisma.$queryRaw`SELECT current_setting('app.current_user_id', true) as user_id`;
+            testResults.push({
+              test: 'Get current user',
+              status: 'success',
+              data: currentUser,
+            });
           } catch (error) {
-            testResults.push({ test: 'Get current user', status: 'failed', error: error instanceof Error ? error.message : String(error) });
+            testResults.push({
+              test: 'Get current user',
+              status: 'failed',
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
 
           // Test 3: Clear user context
@@ -306,7 +358,11 @@ export async function POST(request: NextRequest) {
             await testPrisma.clearUserContext();
             testResults.push({ test: 'Clear user context', status: 'success' });
           } catch (error) {
-            testResults.push({ test: 'Clear user context', status: 'failed', error: error instanceof Error ? error.message : String(error) });
+            testResults.push({
+              test: 'Clear user context',
+              status: 'failed',
+              error: error instanceof Error ? error.message : String(error),
+            });
           }
 
           return NextResponse.json({
@@ -327,9 +383,14 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('RLS Setup Error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );
@@ -343,7 +404,7 @@ export async function POST(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session?.user) {
       return NextResponse.json(
         { error: 'Authentication required' },
@@ -382,9 +443,14 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     console.error('Audit Cleanup Error:', error);
     return NextResponse.json(
-      { 
+      {
         error: 'Internal server error',
-        details: process.env.NODE_ENV === 'development' ? (error instanceof Error ? error.message : String(error)) : undefined
+        details:
+          process.env.NODE_ENV === 'development'
+            ? error instanceof Error
+              ? error.message
+              : String(error)
+            : undefined,
       },
       { status: 500 }
     );

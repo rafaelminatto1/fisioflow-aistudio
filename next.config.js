@@ -11,16 +11,16 @@ const nextConfig = {
   experimental: {
     // Enable partial prerendering for better performance (when stable)
     // ppr: false, // Commented out as it's not stable yet
-    
+
     // Enable optimizations that are stable
     optimizePackageImports: ['lucide-react', '@radix-ui/react-icons'],
-    
+
     // Enable SWC optimizations
     swcPlugins: [],
-    
+
     // Edge Runtime compatibility
     serverComponentsExternalPackages: ['winston'],
-    
+
     // Hot reload improvements
     webVitalsAttribution: ['CLS', 'LCP'],
   },
@@ -118,7 +118,7 @@ const nextConfig = {
   },
 
   // Simplified webpack configuration for deployment
-  webpack: (config) => {
+  webpack: config => {
     // Add any Node.js polyfills if needed
     config.resolve.fallback = {
       ...config.resolve.fallback,
@@ -126,7 +126,7 @@ const nextConfig = {
       net: false,
       tls: false,
     };
-    
+
     return config;
   },
 
@@ -191,7 +191,7 @@ if (process.env.NODE_ENV === 'production') {
       exclude: ['error', 'warn'],
     },
   };
-  
+
   // Bundle analyzer (optional)
   if (process.env.ANALYZE === 'true') {
     const withBundleAnalyzer = require('@next/bundle-analyzer')({

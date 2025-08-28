@@ -27,6 +27,9 @@ yarn-error.log*
 
 # local env files
 .env*.local
+.env
+.env.production
+.env.staging
 
 # vercel
 .vercel
@@ -53,3 +56,32 @@ lerna-debug.log*
 
 # Railway
 .railway
+
+# Security - Never commit these
+*.pem
+*.key
+*.crt
+credentials.json
+secrets.json
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Cache directories
+.cache/
+.parcel-cache/
+.eslintcache
+
+# OS generated files
+Thumbs.db
+ehthumbs.db
+
+# MCP sensitive configs
+mcp.config.local.json
+
+# Backup files
+*.bak
+*.backup
+*.tmp

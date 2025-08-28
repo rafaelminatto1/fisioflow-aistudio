@@ -11,38 +11,38 @@ graph TB
         B[React Components]
         C[State Management]
     end
-    
+
     subgraph "API Layer"
         D[API Routes]
         E[Middleware]
         F[Authentication]
     end
-    
+
     subgraph "Business Logic"
         G[Services]
         H[Validators]
         I[Utils]
     end
-    
+
     subgraph "Data Access Layer"
         J[Prisma Client]
         K[Connection Pool]
         L[Query Builder]
     end
-    
+
     subgraph "Neon Infrastructure"
         M[Neon Proxy]
         N[Compute Nodes]
         O[Storage Layer]
         P[Branching System]
     end
-    
+
     subgraph "External Services"
         Q[Redis Cache]
         R[File Storage]
         S[Monitoring]
     end
-    
+
     A --> D
     B --> D
     C --> D
@@ -58,7 +58,7 @@ graph TB
     M --> N
     N --> O
     N --> P
-    
+
     D --> Q
     D --> R
     G --> S
@@ -81,7 +81,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     FISIOTERAPEUTAS {
         uuid id PK
         varchar nome
@@ -93,7 +93,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     CONSULTAS {
         uuid id PK
         uuid paciente_id FK
@@ -107,7 +107,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     PRONTUARIOS {
         uuid id PK
         uuid paciente_id FK
@@ -120,7 +120,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     EXERCICIOS {
         uuid id PK
         varchar nome
@@ -134,7 +134,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     PRESCRICOES_EXERCICIOS {
         uuid id PK
         uuid paciente_id FK
@@ -151,7 +151,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     EXECUCOES_EXERCICIOS {
         uuid id PK
         uuid prescricao_id FK
@@ -165,7 +165,7 @@ erDiagram
         json dados_sensores
         timestamp created_at
     }
-    
+
     AGENDAMENTOS {
         uuid id PK
         uuid paciente_id FK
@@ -179,7 +179,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     PAGAMENTOS {
         uuid id PK
         uuid consulta_id FK
@@ -194,7 +194,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     AUDIT_LOGS {
         uuid id PK
         varchar tabela
@@ -207,7 +207,7 @@ erDiagram
         varchar user_agent
         timestamp created_at
     }
-    
+
     PACIENTES ||--o{ CONSULTAS : "tem"
     FISIOTERAPEUTAS ||--o{ CONSULTAS : "realiza"
     FISIOTERAPEUTAS ||--o{ PACIENTES : "atende"
@@ -256,12 +256,12 @@ model Consultas {
   tipoConsulta      String   @db.VarChar(50)
   createdAt         DateTime @default(now()) @db.Timestamptz
   updatedAt         DateTime @updatedAt @db.Timestamptz
-  
+
   paciente          Pacientes @relation(fields: [pacienteId], references: [id])
   fisioterapeuta    Fisioterapeutas @relation(fields: [fisioterapeutaId], references: [id])
   prontuarios       Prontuarios[]
   pagamentos        Pagamentos[]
-  
+
   @@index([pacienteId, dataConsulta(sort: Desc)])
   @@index([fisioterapeutaId])
   @@index([status, createdAt(sort: Desc)])
@@ -279,12 +279,12 @@ model Fisioterapeutas {
   status        String   @default("ativo") @db.VarChar(20)
   createdAt     DateTime @default(now()) @db.Timestamptz
   updatedAt     DateTime @updatedAt @db.Timestamptz
-  
+
   pacientes     Pacientes[]
   consultas     Consultas[]
   prescricoes   PrescricoesExercicios[]
   agendamentos  Agendamentos[]
-  
+
   @@index([status])
   @@index([especialidade])
   @@map("fisioterapeutas")
@@ -297,7 +297,7 @@ view ConsultasAnalytics {
   totalConsultas    Int
   receitaTotal      Decimal
   fisioterapeutaId  String
-  
+
   @@map("vw_consultas_analytics")
   @@schema("analytics")
 }
@@ -319,8 +319,8 @@ const neonConfig = {
   connectionTimeoutMillis: parseInt(process.env.DATABASE_POOL_TIMEOUT || '30000'),
   allowExitOnIdle: true,
   ssl: {
-    rejectUnauthorized: false
-  }
+    rejectUnauthorized: false,
+  },
 };
 
 const pool = new Pool(neonConfig);
@@ -331,11 +331,12 @@ const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
 
-export const prisma = globalForPrisma.prisma ??
+export const prisma =
+  globalForPrisma.prisma ??
   new PrismaClient({
     adapter,
     log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
-    errorFormat: 'pretty'
+    errorFormat: 'pretty',
   });
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma;
@@ -346,25 +347,25 @@ export async function checkNeonHealth() {
     const start = Date.now();
     await prisma.$queryRaw`SELECT 1`;
     const latency = Date.now() - start;
-    
+
     const stats = await prisma.$queryRaw`
       SELECT 
         (SELECT count(*) FROM pg_stat_activity WHERE state = 'active') as active_connections,
         (SELECT count(*) FROM pg_stat_activity) as total_connections,
         pg_database_size(current_database()) as database_size
     `;
-    
+
     return {
       status: 'healthy',
       latency,
       connections: stats[0],
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   } catch (error) {
     return {
       status: 'unhealthy',
       error: error.message,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
   }
 }
@@ -442,22 +443,23 @@ import { NextRequest, NextResponse } from 'next/server';
 
 const NEON_API_BASE = 'https://console.neon.tech/api/v2';
 const headers = {
-  'Authorization': `Bearer ${process.env.NEON_API_KEY}`,
-  'Content-Type': 'application/json'
+  Authorization: `Bearer ${process.env.NEON_API_KEY}`,
+  'Content-Type': 'application/json',
 };
 
 // Criar branch
 export async function POST(request: NextRequest) {
   try {
     const { name, purpose, parentBranchId } = await request.json();
-    
-    const computeUnits = {
-      'production': 2,
-      'staging': 1,
-      'development': 0.25,
-      'testing': 0.25
-    }[purpose] || 0.25;
-    
+
+    const computeUnits =
+      {
+        production: 2,
+        staging: 1,
+        development: 0.25,
+        testing: 0.25,
+      }[purpose] || 0.25;
+
     const response = await fetch(
       `${NEON_API_BASE}/projects/${process.env.NEON_PROJECT_ID}/branches`,
       {
@@ -467,13 +469,13 @@ export async function POST(request: NextRequest) {
           name,
           parent_id: parentBranchId || process.env.NEON_MAIN_BRANCH_ID,
           compute_units: computeUnits,
-          auto_suspend_delay_seconds: purpose === 'production' ? 300 : 60
-        })
+          auto_suspend_delay_seconds: purpose === 'production' ? 300 : 60,
+        }),
       }
     );
-    
+
     const branch = await response.json();
-    
+
     return NextResponse.json({
       success: true,
       branch: {
@@ -481,14 +483,11 @@ export async function POST(request: NextRequest) {
         name: branch.name,
         connectionString: branch.connection_string,
         computeUnits: branch.compute_units,
-        createdAt: branch.created_at
-      }
+        createdAt: branch.created_at,
+      },
     });
   } catch (error) {
-    return NextResponse.json(
-      { success: false, error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
@@ -499,9 +498,9 @@ export async function GET() {
       `${NEON_API_BASE}/projects/${process.env.NEON_PROJECT_ID}/branches`,
       { headers }
     );
-    
+
     const data = await response.json();
-    
+
     return NextResponse.json({
       branches: data.branches.map(branch => ({
         id: branch.id,
@@ -509,14 +508,11 @@ export async function GET() {
         parentId: branch.parent_id,
         computeUnits: branch.compute_units,
         status: branch.status,
-        createdAt: branch.created_at
-      }))
+        createdAt: branch.created_at,
+      })),
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 ```
@@ -532,20 +528,17 @@ export async function GET() {
     const [dbMetrics, connectionMetrics, performanceMetrics] = await Promise.all([
       getDatabaseMetrics(),
       getConnectionMetrics(),
-      getPerformanceMetrics()
+      getPerformanceMetrics(),
     ]);
-    
+
     return NextResponse.json({
       database: dbMetrics,
       connections: connectionMetrics,
       performance: performanceMetrics,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    return NextResponse.json(
-      { error: error.message },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
@@ -556,7 +549,7 @@ async function getDatabaseMetrics() {
       (SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public') as table_count,
       (SELECT count(*) FROM pg_stat_user_indexes) as index_count
   `;
-  
+
   return result[0];
 }
 
@@ -570,7 +563,7 @@ async function getConnectionMetrics() {
     FROM pg_stat_activity 
     WHERE pid <> pg_backend_pid()
   `;
-  
+
   return result[0];
 }
 
@@ -583,7 +576,7 @@ async function getPerformanceMetrics() {
       (SELECT sum(shared_blks_hit) / (sum(shared_blks_hit) + sum(shared_blks_read)) * 100 
        FROM pg_stat_statements) as cache_hit_ratio
   `;
-  
+
   return result[0];
 }
 ```
@@ -609,19 +602,19 @@ class NeonDashboard {
       this.getComputeMetrics(),
       this.getStorageMetrics(),
       this.getConnectionMetrics(),
-      this.getPerformanceMetrics()
+      this.getPerformanceMetrics(),
     ]);
-    
+
     return {
       computeUnits: compute.current_cu,
       storageUsed: storage.used_bytes,
       activeConnections: connections.active,
       queryLatency: performance.avg_latency,
       cacheHitRatio: performance.cache_hit_ratio,
-      errorRate: performance.error_rate
+      errorRate: performance.error_rate,
     };
   }
-  
+
   async getSlowQueries(limit: number = 10) {
     return await prisma.$queryRaw`
       SELECT 
@@ -638,7 +631,7 @@ class NeonDashboard {
       LIMIT ${limit}
     `;
   }
-  
+
   async getTableStats() {
     return await prisma.$queryRaw`
       SELECT 
@@ -681,7 +674,7 @@ class NeonAlertManager {
       threshold: 80,
       operator: '>',
       severity: 'high',
-      cooldownMinutes: 5
+      cooldownMinutes: 5,
     },
     {
       name: 'High Query Latency',
@@ -689,7 +682,7 @@ class NeonAlertManager {
       threshold: 1000,
       operator: '>',
       severity: 'medium',
-      cooldownMinutes: 10
+      cooldownMinutes: 10,
     },
     {
       name: 'Low Cache Hit Ratio',
@@ -697,7 +690,7 @@ class NeonAlertManager {
       threshold: 90,
       operator: '<',
       severity: 'medium',
-      cooldownMinutes: 15
+      cooldownMinutes: 15,
     },
     {
       name: 'High Error Rate',
@@ -705,47 +698,48 @@ class NeonAlertManager {
       threshold: 5,
       operator: '>',
       severity: 'critical',
-      cooldownMinutes: 2
-    }
+      cooldownMinutes: 2,
+    },
   ];
-  
+
   async checkAlerts() {
     const metrics = await new NeonDashboard().getMetrics();
     const triggeredAlerts = [];
-    
+
     for (const rule of this.rules) {
       if (this.isInCooldown(rule)) continue;
-      
+
       const value = metrics[rule.metric];
       const triggered = this.evaluateRule(value, rule);
-      
+
       if (triggered) {
         triggeredAlerts.push({
           rule,
           value,
-          timestamp: new Date()
+          timestamp: new Date(),
         });
-        
+
         await this.sendAlert(rule, value);
         this.setCooldown(rule);
       }
     }
-    
+
     return triggeredAlerts;
   }
-  
+
   private async sendAlert(rule: AlertRule, value: number) {
-    const message = `🚨 Alert: ${rule.name}\n` +
-                   `Metric: ${rule.metric}\n` +
-                   `Current Value: ${value}\n` +
-                   `Threshold: ${rule.operator} ${rule.threshold}\n` +
-                   `Severity: ${rule.severity.toUpperCase()}`;
-    
+    const message =
+      `🚨 Alert: ${rule.name}\n` +
+      `Metric: ${rule.metric}\n` +
+      `Current Value: ${value}\n` +
+      `Threshold: ${rule.operator} ${rule.threshold}\n` +
+      `Severity: ${rule.severity.toUpperCase()}`;
+
     // Enviar para Slack, Discord, email, etc.
-     await this.sendToSlack(message);
-     await this.sendEmail(rule, value);
-   }
- }
+    await this.sendToSlack(message);
+    await this.sendEmail(rule, value);
+  }
+}
 ```
 
 ## 5. Deployment e CI/CD
@@ -769,24 +763,24 @@ env:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    
+
     strategy:
       matrix:
         environment: [development, staging, production]
-        
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-          
+
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Create Neon Branch
         id: create-branch
         run: |
@@ -799,27 +793,27 @@ jobs:
               \"name\": \"$BRANCH_NAME\",
               \"parent_id\": \"${{ secrets.NEON_MAIN_BRANCH_ID }}\"
             }")
-          
+
           BRANCH_ID=$(echo $RESPONSE | jq -r '.id')
           CONNECTION_STRING=$(echo $RESPONSE | jq -r '.connection_string')
-          
+
           echo "branch_id=$BRANCH_ID" >> $GITHUB_OUTPUT
           echo "connection_string=$CONNECTION_STRING" >> $GITHUB_OUTPUT
-          
+
       - name: Run Database Migrations
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.connection_string }}
         run: |
           npx prisma migrate deploy
           npx prisma generate
-          
+
       - name: Run Tests
         env:
           DATABASE_URL: ${{ steps.create-branch.outputs.connection_string }}
         run: |
           npm run test:integration
           npm run test:e2e
-          
+
       - name: Deploy to Vercel
         if: success()
         env:
@@ -827,12 +821,12 @@ jobs:
           NEON_DATABASE_URL: ${{ steps.create-branch.outputs.connection_string }}
         run: |
           npx vercel --prod --token $VERCEL_TOKEN
-          
+
       - name: Health Check
         run: |
           sleep 30
           curl -f ${{ secrets.APP_URL }}/api/health || exit 1
-          
+
       - name: Cleanup on Failure
         if: failure()
         run: |
@@ -860,102 +854,100 @@ interface DeploymentConfig {
 
 class NeonDeployment {
   private config: DeploymentConfig;
-  
+
   constructor(config: DeploymentConfig) {
     this.config = config;
   }
-  
+
   async deploy(): Promise<void> {
     console.log(`🚀 Iniciando deployment para ${this.config.environment}`);
-    
+
     try {
       // 1. Criar branch se necessário
       const branch = await this.createBranch();
-      
+
       // 2. Executar migrações
       if (this.config.runMigrations) {
         await this.runMigrations(branch.connectionString);
       }
-      
+
       // 3. Executar seeds
       if (this.config.runSeeds) {
         await this.runSeeds(branch.connectionString);
       }
-      
+
       // 4. Executar testes
       await this.runTests(branch.connectionString);
-      
+
       // 5. Deploy da aplicação
       await this.deployApplication(branch.connectionString);
-      
+
       // 6. Health check
       await this.healthCheck();
-      
+
       console.log('✅ Deployment concluído com sucesso!');
-      
     } catch (error) {
       console.error('❌ Erro no deployment:', error);
       throw error;
     }
   }
-  
+
   private async createBranch() {
-    const branchName = this.config.branchName || 
-      `${this.config.environment}-${Date.now()}`;
-    
+    const branchName = this.config.branchName || `${this.config.environment}-${Date.now()}`;
+
     const response = await fetch(
       `https://console.neon.tech/api/v2/projects/${process.env.NEON_PROJECT_ID}/branches`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.NEON_API_KEY}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${process.env.NEON_API_KEY}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: branchName,
-          parent_id: this.config.parentBranchId || process.env.NEON_MAIN_BRANCH_ID
-        })
+          parent_id: this.config.parentBranchId || process.env.NEON_MAIN_BRANCH_ID,
+        }),
       }
     );
-    
+
     return await response.json();
   }
-  
+
   private async runMigrations(connectionString: string) {
     console.log('📦 Executando migrações...');
-    
+
     process.env.DATABASE_URL = connectionString;
     await execAsync('npx prisma migrate deploy');
     await execAsync('npx prisma generate');
   }
-  
+
   private async runSeeds(connectionString: string) {
     console.log('🌱 Executando seeds...');
-    
+
     process.env.DATABASE_URL = connectionString;
     await execAsync('npx prisma db seed');
   }
-  
+
   private async runTests(connectionString: string) {
     console.log('🧪 Executando testes...');
-    
+
     process.env.DATABASE_URL = connectionString;
     await execAsync('npm run test:integration');
   }
-  
+
   private async deployApplication(connectionString: string) {
     console.log('🚀 Fazendo deploy da aplicação...');
-    
+
     process.env.NEON_DATABASE_URL = connectionString;
     await execAsync('npx vercel --prod');
   }
-  
+
   private async healthCheck() {
     console.log('🏥 Verificando saúde da aplicação...');
-    
+
     const maxAttempts = 10;
     const delay = 5000;
-    
+
     for (let i = 0; i < maxAttempts; i++) {
       try {
         const response = await fetch(`${process.env.APP_URL}/api/health`);
@@ -966,10 +958,10 @@ class NeonDeployment {
       } catch (error) {
         console.log(`⏳ Tentativa ${i + 1}/${maxAttempts} falhou, tentando novamente...`);
       }
-      
+
       await new Promise(resolve => setTimeout(resolve, delay));
     }
-    
+
     throw new Error('Health check falhou após múltiplas tentativas');
   }
 }
@@ -993,27 +985,27 @@ interface ScalingPolicy {
 class NeonAutoScaler {
   private policy: ScalingPolicy;
   private lastScaleAction: Date;
-  
+
   constructor(policy: ScalingPolicy) {
     this.policy = policy;
     this.lastScaleAction = new Date(0);
   }
-  
+
   async evaluateScaling(): Promise<void> {
     const now = new Date();
     const timeSinceLastAction = now.getTime() - this.lastScaleAction.getTime();
     const cooldownMs = this.policy.cooldownPeriodMinutes * 60 * 1000;
-    
+
     if (timeSinceLastAction < cooldownMs) {
       console.log('⏳ Ainda em período de cooldown');
       return;
     }
-    
+
     const metrics = await this.getCurrentMetrics();
     const currentCU = await this.getCurrentComputeUnits();
-    
+
     console.log(`📊 Métricas atuais: CPU ${metrics.cpuUtilization}%, CU ${currentCU}`);
-    
+
     if (metrics.cpuUtilization > this.policy.scaleUpThreshold) {
       const newCU = Math.min(currentCU * 2, this.policy.maxComputeUnits);
       if (newCU > currentCU) {
@@ -1030,50 +1022,49 @@ class NeonAutoScaler {
       }
     }
   }
-  
+
   private async getCurrentMetrics() {
     const result = await prisma.$queryRaw`
       SELECT 
         (SELECT count(*) FROM pg_stat_activity WHERE state = 'active') as active_connections,
         (SELECT avg(mean_exec_time) FROM pg_stat_statements WHERE calls > 10) as avg_query_time
     `;
-    
+
     // Simular CPU utilization baseado em conexões ativas e tempo de query
     const cpuUtilization = Math.min(
-      (result[0].active_connections / 100) * 100 + 
-      (result[0].avg_query_time / 1000) * 10,
+      (result[0].active_connections / 100) * 100 + (result[0].avg_query_time / 1000) * 10,
       100
     );
-    
+
     return { cpuUtilization };
   }
-  
+
   private async getCurrentComputeUnits(): Promise<number> {
     const response = await fetch(
       `https://console.neon.tech/api/v2/projects/${process.env.NEON_PROJECT_ID}/endpoints`,
       {
         headers: {
-          'Authorization': `Bearer ${process.env.NEON_API_KEY}`
-        }
+          Authorization: `Bearer ${process.env.NEON_API_KEY}`,
+        },
       }
     );
-    
+
     const data = await response.json();
     return data.endpoints[0].compute_units;
   }
-  
+
   private async scaleCompute(computeUnits: number): Promise<void> {
     await fetch(
       `https://console.neon.tech/api/v2/projects/${process.env.NEON_PROJECT_ID}/endpoints/${process.env.NEON_ENDPOINT_ID}`,
       {
         method: 'PATCH',
         headers: {
-          'Authorization': `Bearer ${process.env.NEON_API_KEY}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${process.env.NEON_API_KEY}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          compute_units: computeUnits
-        })
+          compute_units: computeUnits,
+        }),
       }
     );
   }
@@ -1088,51 +1079,51 @@ class NeonReadReplicaManager {
   private readReplicas: string[] = [];
   private writeConnection: string;
   private currentReplicaIndex = 0;
-  
+
   constructor(writeConnection: string) {
     this.writeConnection = writeConnection;
   }
-  
+
   async createReadReplica(name: string): Promise<string> {
     const response = await fetch(
       `https://console.neon.tech/api/v2/projects/${process.env.NEON_PROJECT_ID}/branches`,
       {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.NEON_API_KEY}`,
-          'Content-Type': 'application/json'
+          Authorization: `Bearer ${process.env.NEON_API_KEY}`,
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           name: `${name}-read-replica`,
           parent_id: process.env.NEON_MAIN_BRANCH_ID,
           compute_units: 1,
-          read_only: true
-        })
+          read_only: true,
+        }),
       }
     );
-    
+
     const replica = await response.json();
     this.readReplicas.push(replica.connection_string);
-    
+
     console.log(`📖 Read replica criada: ${replica.name}`);
     return replica.id;
   }
-  
+
   getReadConnection(): string {
     if (this.readReplicas.length === 0) {
       return this.writeConnection;
     }
-    
+
     const connection = this.readReplicas[this.currentReplicaIndex];
     this.currentReplicaIndex = (this.currentReplicaIndex + 1) % this.readReplicas.length;
-    
+
     return connection;
   }
-  
+
   getWriteConnection(): string {
     return this.writeConnection;
   }
-  
+
   async healthCheckReplicas(): Promise<void> {
     const healthChecks = this.readReplicas.map(async (replica, index) => {
       try {
@@ -1145,15 +1136,15 @@ class NeonReadReplicaManager {
         return { index, status: 'unhealthy' };
       }
     });
-    
+
     const results = await Promise.all(healthChecks);
-    
+
     // Remover replicas não saudáveis
     const unhealthyIndexes = results
       .filter(r => r.status === 'unhealthy')
       .map(r => r.index)
       .sort((a, b) => b - a); // Ordem decrescente para remoção segura
-    
+
     unhealthyIndexes.forEach(index => {
       this.readReplicas.splice(index, 1);
     });
@@ -1173,70 +1164,60 @@ class NeonReadReplicaManager {
 
 ### 7.2 Métricas de Sucesso
 
-* **Latência**: < 50ms para 95% das queries
+- **Latência**: < 50ms para 95% das queries
 
-* **Throughput**: > 2000 QPS
+- **Throughput**: > 2000 QPS
 
-* **Disponibilidade**: 99.95% uptime
+- **Disponibilidade**: 99.95% uptime
 
-* **Escalabilidade**: Auto-scaling em < 30 segundos
+- **Escalabilidade**: Auto-scaling em < 30 segundos
 
-* **Custo**: Redução de 40% comparado a soluções tradicionais
+- **Custo**: Redução de 40% comparado a soluções tradicionais
 
 ### 7.3 Roadmap de Implementação
 
 **Fase 1 (Semanas 1-2)**: Configuração inicial
 
-* Setup do projeto Neon
+- Setup do projeto Neon
 
-* Configuração de branches
+- Configuração de branches
 
-* Migração do schema
+- Migração do schema
 
 **Fase 2 (Semanas 3-4)**: Migração de dados
 
-* Backup e migração incremental
+- Backup e migração incremental
 
-* Testes de integridade
+- Testes de integridade
 
-* Configuração de RLS
+- Configuração de RLS
 
 **Fase 3 (Semanas 5-6)**: Integração e APIs
 
-* Implementação de APIs de gerenciamento
+- Implementação de APIs de gerenciamento
 
-* Sistema de monitoramento
+- Sistema de monitoramento
 
-* Auto-scaling
+- Auto-scaling
 
 **Fase 4 (Semanas 7-8)**: Deploy e otimização
 
-* CI/CD com Neon
+- CI/CD com Neon
 
-* Testes de carga
+- Testes de carga
 
-* Otimizações de performance
+- Otimizações de performance
 
-Esta arquitetura garante uma solução robusta, escalável e custo-efetiva para o FisioFlow, aproveitando ao máximo as capacidades serverless do Neon DB.
+Esta arquitetura garante uma solução robusta, escalável e custo-efetiva para o FisioFlow,
+aproveitando ao máximo as capacidades serverless do Neon DB.
 
-// Configuração para particionamento por hash
-model Pacientes {
-id                String   @id @default(dbgenerated("gen\_random\_uuid()")) @db.Uuid
-nome              String   @db.VarChar(255)
-email             String?  @unique @db.VarChar(255)
-telefone          String?  @db.VarChar(20)
-dataNascimento    DateTime? @db.Date
-cpf               String?  @unique @db.VarChar(14)
-endereco          String?  @db.Text
-status            String   @default("ativo") @db.VarChar(20)
-fisioterapeutaId  String?  @db.Uuid
-createdAt         DateTime @default(now()) @db.Timestamptz
-updatedAt         DateTime @updatedAt @db.Timestamptz
+// Configuração para particionamento por hash model Pacientes { id String @id
+@default(dbgenerated("gen_random_uuid()")) @db.Uuid nome String @db.VarChar(255) email String?
+@unique @db.VarChar(255) telefone String? @db.VarChar(20) dataNascimento DateTime? @db.Date cpf
+String? @unique @db.VarChar(14) endereco String? @db.Text status String @default("ativo")
+@db.VarChar(20) fisioterapeutaId String? @db.Uuid createdAt DateTime @default(now()) @db.Timestamptz
+updatedAt DateTime @updatedAt @db.Timestamptz
 
-fisioterapeuta    Fisioterapeutas? @relation(fields: \[fisioterapeutaId], references: \[id])
-consultas         Consultas\[]
-prontuarios       Prontuarios\[]
-prescricoes       PrescricoesExercicios\[]
-execucoes         ExecucoesExercicios\[]
-agendamentos      Agendamentos\[]
-pagamentos        Pag
+fisioterapeuta Fisioterapeutas? @relation(fields: \[fisioterapeutaId], references: \[id]) consultas
+Consultas\[] prontuarios Prontuarios\[] prescricoes PrescricoesExercicios\[] execucoes
+ExecucoesExercicios\[] agendamentos Agendamentos\[] pagamentos Pag

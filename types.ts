@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 // --- User & Auth Types ---
@@ -20,7 +19,7 @@ export interface User {
 }
 
 export interface Therapist {
-  id:string;
+  id: string;
   name: string;
   color: string; // e.g., 'teal', 'sky', 'indigo'
   avatarUrl: string;
@@ -51,10 +50,10 @@ export interface MetricResult {
 }
 
 export interface PatientAttachment {
-    name: string;
-    url: string;
-    type: string;
-    size: number;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
 }
 
 export interface CommunicationLog {
@@ -85,7 +84,7 @@ export interface Patient {
   email: string;
   emergencyContact: {
     name: string;
-    phone:string;
+    phone: string;
   };
   address: {
     street: string;
@@ -112,8 +111,8 @@ export interface Patient {
 export type AlertType = 'abandonment' | 'highRisk' | 'attention';
 
 export interface AlertPatient extends Patient {
-    alertReason: string;
-    alertType: AlertType;
+  alertReason: string;
+  alertType: AlertType;
 }
 
 export interface PatientSummary {
@@ -134,32 +133,31 @@ export enum AppointmentStatus {
   Scheduled = 'Agendado',
   Completed = 'Realizado',
   Canceled = 'Cancelado',
-  NoShow = 'Faltou'
+  NoShow = 'Faltou',
 }
 
 export enum AppointmentType {
-    Evaluation = 'Avaliação',
-    Session = 'Sessão',
-    Return = 'Retorno',
-    Pilates = 'Pilates',
-    Urgent = 'Urgente',
-    Teleconsulta = 'Teleconsulta',
+  Evaluation = 'Avaliação',
+  Session = 'Sessão',
+  Return = 'Retorno',
+  Pilates = 'Pilates',
+  Urgent = 'Urgente',
+  Teleconsulta = 'Teleconsulta',
 }
 
 export const AppointmentTypeColors: Record<string, string> = {
-    [AppointmentType.Evaluation]: 'purple',
-    [AppointmentType.Session]: 'emerald',
-    [AppointmentType.Return]: 'blue',
-    [AppointmentType.Pilates]: 'amber',
-    [AppointmentType.Urgent]: 'red',
-    [AppointmentType.Teleconsulta]: 'cyan',
+  [AppointmentType.Evaluation]: 'purple',
+  [AppointmentType.Session]: 'emerald',
+  [AppointmentType.Return]: 'blue',
+  [AppointmentType.Pilates]: 'amber',
+  [AppointmentType.Urgent]: 'red',
+  [AppointmentType.Teleconsulta]: 'cyan',
 };
 
-
 export interface RecurrenceRule {
-    frequency: 'weekly';
-    days: number[]; // 0=Sun, 1=Mon, ...
-    until: string; // YYYY-MM-DD
+  frequency: 'weekly';
+  days: number[]; // 0=Sun, 1=Mon, ...
+  until: string; // YYYY-MM-DD
 }
 
 export interface Appointment {
@@ -183,10 +181,10 @@ export interface Appointment {
 }
 
 export interface EnrichedAppointment extends Appointment {
-    therapistColor: string;
-    typeColor: string;
-    patientPhone: string;
-    patientMedicalAlerts?: string;
+  therapistColor: string;
+  typeColor: string;
+  patientPhone: string;
+  patientMedicalAlerts?: string;
 }
 
 export interface AvailabilityBlock {
@@ -198,10 +196,19 @@ export interface AvailabilityBlock {
 }
 
 export interface AppointmentHeatmapData {
-    day: string;
-    '8h': number; '9h': number; '10h': number; '11h': number;
-    '12h': number; '13h': number; '14h': number; '15h': number;
-    '16h': number; '17h': number; '18h': number; '19h': number;
+  day: string;
+  '8h': number;
+  '9h': number;
+  '10h': number;
+  '11h': number;
+  '12h': number;
+  '13h': number;
+  '14h': number;
+  '15h': number;
+  '16h': number;
+  '17h': number;
+  '18h': number;
+  '19h': number;
 }
 
 // --- Scheduling Settings Types ---
@@ -224,7 +231,6 @@ export interface SchedulingSettings {
   teleconsultaEnabled: boolean;
 }
 
-
 // --- Clinical & Documentation Types ---
 
 export interface SoapNote {
@@ -239,7 +245,7 @@ export interface SoapNote {
   plan: string;
   bodyParts?: string[];
   painScale?: number;
-  attachments?: { name: string; url: string; }[];
+  attachments?: { name: string; url: string }[];
   metricResults?: MetricResult[];
 }
 
@@ -257,14 +263,14 @@ export interface TreatmentPlan {
 }
 
 export interface ExercisePrescription {
-    id: string;
-    treatmentPlanId: string;
-    exerciseName: string;
-    sets: number;
-    repetitions: string; // Can be "15" or "30s"
-    resistanceLevel: string;
-    progressionCriteria: string;
-    demonstrationVideoUrl?: string;
+  id: string;
+  treatmentPlanId: string;
+  exerciseName: string;
+  sets: number;
+  repetitions: string; // Can be "15" or "30s"
+  resistanceLevel: string;
+  progressionCriteria: string;
+  demonstrationVideoUrl?: string;
 }
 
 export interface AuditLogEntry {
@@ -331,7 +337,10 @@ export interface Exercise {
 
 export interface ClinicalMaterialData {
   nome_material: string;
-  tipo_material: 'Escala de Avaliação' | 'Protocolo Clínico' | 'Material de Orientação';
+  tipo_material:
+    | 'Escala de Avaliação'
+    | 'Protocolo Clínico'
+    | 'Material de Orientação';
 }
 
 export interface MedicalReport {
@@ -347,7 +356,6 @@ export interface MedicalReport {
   generatedAt: Date;
   finalizedAt?: Date;
 }
-
 
 // --- Group & Gamification Types ---
 
@@ -474,11 +482,11 @@ export type Achievement = {
 };
 
 export interface GamificationProgress {
-    points: number;
-    level: number;
-    xpForNextLevel: number;
-    streak: number;
-    achievements: Achievement[];
+  points: number;
+  level: number;
+  xpForNextLevel: number;
+  streak: number;
+  achievements: Achievement[];
 }
 
 // --- UI & General Types ---
@@ -507,7 +515,11 @@ export interface Notification {
   message: string;
   isRead: boolean;
   createdAt: Date;
-  type: 'task_assigned' | 'announcement' | 'appointment_reminder' | 'exercise_reminder';
+  type:
+    | 'task_assigned'
+    | 'announcement'
+    | 'appointment_reminder'
+    | 'exercise_reminder';
 }
 
 export interface RecentActivity {
@@ -593,8 +605,8 @@ export interface Voucher {
 }
 
 export interface PartnershipClient {
-    patient: Patient;
-    voucher: Voucher;
+  patient: Patient;
+  voucher: Voucher;
 }
 
 export interface Partner {
@@ -622,10 +634,10 @@ export interface FinancialSummary {
 }
 
 export interface CommissionBreakdown {
-    grossAmount: number;
-    platformFee: number;
-    taxAmount: number;
-    netAmount: number;
+  grossAmount: number;
+  platformFee: number;
+  taxAmount: number;
+  netAmount: number;
 }
 
 export interface Transaction {
@@ -641,13 +653,13 @@ export interface Transaction {
 // --- AI System Types ---
 
 export enum AIProvider {
-    CACHE = 'Cache',
-    INTERNAL_KB = 'Base de Conhecimento',
-    GEMINI = 'Google Gemini Pro',
-    CHATGPT = 'ChatGPT Plus',
-    CLAUDE = 'Claude Pro',
-    PERPLEXITY = 'Perplexity Pro',
-    MARS = 'Mars AI Pro',
+  CACHE = 'Cache',
+  INTERNAL_KB = 'Base de Conhecimento',
+  GEMINI = 'Google Gemini Pro',
+  CHATGPT = 'ChatGPT Plus',
+  CLAUDE = 'Claude Pro',
+  PERPLEXITY = 'Perplexity Pro',
+  MARS = 'Mars AI Pro',
 }
 
 export interface AIResponse {
@@ -656,13 +668,12 @@ export interface AIResponse {
 }
 
 export interface AIQueryLog {
-    id: number;
-    prompt: string;
-    content: string;
-    source: AIProvider;
-    timestamp: Date;
+  id: number;
+  prompt: string;
+  content: string;
+  source: AIProvider;
+  timestamp: Date;
 }
-
 
 export interface KnowledgeBaseEntry {
   id: string;
@@ -675,14 +686,14 @@ export interface KnowledgeBaseEntry {
 // --- WhatsApp Integration Types ---
 
 export interface WhatsappMessage {
-    id: string;
-    patientId: string;
-    patientName: string;
-    phone: string;
-    type: 'confirmation' | 'reminder' | 'hep' | 'chat';
-    content: string;
-    status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
-    createdAt: Date;
+  id: string;
+  patientId: string;
+  patientName: string;
+  phone: string;
+  type: 'confirmation' | 'reminder' | 'hep' | 'chat';
+  content: string;
+  status: 'sending' | 'sent' | 'delivered' | 'read' | 'failed';
+  createdAt: Date;
 }
 
 // --- Mentorship & Teaching Module Types ---
@@ -768,28 +779,28 @@ export interface StockMovement {
 }
 
 export enum InventoryAlertType {
-    LowStock = 'Estoque Baixo',
-    OutOfStock = 'Sem Estoque',
-    Expiring = 'Vencimento Próximo',
-    Expired = 'Vencido',
+  LowStock = 'Estoque Baixo',
+  OutOfStock = 'Sem Estoque',
+  Expiring = 'Vencimento Próximo',
+  Expired = 'Vencido',
 }
 
 export interface InventoryAlert {
-    id: string;
-    type: InventoryAlertType;
-    itemId: string;
-    itemName: string;
-    message: string;
-    severity: 'high' | 'critical';
-    createdAt: string; // ISO String
+  id: string;
+  type: InventoryAlertType;
+  itemId: string;
+  itemName: string;
+  message: string;
+  severity: 'high' | 'critical';
+  createdAt: string; // ISO String
 }
 
 export interface InventoryMetrics {
-    totalItems: number;
-    lowStockItems: number;
-    expiringSoon: number;
-    totalValue: number;
-    criticalAlerts: InventoryAlert[];
+  totalItems: number;
+  lowStockItems: number;
+  expiringSoon: number;
+  totalValue: number;
+  criticalAlerts: InventoryAlert[];
 }
 
 // --- Event Management Types ---
@@ -799,7 +810,7 @@ export enum EventType {
   Workshop = 'Workshop',
   Palestra = 'Palestra',
   Campanha = 'Campanha de Saúde',
-  Atendimento = 'Atendimento Externo'
+  Atendimento = 'Atendimento Externo',
 }
 
 export enum EventStatus {
@@ -807,21 +818,21 @@ export enum EventStatus {
   Published = 'Publicado',
   Active = 'Ativo',
   Completed = 'Concluído',
-  Cancelled = 'Cancelado'
+  Cancelled = 'Cancelado',
 }
 
 export enum RegistrationStatus {
   Pending = 'Pendente',
   Confirmed = 'Confirmado',
   Attended = 'Compareceu',
-  Cancelled = 'Cancelado'
+  Cancelled = 'Cancelado',
 }
 
 export enum ProviderStatus {
   Applied = 'Inscrito',
   Confirmed = 'Confirmado',
   Paid = 'Pago',
-  Cancelled = 'Cancelado'
+  Cancelled = 'Cancelado',
 }
 
 export interface Event {

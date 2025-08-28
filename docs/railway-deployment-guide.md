@@ -18,6 +18,7 @@
 ## 🚀 Pré-requisitos
 
 ### Contas e Serviços
+
 - [ ] Conta no [Railway](https://railway.app)
 - [ ] Conta no [Neon](https://neon.tech) (PostgreSQL)
 - [ ] Repositório GitHub configurado
@@ -56,6 +57,7 @@ railway login
    - Anote as credenciais de conexão
 
 2. **Configurar Connection Pooling:**
+
    ```sql
    -- No Neon Console, vá em Settings > Connection Pooling
    -- Habilite connection pooling
@@ -277,10 +279,12 @@ railway variables set ALERT_EMAIL "admin@fisioflow.com"
 #### 1. Build Falha
 
 **Sintomas:**
+
 - Deploy falha durante build
 - Erro "Module not found"
 
 **Soluções:**
+
 ```bash
 # Verificar dependências
 npm audit
@@ -298,10 +302,12 @@ docker build -t fisioflow .
 #### 2. Database Connection Error
 
 **Sintomas:**
+
 - Erro "connection refused"
 - Timeout de conexão
 
 **Soluções:**
+
 ```bash
 # Verificar URL do banco
 railway variables get DATABASE_URL
@@ -316,10 +322,12 @@ railway logs --filter "database"
 #### 3. Memory Leaks
 
 **Sintomas:**
+
 - Uso de memória crescente
 - Aplicação reiniciando
 
 **Soluções:**
+
 ```bash
 # Analisar uso de memória
 railway logs --filter "memory"
@@ -334,10 +342,12 @@ railway variables set RAILWAY_MAX_MEMORY 1024
 #### 4. Slow Response Times
 
 **Sintomas:**
+
 - Requests > 2s
 - Timeouts frequentes
 
 **Soluções:**
+
 ```bash
 # Verificar logs de performance
 railway logs --filter "performance"
@@ -596,24 +606,28 @@ docker image prune
 ## 📚 Referências
 
 ### Documentação Oficial
+
 - [Railway Docs](https://docs.railway.app)
 - [Neon Docs](https://neon.tech/docs)
 - [Next.js Deployment](https://nextjs.org/docs/deployment)
 - [Prisma Railway Guide](https://www.prisma.io/docs/guides/deployment/deployment-guides/deploying-to-railway)
 
 ### Recursos Úteis
+
 - [Railway Templates](https://railway.app/templates)
 - [Railway Discord](https://discord.gg/railway)
 - [Neon Community](https://community.neon.tech)
 - [Next.js Examples](https://github.com/vercel/next.js/tree/canary/examples)
 
 ### Monitoramento e Alertas
+
 - [Railway Metrics](https://railway.app/dashboard)
 - [Neon Monitoring](https://console.neon.tech)
 - [Uptime Robot](https://uptimerobot.com)
 - [Better Uptime](https://betteruptime.com)
 
 ### Ferramentas de Desenvolvimento
+
 - [Railway CLI](https://docs.railway.app/develop/cli)
 - [Prisma Studio](https://www.prisma.io/studio)
 - [pgAdmin](https://www.pgadmin.org)
@@ -634,6 +648,4 @@ Em caso de problemas:
 
 ---
 
-**Última atualização**: Janeiro 2024
-**Versão**: 1.0.0
-**Autor**: Equipe FisioFlow
+**Última atualização**: Janeiro 2024 **Versão**: 1.0.0 **Autor**: Equipe FisioFlow

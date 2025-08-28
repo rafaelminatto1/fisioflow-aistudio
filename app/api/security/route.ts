@@ -5,10 +5,15 @@ import { z } from 'zod';
 
 // Validation schemas
 const securityActionSchema = z.object({
-  action: z.enum(['enable_rls', 'disable_rls', 'check_permissions', 'log_event']),
+  action: z.enum([
+    'enable_rls',
+    'disable_rls',
+    'check_permissions',
+    'log_event',
+  ]),
   tableName: z.string().optional(),
   recordId: z.string().optional(),
-  metadata: z.record(z.any()).optional()
+  metadata: z.record(z.any()).optional(),
 });
 
 /**
@@ -18,7 +23,7 @@ const securityActionSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session || !securityUtils.isAdmin(session.user.role)) {
       await rlsSecurityManager.logSecurityEvent(
         'UNAUTHORIZED_ACCESS',
@@ -27,7 +32,7 @@ export async function GET(request: NextRequest) {
         { endpoint: '/api/security', method: 'GET' },
         request
       );
-      
+
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -57,29 +62,34 @@ export async function GET(request: NextRequest) {
 
       case 'all':
       default:
-        const [allMetrics, allPolicies, allRlsStatus, allAuditLogs] = await Promise.all([
-          rlsSecurityManager.getSecurityMetrics(),
-          rlsSecurityManager.getSecurityPolicies(),
-          rlsSecurityManager.checkRLSStatus(),
-          rlsSecurityManager.getAuditLogs(50)
-        ]);
+        const [allMetrics, allPolicies, allRlsStatus, allAuditLogs] =
+          await Promise.all([
+            rlsSecurityManager.getSecurityMetrics(),
+            rlsSecurityManager.getSecurityPolicies(),
+            rlsSecurityManager.checkRLSStatus(),
+            rlsSecurityManager.getAuditLogs(50),
+          ]);
 
         return NextResponse.json({
           metrics: allMetrics,
           policies: allPolicies,
           rlsStatus: allRlsStatus,
           auditLogs: allAuditLogs,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
     }
   } catch (error) {
     console.error('Security API GET error:', error);
-    
+
     await rlsSecurityManager.logSecurityEvent(
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'GET' },
+      {
+        error: error instanceof Error ? error.message : String(error),
+        endpoint: '/api/security',
+        method: 'GET',
+      },
       request
     );
 
@@ -97,7 +107,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session || !securityUtils.isAdmin(session.user.role)) {
       await rlsSecurityManager.logSecurityEvent(
         'UNAUTHORIZED_ACCESS',
@@ -106,7 +116,7 @@ export async function POST(request: NextRequest) {
         { endpoint: '/api/security', method: 'POST' },
         request
       );
-      
+
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -125,14 +135,15 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        
-        const enableResult = await rlsSecurityManager.enableRLSForTable(tableName);
-        
+
+        const enableResult =
+          await rlsSecurityManager.enableRLSForTable(tableName);
+
         if (enableResult) {
           return NextResponse.json({
             success: true,
             message: `RLS enabled for table ${tableName}`,
-            tableName
+            tableName,
           });
         } else {
           return NextResponse.json(
@@ -148,15 +159,16 @@ export async function POST(request: NextRequest) {
             { status: 400 }
           );
         }
-        
-        const disableResult = await rlsSecurityManager.disableRLSForTable(tableName);
-        
+
+        const disableResult =
+          await rlsSecurityManager.disableRLSForTable(tableName);
+
         if (disableResult) {
           return NextResponse.json({
             success: true,
             message: `RLS disabled for table ${tableName}`,
             tableName,
-            warning: 'RLS disabled - this may pose security risks'
+            warning: 'RLS disabled - this may pose security risks',
           });
         } else {
           return NextResponse.json(
@@ -168,23 +180,26 @@ export async function POST(request: NextRequest) {
       case 'check_permissions':
         if (!tableName || !recordId) {
           return NextResponse.json(
-            { error: 'Table name and record ID are required for check_permissions action' },
+            {
+              error:
+                'Table name and record ID are required for check_permissions action',
+            },
             { status: 400 }
           );
         }
-        
+
         const hasPermission = await rlsSecurityManager.validateUserPermission(
           session.user.id,
           'SELECT',
           tableName,
           recordId
         );
-        
+
         return NextResponse.json({
           hasPermission,
           userId: session.user.id,
           tableName,
-          recordId
+          recordId,
         });
 
       case 'log_event':
@@ -195,14 +210,14 @@ export async function POST(request: NextRequest) {
           {
             ...metadata,
             triggeredBy: session.user.id,
-            triggeredAt: new Date().toISOString()
+            triggeredAt: new Date().toISOString(),
           },
           request
         );
-        
+
         return NextResponse.json({
           success: true,
-          message: 'Security event logged successfully'
+          message: 'Security event logged successfully',
         });
 
       default:
@@ -213,7 +228,7 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('Security API POST error:', error);
-    
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { error: 'Invalid request data', details: error.errors },
@@ -225,7 +240,11 @@ export async function POST(request: NextRequest) {
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'POST' },
+      {
+        error: error instanceof Error ? error.message : String(error),
+        endpoint: '/api/security',
+        method: 'POST',
+      },
       request
     );
 
@@ -243,7 +262,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session || !securityUtils.isAdmin(session.user.role)) {
       await rlsSecurityManager.logSecurityEvent(
         'UNAUTHORIZED_ACCESS',
@@ -252,7 +271,7 @@ export async function PUT(request: NextRequest) {
         { endpoint: '/api/security', method: 'PUT' },
         request
       );
-      
+
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -270,7 +289,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const results = [];
-    
+
     for (const tableName of tables) {
       try {
         let result;
@@ -279,18 +298,18 @@ export async function PUT(request: NextRequest) {
         } else {
           result = await rlsSecurityManager.disableRLSForTable(tableName);
         }
-        
+
         results.push({
           tableName,
           success: result,
-          action: enableRLS ? 'enabled' : 'disabled'
+          action: enableRLS ? 'enabled' : 'disabled',
         });
       } catch (error) {
         results.push({
           tableName,
           success: false,
           error: error instanceof Error ? error.message : String(error),
-          action: enableRLS ? 'enable_failed' : 'disable_failed'
+          action: enableRLS ? 'enable_failed' : 'disable_failed',
         });
       }
     }
@@ -303,7 +322,7 @@ export async function PUT(request: NextRequest) {
         tables,
         enableRLS,
         results,
-        triggeredBy: session.user.id
+        triggeredBy: session.user.id,
       },
       request
     );
@@ -311,16 +330,20 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Bulk RLS ${enableRLS ? 'enable' : 'disable'} completed`,
-      results
+      results,
     });
   } catch (error) {
     console.error('Security API PUT error:', error);
-    
+
     await rlsSecurityManager.logSecurityEvent(
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'PUT' },
+      {
+        error: error instanceof Error ? error.message : String(error),
+        endpoint: '/api/security',
+        method: 'PUT',
+      },
       request
     );
 
@@ -338,7 +361,7 @@ export async function PUT(request: NextRequest) {
 export async function DELETE(request: NextRequest) {
   try {
     const session = await auth();
-    
+
     if (!session || !securityUtils.isAdmin(session.user.role)) {
       await rlsSecurityManager.logSecurityEvent(
         'UNAUTHORIZED_ACCESS',
@@ -347,7 +370,7 @@ export async function DELETE(request: NextRequest) {
         { endpoint: '/api/security', method: 'DELETE' },
         request
       );
-      
+
       return NextResponse.json(
         { error: 'Unauthorized. Admin access required.' },
         { status: 403 }
@@ -369,7 +392,7 @@ export async function DELETE(request: NextRequest) {
         {
           daysRetention: days,
           deletedRecords: result,
-          triggeredBy: session.user.id
+          triggeredBy: session.user.id,
         },
         request
       );
@@ -377,7 +400,7 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: `Cleared audit logs older than ${days} days`,
-        deletedRecords: result
+        deletedRecords: result,
       });
     }
 
@@ -387,12 +410,16 @@ export async function DELETE(request: NextRequest) {
     );
   } catch (error) {
     console.error('Security API DELETE error:', error);
-    
+
     await rlsSecurityManager.logSecurityEvent(
       'API_ERROR',
       'security_api',
       undefined,
-      { error: error instanceof Error ? error.message : String(error), endpoint: '/api/security', method: 'DELETE' },
+      {
+        error: error instanceof Error ? error.message : String(error),
+        endpoint: '/api/security',
+        method: 'DELETE',
+      },
       request
     );
 

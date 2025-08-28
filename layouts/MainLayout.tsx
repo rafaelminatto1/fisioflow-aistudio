@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import AiAssistant from '../components/AiAssistant';
@@ -25,17 +23,19 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     setShowDisclaimer(false);
   };
 
-
   return (
-    <div className="flex h-screen bg-slate-100">
+    <div className='flex h-screen bg-slate-100'>
       <Sidebar />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-8">
-            {children}
+      <main className='flex-1 flex flex-col overflow-hidden'>
+        <div className='flex-1 overflow-x-hidden overflow-y-auto p-6 lg:p-8'>
+          {children}
         </div>
         <ToastContainer />
         <AiAssistant />
-        <MedicalDisclaimerModal isOpen={showDisclaimer} onAgree={handleDisclaimerAgree} />
+        <MedicalDisclaimerModal
+          isOpen={showDisclaimer}
+          onAgree={handleDisclaimerAgree}
+        />
       </main>
     </div>
   );

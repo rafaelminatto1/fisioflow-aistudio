@@ -22,11 +22,14 @@ export function withPerformanceMonitoring(
   return async (req: NextRequest): Promise<NextResponse> => {
     const startTime = Date.now();
     const startMemory = process.memoryUsage();
-    
+
     const method = req.method || 'GET';
     const url = req.url || '';
     const userAgent = req.headers.get('user-agent') || 'unknown';
-    const ip = req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip') || 'unknown';
+    const ip =
+      req.headers.get('x-forwarded-for') ||
+      req.headers.get('x-real-ip') ||
+      'unknown';
 
     let response: NextResponse;
     let statusCode = 200;
@@ -36,15 +39,14 @@ export function withPerformanceMonitoring(
         `api.${method.toLowerCase()}.${url.split('?')[0]}`,
         () => handler(req)
       );
-      
+
       statusCode = response.status;
-      
+
       // Record business metrics
       BusinessMetrics.recordAPICall(url, method, statusCode);
-      
     } catch (error: any) {
       statusCode = 500;
-      
+
       structuredLogger.error('API handler error', {
         method,
         url,
@@ -82,7 +84,7 @@ export function withPerformanceMonitoring(
     // Add performance headers to response
     response.headers.set('X-Response-Time', `${duration}ms`);
     response.headers.set('X-Memory-Usage', JSON.stringify(memoryDelta));
-    
+
     // Warning for slow requests
     if (duration > 1000) {
       structuredLogger.warn('Slow API request detected', {
@@ -104,10 +106,7 @@ export async function trackDatabaseOperation<T>(
   query: () => Promise<T>,
   context?: Record<string, any>
 ): Promise<T> {
-  return timeAsyncOperation(
-    `database.${operation}`,
-    query
-  );
+  return timeAsyncOperation(`database.${operation}`, query);
 }
 
 // Cache operation performance tracking
@@ -116,25 +115,22 @@ export async function trackCacheOperation<T>(
   key: string,
   cacheOperation: () => Promise<T>
 ): Promise<T> {
-  return timeAsyncOperation(
-    `cache.${operation}`,
-    async () => {
-      const result = await cacheOperation();
-      
-      // Map operation types to logger expected types
-      let logOperation: 'hit' | 'miss' | 'set' | 'delete';
-      if (operation === 'get') {
-        logOperation = result !== null ? 'hit' : 'miss';
-      } else if (operation === 'del') {
-        logOperation = 'delete';
-      } else {
-        logOperation = operation as 'set';
-      }
-      
-      structuredLogger.logCacheOperation(logOperation, key);
-      return result;
+  return timeAsyncOperation(`cache.${operation}`, async () => {
+    const result = await cacheOperation();
+
+    // Map operation types to logger expected types
+    let logOperation: 'hit' | 'miss' | 'set' | 'delete';
+    if (operation === 'get') {
+      logOperation = result !== null ? 'hit' : 'miss';
+    } else if (operation === 'del') {
+      logOperation = 'delete';
+    } else {
+      logOperation = operation as 'set';
     }
-  );
+
+    structuredLogger.logCacheOperation(logOperation, key);
+    return result;
+  });
 }
 
 // Performance monitoring for external API calls
@@ -143,10 +139,7 @@ export async function trackExternalAPICall<T>(
   endpoint: string,
   apiCall: () => Promise<T>
 ): Promise<T> {
-  return timeAsyncOperation(
-    `external.${service}.${endpoint}`,
-    apiCall
-  );
+  return timeAsyncOperation(`external.${service}.${endpoint}`, apiCall);
 }
 
 // Utility to measure function execution time
@@ -157,7 +150,7 @@ export async function measureExecutionTime<T>(
   const startTime = Date.now();
   const result = await fn();
   const duration = Date.now() - startTime;
-  
+
   return { result, duration };
 }
 
@@ -167,17 +160,22 @@ export function createHealthCheckHandler() {
     const healthData = await measureExecutionTime('health.check', async () => {
       const memoryUsage = process.memoryUsage();
       const uptime = process.uptime();
-      
+
       // Basic health checks
       const checks = {
         database: { status: 'unknown', responseTime: 0 },
         redis: { status: 'unknown', responseTime: 0 },
         memory: {
-          status: memoryUsage.heapUsed / memoryUsage.heapTotal < 0.9 ? 'healthy' : 'warning',
+          status:
+            memoryUsage.heapUsed / memoryUsage.heapTotal < 0.9
+              ? 'healthy'
+              : 'warning',
           usage: {
             used: Math.round(memoryUsage.heapUsed / 1024 / 1024),
             total: Math.round(memoryUsage.heapTotal / 1024 / 1024),
-            percentage: Math.round((memoryUsage.heapUsed / memoryUsage.heapTotal) * 100),
+            percentage: Math.round(
+              (memoryUsage.heapUsed / memoryUsage.heapTotal) * 100
+            ),
           },
         },
         system: {
@@ -189,12 +187,15 @@ export function createHealthCheckHandler() {
 
       // Test database connection
       try {
-        const { duration: dbDuration } = await measureExecutionTime('database.ping', async () => {
-          // Add your database ping logic here
-          await new Promise(resolve => setTimeout(resolve, 10)); // Mock ping
-          return true;
-        });
-        
+        const { duration: dbDuration } = await measureExecutionTime(
+          'database.ping',
+          async () => {
+            // Add your database ping logic here
+            await new Promise(resolve => setTimeout(resolve, 10)); // Mock ping
+            return true;
+          }
+        );
+
         checks.database = {
           status: 'healthy',
           responseTime: dbDuration,
@@ -209,12 +210,15 @@ export function createHealthCheckHandler() {
 
       // Test Redis connection
       try {
-        const { duration: redisDuration } = await measureExecutionTime('redis.ping', async () => {
-          // Add your Redis ping logic here
-          await new Promise(resolve => setTimeout(resolve, 5)); // Mock ping
-          return true;
-        });
-        
+        const { duration: redisDuration } = await measureExecutionTime(
+          'redis.ping',
+          async () => {
+            // Add your Redis ping logic here
+            await new Promise(resolve => setTimeout(resolve, 5)); // Mock ping
+            return true;
+          }
+        );
+
         checks.redis = {
           status: 'healthy',
           responseTime: redisDuration,
@@ -229,7 +233,9 @@ export function createHealthCheckHandler() {
 
       const overallStatus = Object.values(checks).every(
         check => check.status === 'healthy'
-      ) ? 'healthy' : 'unhealthy';
+      )
+        ? 'healthy'
+        : 'unhealthy';
 
       return {
         status: overallStatus,

@@ -65,8 +65,7 @@ export async function checkNeonHealth(): Promise<{
     // Log health check results for monitoring
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('Neon health check completed:', {
-        status: 'healthy',
+      console.log('Neon Health Check:', {
         timestamp: new Date().toISOString(),
         latency: `${latency}ms`,
         connectionPool: {
@@ -158,7 +157,7 @@ export async function closeNeonConnection() {
     await pool.end();
     if (process.env.NODE_ENV === 'development') {
       // eslint-disable-next-line no-console
-      console.log('Neon connections closed gracefully');
+      
     }
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
