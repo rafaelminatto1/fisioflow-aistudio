@@ -803,6 +803,217 @@ export interface InventoryMetrics {
   criticalAlerts: InventoryAlert[];
 }
 
+// --- Clinical Content Library Types ---
+
+export interface Pathology {
+  id: string;
+  name: string;
+  description?: string;
+  symptoms: string[];
+  causes: string[];
+  icd10Code?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  protocols?: TreatmentProtocol[];
+}
+
+export interface Exercise {
+  id: string;
+  name: string;
+  description?: string;
+  category: string;
+  subcategory?: string;
+  bodyParts: string[];
+  difficulty: 1 | 2 | 3 | 4 | 5;
+  equipment: string[];
+  instructions: string[];
+  videoUrl?: string;
+  thumbnailUrl?: string;
+  duration?: number; // Duration in seconds
+  indications: string[];
+  contraindications: string[];
+  modifications?: {
+    easier?: string;
+    harder?: string;
+  };
+  status: ExerciseStatus;
+  authorId?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export enum ExerciseStatus {
+  APPROVED = 'approved',
+  PENDING_APPROVAL = 'pending_approval',
+}
+
+export interface TreatmentProtocol {
+  id: string;
+  name: string;
+  description?: string;
+  pathologyId: string;
+  frequency: string;
+  duration: string;
+  objectives: string[];
+  contraindications: string[];
+  notes?: string;
+  createdBy: string;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  pathology?: Pathology;
+  exercises?: TreatmentProtocolExercise[];
+}
+
+export interface TreatmentProtocolExercise {
+  id: string;
+  protocolId: string;
+  exerciseId: string;
+  order: number;
+  sets?: number;
+  repetitions?: string;
+  restTime?: string;
+  resistanceLevel?: string;
+  progressionCriteria?: string;
+  notes?: string;
+  createdAt: Date;
+  protocol?: TreatmentProtocol;
+  exercise?: Exercise;
+}
+
+export enum AssessmentType {
+  SCALE = 'SCALE',
+  QUESTIONNAIRE = 'QUESTIONNAIRE',
+  FUNCTIONAL_TEST = 'FUNCTIONAL_TEST',
+  MEASUREMENT = 'MEASUREMENT',
+}
+
+export interface StandardizedAssessment {
+  id: string;
+  name: string;
+  description?: string;
+  type: AssessmentType;
+  category: string;
+  jsonFields: any; // Assessment structure (questions, scales, etc.)
+  scoringRules: any; // Rules for calculating scores
+  normValues?: any; // Normal/reference values
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  results?: AssessmentResult[];
+}
+
+export interface AssessmentResult {
+  id: string;
+  assessmentId: string;
+  patientId: string;
+  appointmentId?: string;
+  responses: any; // Patient's responses
+  score?: number;
+  interpretation?: string;
+  notes?: string;
+  evaluatedBy: string; // User ID
+  evaluatedAt: Date;
+  assessment?: StandardizedAssessment;
+  patient?: Patient;
+  appointment?: Appointment;
+}
+
+// --- Financial Module Types ---
+
+export enum FinancialTransactionType {
+  INCOME = 'INCOME',
+  EXPENSE = 'EXPENSE',
+}
+
+export interface FinancialTransaction {
+  id: string;
+  type: FinancialTransactionType;
+  amount: number;
+  description: string;
+  date: Date;
+  patientId?: string;
+  userId: string;
+  category?: string;
+  createdAt: Date;
+  patient?: Patient;
+  user?: User;
+}
+
+export enum PayoutStatus {
+  PENDING = 'pending',
+  PROCESSING = 'processing',
+  PAID = 'paid',
+  CANCELLED = 'cancelled',
+}
+
+export interface ProfessionalPayout {
+  id: string;
+  professionalId: string;
+  period: string; // e.g., "2024-01"
+  baseAmount: number;
+  commissionRate: number; // e.g., 0.7 for 70%
+  grossAmount: number;
+  deductions: number;
+  netAmount: number;
+  status: PayoutStatus;
+  paidAt?: Date;
+  createdAt: Date;
+  professional?: User;
+}
+
+// --- Marketing Automation Types ---
+
+export enum AutomationType {
+  NPS = 'NPS',
+  BIRTHDAY = 'BIRTHDAY',
+  INACTIVITY_REMINDER = 'INACTIVITY_REMINDER',
+  APPOINTMENT_REMINDER = 'APPOINTMENT_REMINDER',
+  FOLLOW_UP = 'FOLLOW_UP',
+}
+
+export interface MarketingAutomation {
+  id: string;
+  type: AutomationType;
+  name: string;
+  description?: string;
+  enabled: boolean;
+  templateMessage: string;
+  trigger: any; // Trigger conditions
+  lastRun?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// --- Inventory Types ---
+
+export interface InventoryItem {
+  id: string;
+  name: string;
+  description?: string;
+  quantity: number;
+  minStockLevel: number;
+  maxStockLevel?: number;
+  unit: string;
+  unitCost?: number;
+  location?: string;
+  expiryDate?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  movements?: InventoryLog[];
+}
+
+export interface InventoryLog {
+  id: string;
+  itemId: string;
+  change: number; // Positive for additions, negative for subtractions
+  reason: string;
+  userId: string;
+  createdAt: Date;
+  item?: InventoryItem;
+  user?: User;
+}
+
 // --- Event Management Types ---
 
 export enum EventType {

@@ -11,63 +11,69 @@ datasource db {
 }
 
 model User {
-  id                String             @id @default(cuid())
-  name              String
-  email             String             @unique
-  passwordHash      String?            @map("password_hash")
-  role              Role
-  avatarUrl         String?            @map("avatar_url")
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  appointments      Appointment[]
-  communicationLogs CommunicationLog[]
+  id                     String                  @id @default(cuid())
+  name                   String
+  email                  String                  @unique
+  passwordHash           String?                 @map("password_hash")
+  role                   Role
+  avatarUrl              String?                 @map("avatar_url")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  appointments           Appointment[]
+  communicationLogs      CommunicationLog[]
+  financialTransactions  FinancialTransaction[]
+  professionalPayouts    ProfessionalPayout[]
+  inventoryLogs          InventoryLog[]
 
   @@map("users")
 }
 
 model Patient {
-  id                String             @id @default(cuid())
-  name              String
-  cpf               String             @unique
-  email             String?
-  phone             String?
-  birthDate         DateTime?          @map("birth_date")
-  address           Json?
-  emergencyContact  Json?              @map("emergency_contact")
-  status            PatientStatus      @default(Active)
-  lastVisit         DateTime?          @map("last_visit")
-  allergies         String?
-  medicalAlerts     String?            @map("medical_alerts")
-  consentGiven      Boolean            @default(false) @map("consent_given")
-  whatsappConsent   WhatsAppConsent    @default(opt_out) @map("whatsapp_consent")
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  appointments      Appointment[]
-  communicationLogs CommunicationLog[]
-  metricResults     MetricResult[]
-  painPoints        PainPoint[]
+  id                     String                  @id @default(cuid())
+  name                   String
+  cpf                    String                  @unique
+  email                  String?
+  phone                  String?
+  birthDate              DateTime?               @map("birth_date")
+  address                Json?
+  emergencyContact       Json?                   @map("emergency_contact")
+  status                 PatientStatus           @default(Active)
+  lastVisit              DateTime?               @map("last_visit")
+  allergies              String?
+  medicalAlerts          String?                 @map("medical_alerts")
+  consentGiven           Boolean                 @default(false) @map("consent_given")
+  whatsappConsent        WhatsAppConsent         @default(opt_out) @map("whatsapp_consent")
+  createdAt              DateTime                @default(now()) @map("created_at")
+  updatedAt              DateTime                @updatedAt @map("updated_at")
+  appointments           Appointment[]
+  communicationLogs      CommunicationLog[]
+  metricResults          MetricResult[]
+  painPoints             PainPoint[]
+  assessmentResults      AssessmentResult[]
+  financialTransactions  FinancialTransaction[]
 
   @@map("patients")
 }
 
 model Appointment {
-  id            String            @id @default(cuid())
-  patientId     String            @map("patient_id")
-  therapistId   String            @map("therapist_id")
-  startTime     DateTime          @map("start_time")
-  endTime       DateTime          @map("end_time")
-  type          AppointmentType
-  status        AppointmentStatus @default(Agendado)
-  value         Decimal?          @db.Decimal(10, 2)
-  paymentStatus PaymentStatus     @default(pending) @map("payment_status")
-  observations  String?
-  seriesId      String?           @map("series_id")
-  sessionNumber Int?              @map("session_number")
-  totalSessions Int?              @map("total_sessions")
-  createdAt     DateTime          @default(now()) @map("created_at")
-  patient       Patient           @relation(fields: [patientId], references: [id], onDelete: Cascade)
-  therapist     User              @relation(fields: [therapistId], references: [id], onDelete: Cascade)
-  soapNotes     SoapNote[]
+  id                String             @id @default(cuid())
+  patientId         String             @map("patient_id")
+  therapistId       String             @map("therapist_id")
+  startTime         DateTime           @map("start_time")
+  endTime           DateTime           @map("end_time")
+  type              AppointmentType
+  status            AppointmentStatus  @default(Agendado)
+  value             Decimal?           @db.Decimal(10, 2)
+  paymentStatus     PaymentStatus      @default(pending) @map("payment_status")
+  observations      String?
+  seriesId          String?            @map("series_id")
+  sessionNumber     Int?               @map("session_number")
+  totalSessions     Int?               @map("total_sessions")
+  createdAt         DateTime           @default(now()) @map("created_at")
+  patient           Patient            @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  therapist         User               @relation(fields: [therapistId], references: [id], onDelete: Cascade)
+  soapNotes         SoapNote[]
+  assessmentResults AssessmentResult[]
 
   @@index([patientId])
   @@index([therapistId])
@@ -192,4 +198,245 @@ enum CommunicationType {
 enum WhatsAppConsent {
   opt_in
   opt_out
+}
+
+// Clinical Content Library Models
+
+model Pathology {
+  id            String              @id @default(cuid())
+  name          String              @unique
+  description   String?
+  symptoms      String[]            // Array of symptoms
+  causes        String[]            // Array of causes
+  icd10Code     String?             @map("icd10_code")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  protocols     TreatmentProtocol[]
+
+  @@map("pathologies")
+}
+
+model Exercise {
+  id                 String                        @id @default(cuid())
+  name               String
+  description        String?
+  category           String
+  subcategory        String?
+  bodyParts          String[]                      @map("body_parts")
+  difficulty         Int                           @db.SmallInt // 1-5 scale
+  equipment          String[]
+  instructions       String[]
+  videoUrl           String?                       @map("video_url")
+  thumbnailUrl       String?                       @map("thumbnail_url")
+  duration           Int?                          // Duration in seconds
+  indications        String[]
+  contraindications  String[]
+  modifications      Json?                         // {easier: string, harder: string}
+  status             ExerciseStatus                @default(pending_approval)
+  authorId           String?                       @map("author_id")
+  createdAt          DateTime                      @default(now()) @map("created_at")
+  updatedAt          DateTime                      @updatedAt @map("updated_at")
+  protocolExercises  TreatmentProtocolExercise[]
+
+  @@map("exercises")
+}
+
+model TreatmentProtocol {
+  id                String                        @id @default(cuid())
+  name              String
+  description       String?
+  pathologyId       String                        @map("pathology_id")
+  frequency         String                        // e.g., "3x por semana"
+  duration          String                        // e.g., "12 semanas"
+  objectives        String[]
+  contraindications String[]
+  notes             String?
+  createdBy         String                        @map("created_by")
+  isActive          Boolean                       @default(true) @map("is_active")
+  createdAt         DateTime                      @default(now()) @map("created_at")
+  updatedAt         DateTime                      @updatedAt @map("updated_at")
+  pathology         Pathology                     @relation(fields: [pathologyId], references: [id], onDelete: Cascade)
+  exercises         TreatmentProtocolExercise[]
+
+  @@map("treatment_protocols")
+}
+
+model TreatmentProtocolExercise {
+  id                   String            @id @default(cuid())
+  protocolId           String            @map("protocol_id")
+  exerciseId           String            @map("exercise_id")
+  order                Int               @db.SmallInt
+  sets                 Int?              @db.SmallInt
+  repetitions          String?           // Can be "15" or "30s"
+  restTime             String?           @map("rest_time") // e.g., "30s"
+  resistanceLevel      String?           @map("resistance_level")
+  progressionCriteria  String?           @map("progression_criteria")
+  notes                String?
+  createdAt            DateTime          @default(now()) @map("created_at")
+  protocol             TreatmentProtocol @relation(fields: [protocolId], references: [id], onDelete: Cascade)
+  exercise             Exercise          @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@unique([protocolId, exerciseId])
+  @@map("treatment_protocol_exercises")
+}
+
+model StandardizedAssessment {
+  id            String              @id @default(cuid())
+  name          String              @unique
+  description   String?
+  type          AssessmentType
+  category      String              // e.g., "Mobilidade", "Qualidade de vida", "Dor"
+  jsonFields    Json                @map("json_fields") // Assessment structure (questions, scales, etc.)
+  scoringRules  Json                @map("scoring_rules") // Rules for calculating scores
+  normValues    Json?               @map("norm_values") // Normal/reference values
+  isActive      Boolean             @default(true) @map("is_active")
+  createdAt     DateTime            @default(now()) @map("created_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+  results       AssessmentResult[]
+
+  @@map("standardized_assessments")
+}
+
+model AssessmentResult {
+  id            String                 @id @default(cuid())
+  assessmentId  String                 @map("assessment_id")
+  patientId     String                 @map("patient_id")
+  appointmentId String?                @map("appointment_id")
+  responses     Json                   // Patient's responses
+  score         Float?
+  interpretation String?              // e.g., "Normal", "Leve", "Moderado", "Severo"
+  notes         String?
+  evaluatedBy   String                 @map("evaluated_by") // User ID
+  evaluatedAt   DateTime               @default(now()) @map("evaluated_at")
+  assessment    StandardizedAssessment @relation(fields: [assessmentId], references: [id], onDelete: Cascade)
+  patient       Patient                @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  appointment   Appointment?           @relation(fields: [appointmentId], references: [id], onDelete: SetNull)
+
+  @@index([patientId])
+  @@index([evaluatedAt(sort: Desc)])
+  @@map("assessment_results")
+}
+
+// Financial Module Models
+
+model FinancialTransaction {
+  id          String                    @id @default(cuid())
+  type        FinancialTransactionType
+  amount      Decimal                   @db.Decimal(10, 2)
+  description String
+  date        DateTime
+  patientId   String?                   @map("patient_id")
+  userId      String                    @map("user_id")
+  category    String?
+  createdAt   DateTime                  @default(now()) @map("created_at")
+  patient     Patient?                  @relation(fields: [patientId], references: [id], onDelete: SetNull)
+  user        User                      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([date(sort: Desc)])
+  @@index([type])
+  @@map("financial_transactions")
+}
+
+model ProfessionalPayout {
+  id              String   @id @default(cuid())
+  professionalId  String   @map("professional_id")
+  period          String   // e.g., "2024-01"
+  baseAmount      Decimal  @db.Decimal(10, 2) @map("base_amount")
+  commissionRate  Decimal  @db.Decimal(5, 4) @map("commission_rate") // e.g., 0.7000 for 70%
+  grossAmount     Decimal  @db.Decimal(10, 2) @map("gross_amount")
+  deductions      Decimal  @default(0) @db.Decimal(10, 2)
+  netAmount       Decimal  @db.Decimal(10, 2) @map("net_amount")
+  status          PayoutStatus @default(pending)
+  paidAt          DateTime? @map("paid_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  professional    User     @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+
+  @@unique([professionalId, period])
+  @@map("professional_payouts")
+}
+
+// Marketing Automation Models
+
+model MarketingAutomation {
+  id              String          @id @default(cuid())
+  type            AutomationType
+  name            String
+  description     String?
+  enabled         Boolean         @default(true)
+  templateMessage String          @map("template_message")
+  trigger         Json            // Trigger conditions (e.g., {"days_inactive": 90})
+  lastRun         DateTime?       @map("last_run")
+  createdAt       DateTime        @default(now()) @map("created_at")
+  updatedAt       DateTime        @updatedAt @map("updated_at")
+
+  @@map("marketing_automations")
+}
+
+// Inventory Models
+
+model InventoryItem {
+  id           String              @id @default(cuid())
+  name         String
+  description  String?
+  quantity     Int
+  minStockLevel Int                @map("min_stock_level")
+  maxStockLevel Int?               @map("max_stock_level")
+  unit         String
+  unitCost     Decimal?            @db.Decimal(10, 2) @map("unit_cost")
+  location     String?
+  expiryDate   DateTime?           @map("expiry_date")
+  createdAt    DateTime            @default(now()) @map("created_at")
+  updatedAt    DateTime            @updatedAt @map("updated_at")
+  movements    InventoryLog[]
+
+  @@map("inventory_items")
+}
+
+model InventoryLog {
+  id        String        @id @default(cuid())
+  itemId    String        @map("item_id")
+  change    Int           // Positive for additions, negative for subtractions
+  reason    String
+  userId    String        @map("user_id")
+  createdAt DateTime      @default(now()) @map("created_at")
+  item      InventoryItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([createdAt(sort: Desc)])
+  @@map("inventory_logs")
+}
+
+// Enums
+
+enum ExerciseStatus {
+  approved
+  pending_approval
+}
+
+enum AssessmentType {
+  SCALE
+  QUESTIONNAIRE
+  FUNCTIONAL_TEST
+  MEASUREMENT
+}
+
+enum FinancialTransactionType {
+  INCOME
+  EXPENSE
+}
+
+enum PayoutStatus {
+  pending
+  processing
+  paid
+  cancelled
+}
+
+enum AutomationType {
+  NPS
+  BIRTHDAY
+  INACTIVITY_REMINDER
+  APPOINTMENT_REMINDER
+  FOLLOW_UP
 }
