@@ -1,7 +1,7 @@
 // app/pacientes/page.tsx
 import cachedPrisma from '../../lib/prisma';
-import PatientList from '../../components/pacientes/PatientList';
-import PageHeader from '../../components/ui/PageHeader';
+import PatientList from '@/components/pacientes/PatientList';
+import PageHeader from '@/components/ui/PageHeader';
 
 type PacientesPageProps = {
   searchParams: {

@@ -12,8 +12,6 @@ type RedisClient = {
   isReady: boolean;
 };
 
-let redis: RedisClient;
-
 // Create a mock redis client for build time
 const mockRedis: RedisClient = {
   get: async () => null,
@@ -29,31 +27,31 @@ const mockRedis: RedisClient = {
 };
 
 // Only create real Redis client at runtime if needed
-async function initializeRedis() {
-  if (typeof window === 'undefined' && process.env.REDIS_URL && process.env.NODE_ENV !== 'test') {
-    try {
-      const { createClient } = await import('redis');
-      
-      const client = createClient({
-        url: process.env.REDIS_URL,
-        socket: {
-          reconnectStrategy: false // Prevent connection attempts during build
-        }
-      });
-      
-      client.on('error', (err: Error) => console.error('Redis Client Error', err));
-      
-      return client;
-    } catch (error) {
-      console.warn('Redis not available, using mock client');
-      return mockRedis;
-    }
-  } else {
-    return mockRedis;
-  }
-}
+// async function initializeRedis() {
+//   if (typeof window === 'undefined' && process.env.REDIS_URL && process.env.NODE_ENV !== 'test') {
+//     try {
+//       const { createClient } = await import('redis');
+//       
+//       const client = createClient({
+//         url: process.env.REDIS_URL,
+//         socket: {
+//           reconnectStrategy: false // Prevent connection attempts during build
+//         }
+//       });
+//       
+//       client.on('error', (err: Error) => console.error('Redis Client Error', err));
+//       
+//       return client;
+//     } catch (error) {
+//       console.warn('Redis not available, using mock client');
+//       return mockRedis;
+//     }
+//   } else {
+//     return mockRedis;
+//   }
+// }
 
 // Initialize Redis lazily
-redis = mockRedis;
+const redis: RedisClient = mockRedis;
 
 export default redis;

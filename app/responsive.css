@@ -1,0 +1,214 @@
+/* Responsive and Accessibility Improvements */
+
+/* Focus styles for better accessibility */
+*:focus {
+  outline: 2px solid theme('colors.sky.500');
+  outline-offset: 2px;
+}
+
+/* Skip link styles */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 6px;
+  background: theme('colors.sky.600');
+  color: white;
+  padding: 8px;
+  text-decoration: none;
+  border-radius: 4px;
+  z-index: 1000;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 6px;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .sidebar-mobile {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 50;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .sidebar-mobile.open {
+    transform: translateX(0);
+  }
+  
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .card {
+    border: 2px solid currentColor;
+  }
+  
+  .button {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Print styles */
+@media print {
+  .sidebar,
+  .floating-theme-toggle,
+  .mobile-menu-button {
+    display: none !important;
+  }
+  
+  .main-content {
+    margin-left: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* Touch device improvements */
+@media (hover: none) and (pointer: coarse) {
+  .hover-effect:hover {
+    transform: none;
+  }
+  
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
+
+/* Screen reader only content */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.sr-only:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  padding: inherit;
+  margin: inherit;
+  overflow: visible;
+  clip: auto;
+  white-space: normal;
+}
+
+/* Improved focus indicators */
+.focus-visible:focus-visible {
+  outline: 2px solid theme('colors.sky.500');
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px theme('colors.sky.500' / 0.2);
+}
+
+/* Better button states */
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.button:disabled:hover {
+  transform: none;
+}
+
+/* Improved form accessibility */
+.form-field:invalid {
+  border-color: theme('colors.red.500');
+  box-shadow: 0 0 0 1px theme('colors.red.500');
+}
+
+.form-field:invalid:focus {
+  outline-color: theme('colors.red.500');
+  box-shadow: 0 0 0 4px theme('colors.red.500' / 0.2);
+}
+
+/* Loading states */
+.loading {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    theme('colors.white' / 0.2),
+    transparent
+  );
+  animation: loading-shimmer 1.5s infinite;
+}
+
+@keyframes loading-shimmer {
+  0% {
+    left: -100%;
+  }
+  100% {
+    left: 100%;
+  }
+}
+
+/* Dark mode improvements */
+@media (prefers-color-scheme: dark) {
+  .loading::after {
+    background: linear-gradient(
+      90deg,
+      transparent,
+      theme('colors.slate.700' / 0.2),
+      transparent
+    );
+  }
+}
+
+/* Responsive text scaling */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+  
+  .heading-responsive {
+    font-size: clamp(1.25rem, 4vw, 1.5rem);
+  }
+}
+
+/* Container queries support */
+@container (max-width: 400px) {
+  .container-responsive {
+    padding: 0.5rem;
+  }
+}
+
+@container (min-width: 401px) {
+  .container-responsive {
+    padding: 1rem;
+  }
+}

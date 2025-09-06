@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -49,7 +48,6 @@ const ToastMessageComponent: React.FC<{ toast: ToastMessage, onRemove: (id: numb
     );
 };
 
-
 const ToastContainer: React.FC = () => {
   const context = useInternalToast();
 
@@ -95,3 +93,4 @@ const ToastContainer: React.FC = () => {
 };
 
 export default ToastContainer;
+export { ToastMessageComponent };

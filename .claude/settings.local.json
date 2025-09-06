@@ -40,7 +40,9 @@
       "WebSearch",
       "WebFetch(domain:station.railway.com)",
       "WebFetch(domain:railway.com)",
-      "WebFetch(domain:docs.railway.com)"
+      "WebFetch(domain:docs.railway.com)",
+      "Bash(npm ls:*)",
+      "Bash(del .babelrc.js)"
     ],
     "deny": [],
     "ask": []

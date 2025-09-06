@@ -3,14 +3,15 @@
  * Otimizado para Railway e Vercel Edge Functions
  */
 
-interface LogEntry {
+export interface LogEntry {
   timestamp: string;
   level: 'info' | 'warn' | 'error' | 'debug';
   message: string;
-  data?: any;
-  requestId?: string;
-  ip?: string;
+  data?: unknown;
+  userId?: string;
+  sessionId?: string;
   userAgent?: string;
+  ip?: string;
 }
 
 interface Metrics {
@@ -36,13 +37,13 @@ class EdgeLogger {
     };
   }
 
-  private log(level: LogEntry['level'], message: string, data?: any, context?: any) {
+  private log(level: LogEntry['level'], message: string, data?: unknown): void {
     const entry: LogEntry = {
       timestamp: new Date().toISOString(),
       level,
       message,
       data,
-      ...context,
+      // Context would be added here if available
     };
 
     // Adicionar ao buffer interno
@@ -53,14 +54,9 @@ class EdgeLogger {
       this.logs = this.logs.slice(-this.maxLogs);
     }
 
-    // Log no console em desenvolvimento
-    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'development') {
-      const logMethod = level === 'error' ? console.error : 
-                       level === 'warn' ? console.warn : 
-                       console.log;
-      
-      logMethod(`[${level.toUpperCase()}] ${message}`, data || '');
-    }
+    // Em produção, você pode enviar para um serviço de logging
+    // eslint-disable-next-line no-console
+    console.log(`[${level.toUpperCase()}] ${message}`, data);
 
     // Atualizar métricas
     if (level === 'error') {
@@ -77,19 +73,19 @@ class EdgeLogger {
       : 0;
   }
 
-  info(message: string, data?: any) {
+  info(message: string, data?: unknown): void {
     this.log('info', message, data);
   }
 
-  warn(message: string, data?: any) {
+  warn(message: string, data?: unknown): void {
     this.log('warn', message, data);
   }
 
-  error(message: string, data?: any) {
+  error(message: string, data?: unknown): void {
     this.log('error', message, data);
   }
 
-  debug(message: string, data?: any) {
+  debug(message: string, data?: unknown): void {
     this.log('debug', message, data);
   }
 
@@ -111,7 +107,7 @@ class EdgeLogger {
   createRequestMiddleware() {
     const requestId = this.generateRequestId();
     
-    return (request: any) => {
+    return (request: Request) => {
       this.metrics.requestCount++;
       
       const startTime = Date.now();
@@ -128,7 +124,7 @@ class EdgeLogger {
         userAgent,
       });
       
-      return (statusCode: number, responseData?: any) => {
+      return (statusCode: number, responseData?: unknown) => {
         const duration = Date.now() - startTime;
         
         const logData = {

@@ -15,7 +15,10 @@ export const authOptions = {
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials: any) {
+        console.log("[AUTH] Tentativa de login:", { email: credentials?.email })
+        
         if (!credentials?.email || !credentials?.password) {
+          console.log("[AUTH] Credenciais faltando")
           return null
         }
 
@@ -26,7 +29,14 @@ export const authOptions = {
             }
           })
 
+          console.log("[AUTH] Usuário encontrado:", { 
+            found: !!user, 
+            hasPassword: !!user?.passwordHash,
+            email: user?.email 
+          })
+
           if (!user || !user.passwordHash) {
+            console.log("[AUTH] Usuário não encontrado ou sem senha")
             return null
           }
 
@@ -35,10 +45,14 @@ export const authOptions = {
             user.passwordHash
           )
 
+          console.log("[AUTH] Validação de senha:", { valid: isPasswordValid })
+
           if (!isPasswordValid) {
+            console.log("[AUTH] Senha inválida")
             return null
           }
 
+          console.log("[AUTH] Login bem-sucedido para:", user.email)
           return {
             id: user.id,
             email: user.email,
@@ -47,7 +61,7 @@ export const authOptions = {
             avatarUrl: user.avatarUrl || undefined
           }
         } catch (error) {
-          console.error("Auth error:", error)
+          console.error("[AUTH] Erro durante autenticação:", error)
           return null
         }
       }
@@ -82,6 +96,50 @@ export const authOptions = {
     error: "/login"
   },
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
+  useSecureCookies: false,
+  debug: true,
+  url: process.env.NEXTAUTH_URL || "http://localhost:3000",
+  skipCSRFCheck: process.env.NODE_ENV === "development",
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false
+      }
+    },
+    callbackUrl: {
+      name: `next-auth.callback-url`,
+      options: {
+        sameSite: 'lax',
+        path: '/',
+        secure: false
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: false
+      }
+    }
+   },
+  logger: {
+    error(code, metadata) {
+      console.error("[NextAuth Error]", code, metadata)
+    },
+    warn(code) {
+      console.warn("[NextAuth Warning]", code)
+    },
+    debug(code, metadata) {
+      console.log("[NextAuth Debug]", code, metadata)
+    }
+  }
 }
 
 export const { auth, handlers, signIn, signOut } = NextAuth(authOptions)

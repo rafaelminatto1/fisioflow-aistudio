@@ -1,6 +1,6 @@
 import React from 'react';
-import PartnerSidebar from '../components/partner-portal/PartnerSidebar';
-import ToastContainer from '../components/ui/Toast';
+import PartnerSidebar from '../src/components/partner-portal/PartnerSidebar';
+import ToastContainer from '../src/components/ui/Toast';
 
 interface PartnerLayoutProps {
   children: React.ReactNode;

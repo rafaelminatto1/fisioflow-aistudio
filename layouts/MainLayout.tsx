@@ -1,10 +1,10 @@
 
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../components/Sidebar';
-import AiAssistant from '../components/AiAssistant';
-import ToastContainer from '../components/ui/Toast';
-import MedicalDisclaimerModal from '../components/MedicalDisclaimerModal';
+import Sidebar from '@/components/Sidebar';
+import AiAssistant from '@/components/AiAssistant';
+import ToastContainer from '@/components/ui/Toast';
+import MedicalDisclaimerModal from '@/components/MedicalDisclaimerModal';
 
 interface MainLayoutProps {
   children: React.ReactNode;

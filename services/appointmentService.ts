@@ -1,4 +1,4 @@
-import { Appointment } from '../types';
+import { Appointment } from '../src/types';
 import { db } from './mockDb';
 import { eventService } from './eventService';
 import { mockPatients } from '../data/mockData';

@@ -1,12 +1,13 @@
 // src/lib/auth.ts
+import { PrismaAdapter } from '@auth/prisma-adapter';
+import { Role } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 import NextAuth from 'next-auth';
 import type { NextAuthConfig } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@auth/prisma-adapter';
+
 import prisma from './prisma';
-import bcrypt from 'bcryptjs';
 import redis from './redis';
-import { Role } from '@prisma/client';
 
 // Tipos para estender a sessão do NextAuth
 interface ExtendedUser {
@@ -31,12 +32,12 @@ export const authOptions: NextAuthConfig = {
         email: { label: "Email", type: "text" },
         password: { label: "Password", type: "password" }
       },
-      async authorize(credentials, req) {
+      async authorize(credentials, _req) {
         if (!credentials?.email || !credentials?.password || typeof credentials.password !== 'string' || typeof credentials.email !== 'string') {
           throw new Error('Credenciais inválidas.');
         }
 
-        const ip = req.headers?.get('x-forwarded-for') || req.headers?.get('remote_addr') || 'unknown';
+        // const ip = req.headers?.get('x-forwarded-for') || req.headers?.get('remote_addr') || 'unknown';
         const rateLimitKey = `${RATE_LIMIT_PREFIX}${credentials.email}`;
         
         const attempts = await redis.get(rateLimitKey);

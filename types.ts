@@ -225,6 +225,50 @@ export interface SchedulingSettings {
 }
 
 
+// --- Mock Data Types ---
+
+export interface MockPatient {
+  id: string;
+  name: string;
+  status: 'Active' | 'Discharged' | 'Inactive';
+  lastVisit?: string;
+  appointments?: MockAppointment[];
+  createdAt?: string;
+}
+
+export interface MockAppointment {
+  id: string;
+  patientId: string;
+  therapistId?: string;
+  date: Date;
+  status: AppointmentStatus;
+  type?: string;
+}
+
+export interface MockTransaction {
+  id: string;
+  patientId: string;
+  amount: number;
+  type: 'income' | 'expense';
+  date: Date;
+  description?: string;
+}
+
+// --- Financial Types ---
+
+export interface FinancialKPIs {
+  totalRevenue: number;
+  monthlyGrowth: number;
+  averageTicket: number;
+  pendingPayments: number;
+}
+
+export interface RevenueByCategory {
+  category: string;
+  amount: number;
+  percentage: number;
+}
+
 // --- Clinical & Documentation Types ---
 
 export interface SoapNote {

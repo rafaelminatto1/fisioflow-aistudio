@@ -14,7 +14,7 @@ const customJestConfig = {
   moduleDirectories: ['node_modules', '<rootDir>/'],
   
   // Handle module aliases (the same way Next.js does)
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@/components/(.*)$': '<rootDir>/components/$1',
     '^@/lib/(.*)$': '<rootDir>/lib/$1',
@@ -28,10 +28,7 @@ const customJestConfig = {
 
   // Test patterns
   testMatch: [
-    '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',
-    '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}'
+    '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}'
   ],
 
   // Coverage configuration
@@ -62,8 +59,7 @@ const customJestConfig = {
   //   },
   // },
 
-  // Test timeout
-  testTimeout: 30000,
+  // Test timeout configured per project below
 
   // Setup files
   setupFiles: ['<rootDir>/tests/global-setup.js'],

@@ -1,5 +1,6 @@
 // app/pacientes/layout.tsx
 import React from 'react';
+import Sidebar from '@/components/Sidebar';
 
 export default function PacientesLayout({
   children,
@@ -7,8 +8,13 @@ export default function PacientesLayout({
   children: React.ReactNode;
 }) {
   return (
-    // No futuro, este layout poderia ter um sub-menu ou contexto específico para pacientes.
-    // Por enquanto, ele apenas renderiza os filhos.
-    <section>{children}</section>
+    <div className="flex h-screen bg-gray-50">
+      <Sidebar />
+      <main className="flex-1 overflow-auto">
+        <div className="p-6">
+          {children}
+        </div>
+      </main>
+    </div>
   );
 }

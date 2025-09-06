@@ -1,7 +1,7 @@
 
 import React from 'react';
-import PatientSidebar from '../components/patient-portal/PatientSidebar';
-import ToastContainer from '../components/ui/Toast';
+import PatientSidebar from '../src/components/patient-portal/PatientSidebar';
+import ToastContainer from '../src/components/ui/Toast';
 
 interface PatientPortalLayoutProps {
   children: React.ReactNode;

@@ -1,4 +1,4 @@
-import { Patient, PatientAttachment, PatientSummary, CommunicationLog, PainPoint } from '../types';
+import { Patient, PatientAttachment, PatientSummary, CommunicationLog, PainPoint } from '../src/types';
 import api from '../lib/api';
 import { eventService } from './eventService';
 
@@ -82,3 +82,20 @@ export const savePainPoints = async (patientId: string, painPoints: PainPoint[])
     eventService.emit('patients:changed');
     return response.data;
 };
+
+// Default export
+export const patientService = {
+    getRecentPatients,
+    getAllPatients,
+    searchPatients,
+    quickAddPatient,
+    getPatients,
+    getPatientById,
+    addPatient,
+    updatePatient,
+    addAttachment,
+    addCommunicationLog,
+    savePainPoints
+};
+
+export default patientService;

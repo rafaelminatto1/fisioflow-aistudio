@@ -3,7 +3,7 @@
 
 import React, { useState, useRef, useTransition } from 'react';
 import { X, Save, Loader2 } from 'lucide-react';
-import { useToast } from '../ui/use-toast';
+import { useToast } from '@/contexts/ToastContext';
 import PainScale from '../ui/PainScale';
 import { saveSoapNoteAction } from '../../lib/actions/soap.actions';
 

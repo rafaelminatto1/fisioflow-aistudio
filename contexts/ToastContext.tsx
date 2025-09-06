@@ -1,6 +1,6 @@
 
 import React, { createContext, useState, useContext, ReactNode } from 'react';
-import { ToastMessage, ToastContextType } from '../types';
+import { ToastMessage, ToastContextType } from '../src/types';
 
 // The full internal type for the context value, including all properties
 interface FullToastContextType {

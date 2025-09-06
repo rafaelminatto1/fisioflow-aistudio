@@ -1,7 +1,7 @@
 
 
 // services/notificationService.ts
-import { Notification, User, Role, AppointmentStatus } from '../types';
+import { Notification, User, Role, AppointmentStatus } from '../src/types';
 import { mockNotifications, mockAppointments, mockUsers, mockPatients } from '../data/mockData';
 import * as treatmentService from './treatmentService';
 import * as whatsappService from './whatsappService';

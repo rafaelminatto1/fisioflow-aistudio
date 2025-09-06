@@ -1,9 +1,9 @@
 import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { Patient, Therapist, Appointment } from '../types';
+import { Patient, Therapist, Appointment } from '../src/types';
 import * as therapistService from '../services/therapistService';
 import * as appointmentService from '../services/appointmentService';
 import * as patientService from '../services/patientService';
-import PageLoader from '../components/ui/PageLoader';
+import PageLoader from '../src/components/ui/PageLoader';
 import { eventService } from '../services/eventService';
 
 interface DataContextType {

@@ -149,3 +149,24 @@ export const getDashboardMetrics = async (): Promise<InventoryMetrics> => {
         criticalAlerts: criticalAlerts.sort((a,b) => (b.severity === 'critical' ? 1 : -1)), // Prioritize critical
     };
 };
+
+// Default export
+export const inventoryService = {
+    getItems,
+    getSuppliers,
+    getCategories,
+    saveItem,
+    addStockMovement,
+    getDashboardMetrics,
+    createItem: saveItem,
+    updateItem: (id: string, data: Partial<InventoryItem>) => saveItem({ ...data, id }),
+    deleteItem: async (id: string) => {
+        await delay(200);
+        const index = items.findIndex(i => i.id === id);
+        if (index > -1) {
+            items.splice(index, 1);
+        }
+    }
+};
+
+export default inventoryService;

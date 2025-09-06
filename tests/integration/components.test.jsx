@@ -42,7 +42,7 @@ global.fetch = jest.fn();
 import PatientForm from '../../components/pacientes/PatientForm';
 import AppointmentFormModal from '../../components/AppointmentFormModal';
 import AdvancedDashboard from '../../components/analytics/AdvancedDashboard';
-import Sidebar from '../../components/Sidebar';
+import Sidebar from '@/components/Sidebar';
 import MetricTrackerCard from '../../components/MetricTrackerCard';
 
 describe('Component Integration Tests', () => {

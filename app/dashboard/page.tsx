@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { Stethoscope, Users, Calendar, TrendingUp, BarChart, LogOut } from 'lucide-react';
+import { Users, Calendar, TrendingUp, BarChart } from 'lucide-react';
 import { signOut } from 'next-auth/react';
+import Sidebar from '../../components/Sidebar';
+
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -49,35 +51,13 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 justify-between items-center">
-            <div className="flex items-center">
-              <Stethoscope className="h-8 w-8 text-sky-500" />
-              <h1 className="ml-2 text-2xl font-bold text-gray-900">
-                Fisio<span className="text-sky-500">Flow</span>
-              </h1>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                Olá, {session.user?.name || 'Usuário'} ({session.user?.role || 'Usuário'})
-              </span>
-              <button
-                onClick={handleLogout}
-                className="flex items-center text-sm text-gray-500 hover:text-gray-700"
-              >
-                <LogOut className="h-4 w-4 mr-1" />
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Sidebar */}
+      <Sidebar />
+      
       {/* Main Content */}
-      <main className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+      <main className="flex-1 ml-0 lg:ml-64 transition-all duration-300">
+        <div className="p-6">
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
           <p className="mt-2 text-gray-600">
@@ -188,6 +168,7 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
+        </div>
         </div>
       </main>
     </div>
