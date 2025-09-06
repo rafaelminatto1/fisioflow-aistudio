@@ -1,4 +1,3 @@
-
 import { User, Role } from '../types';
 import { mockUsers } from '../data/mockData';
 

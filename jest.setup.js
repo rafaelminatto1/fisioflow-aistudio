@@ -6,12 +6,14 @@ expect.extend({
     const pass = received >= floor && received <= ceiling;
     if (pass) {
       return {
-        message: () => `expected ${received} not to be within range ${floor} - ${ceiling}`,
+        message: () =>
+          `expected ${received} not to be within range ${floor} - ${ceiling}`,
         pass: true,
       };
     } else {
       return {
-        message: () => `expected ${received} to be within range ${floor} - ${ceiling}`,
+        message: () =>
+          `expected ${received} to be within range ${floor} - ${ceiling}`,
         pass: false,
       };
     }
@@ -20,7 +22,9 @@ expect.extend({
 
 // Mock environment variables for tests
 process.env.NODE_ENV = 'test';
-process.env.DATABASE_URL = process.env.TEST_DATABASE_URL || 'postgresql://test:test@localhost:5432/fisioflow_test';
+process.env.DATABASE_URL =
+  process.env.TEST_DATABASE_URL ||
+  'postgresql://test:test@localhost:5432/fisioflow_test';
 process.env.NEXTAUTH_SECRET = 'test-secret-key-for-testing-only';
 process.env.NEXTAUTH_URL = 'http://localhost:3000';
 process.env.LOG_LEVEL = 'error'; // Reduce log noise during tests
@@ -53,6 +57,6 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Global error handler for uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error);
 });

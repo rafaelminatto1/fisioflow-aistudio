@@ -2,111 +2,114 @@
 
 ## 🎯 Visão Geral do Projeto
 
-O **FisioFlow** é uma plataforma completa de gestão para clínicas de fisioterapia, desenvolvida com Next.js 14, TypeScript e integrada com Railway (deploy) e Neon DB (banco de dados PostgreSQL). O sistema oferece funcionalidades abrangentes para gestão de pacientes, agendamentos, relatórios e muito mais.
+O **FisioFlow** é uma plataforma completa de gestão para clínicas de fisioterapia, desenvolvida com
+Next.js 14, TypeScript e integrada com Railway (deploy) e Neon DB (banco de dados PostgreSQL). O
+sistema oferece funcionalidades abrangentes para gestão de pacientes, agendamentos, relatórios e
+muito mais.
 
-***
+---
 
 ## 🏥 1. Funcionalidades Principais da Aplicação
 
 ### 👥 Gestão de Pacientes
 
-* **Cadastro Completo**: Dados pessoais, histórico médico, contatos
+- **Cadastro Completo**: Dados pessoais, histórico médico, contatos
 
-* **Prontuário Eletrônico**: Evolução clínica, diagnósticos, tratamentos
+- **Prontuário Eletrônico**: Evolução clínica, diagnósticos, tratamentos
 
-* **Histórico de Consultas**: Registro detalhado de todas as sessões
+- **Histórico de Consultas**: Registro detalhado de todas as sessões
 
-* **Documentos**: Upload e gestão de exames, laudos, receitas
+- **Documentos**: Upload e gestão de exames, laudos, receitas
 
-* **Anamnese Digital**: Formulários estruturados para avaliação inicial
+- **Anamnese Digital**: Formulários estruturados para avaliação inicial
 
 ### 📅 Sistema de Agendamentos
 
-* **Agenda Inteligente**: Visualização por dia, semana, mês
+- **Agenda Inteligente**: Visualização por dia, semana, mês
 
-* **Agendamento Online**: Interface para pacientes agendarem
+- **Agendamento Online**: Interface para pacientes agendarem
 
-* **Confirmação Automática**: Notificações via WhatsApp/SMS
+- **Confirmação Automática**: Notificações via WhatsApp/SMS
 
-* **Gestão de Horários**: Bloqueios, feriados, disponibilidade
+- **Gestão de Horários**: Bloqueios, feriados, disponibilidade
 
-* **Lista de Espera**: Gerenciamento automático de cancelamentos
+- **Lista de Espera**: Gerenciamento automático de cancelamentos
 
 ### 💰 Gestão Financeira
 
-* **Controle de Pagamentos**: Recebimentos, pendências, parcelamentos
+- **Controle de Pagamentos**: Recebimentos, pendências, parcelamentos
 
-* **Relatórios Financeiros**: Faturamento, inadimplência, projeções
+- **Relatórios Financeiros**: Faturamento, inadimplência, projeções
 
-* **Integração com Meios de Pagamento**: PIX, cartões, boletos
+- **Integração com Meios de Pagamento**: PIX, cartões, boletos
 
-* **Controle de Convênios**: Gestão de planos de saúde
+- **Controle de Convênios**: Gestão de planos de saúde
 
-* **Fluxo de Caixa**: Entradas, saídas, saldo projetado
+- **Fluxo de Caixa**: Entradas, saídas, saldo projetado
 
 ### 📊 Relatórios e Analytics
 
-* **Dashboard Executivo**: KPIs principais, gráficos interativos
+- **Dashboard Executivo**: KPIs principais, gráficos interativos
 
-* **Relatórios de Atendimento**: Produtividade, ocupação
+- **Relatórios de Atendimento**: Produtividade, ocupação
 
-* **Análise de Pacientes**: Perfil demográfico, tratamentos
+- **Análise de Pacientes**: Perfil demográfico, tratamentos
 
-* **Relatórios Financeiros**: Receitas, custos, margem
+- **Relatórios Financeiros**: Receitas, custos, margem
 
-* **Exportação**: PDF, Excel, CSV
+- **Exportação**: PDF, Excel, CSV
 
 ### 🏋️ Gestão de Exercícios
 
-* **Biblioteca de Exercícios**: Catálogo completo com vídeos
+- **Biblioteca de Exercícios**: Catálogo completo com vídeos
 
-* **Prescrição Personalizada**: Criação de protocolos individuais
+- **Prescrição Personalizada**: Criação de protocolos individuais
 
-* **Acompanhamento**: Evolução e progressão dos exercícios
+- **Acompanhamento**: Evolução e progressão dos exercícios
 
-* **Planos de Tratamento**: Estruturação por fases e objetivos
+- **Planos de Tratamento**: Estruturação por fases e objetivos
 
 ### 📱 Comunicação e Notificações
 
-* **WhatsApp Business**: Integração para lembretes e confirmações
+- **WhatsApp Business**: Integração para lembretes e confirmações
 
-* **SMS**: Notificações importantes
+- **SMS**: Notificações importantes
 
-* **Email**: Relatórios, confirmações, marketing
+- **Email**: Relatórios, confirmações, marketing
 
-* **Notificações Push**: Alertas em tempo real
+- **Notificações Push**: Alertas em tempo real
 
-***
+---
 
 ## 🔧 2. Sistema MCP (Model Context Protocol)
 
 ### 🚂 Integração Railway
 
-* **Deploy Automatizado**: CI/CD completo
+- **Deploy Automatizado**: CI/CD completo
 
-* **Monitoramento**: Logs, métricas, alertas
+- **Monitoramento**: Logs, métricas, alertas
 
-* **Escalabilidade**: Auto-scaling baseado em demanda
+- **Escalabilidade**: Auto-scaling baseado em demanda
 
-* **Configuração de Ambiente**: Produção, staging, desenvolvimento
+- **Configuração de Ambiente**: Produção, staging, desenvolvimento
 
-* **Health Checks**: Verificação automática de saúde da aplicação
+- **Health Checks**: Verificação automática de saúde da aplicação
 
-* **Rate Limiting**: Controle de requisições por IP/usuário
+- **Rate Limiting**: Controle de requisições por IP/usuário
 
 ### 🐘 Integração Neon DB
 
-* **PostgreSQL Serverless**: Banco de dados escalável
+- **PostgreSQL Serverless**: Banco de dados escalável
 
-* **Backup Automático**: Snapshots diários e recuperação
+- **Backup Automático**: Snapshots diários e recuperação
 
-* **Monitoramento de Performance**: Query analysis, índices
+- **Monitoramento de Performance**: Query analysis, índices
 
-* **SSL Obrigatório**: Conexões seguras
+- **SSL Obrigatório**: Conexões seguras
 
-* **Branching**: Ambientes isolados para desenvolvimento
+- **Branching**: Ambientes isolados para desenvolvimento
 
-* **Connection Pooling**: Otimização de conexões
+- **Connection Pooling**: Otimização de conexões
 
 ### 📋 Scripts MCP Disponíveis
 
@@ -135,21 +138,21 @@ npm run railway:logs
 npm run railway:status
 ```
 
-***
+---
 
 ## ⚙️ 3. Automação de Variáveis de Ambiente
 
 ### 🔄 Sistema Automatizado
 
-* **Detecção de CLIs**: Verificação automática do Railway CLI e Neon CLI
+- **Detecção de CLIs**: Verificação automática do Railway CLI e Neon CLI
 
-* **Login Automático**: Autenticação nas plataformas
+- **Login Automático**: Autenticação nas plataformas
 
-* **Obtenção de Credenciais**: Extração automática de API keys e configurações
+- **Obtenção de Credenciais**: Extração automática de API keys e configurações
 
-* **Atualização do .env.local**: Substituição de placeholders por valores reais
+- **Atualização do .env.local**: Substituição de placeholders por valores reais
 
-* **Validação**: Testes de conectividade após configuração
+- **Validação**: Testes de conectividade após configuração
 
 ### 📝 Comandos de Automação
 
@@ -175,87 +178,86 @@ npm run env:restore
 
 ### 🔐 Variáveis Configuradas
 
-* **Railway**: API Key, Project ID, domínios de produção/staging
+- **Railway**: API Key, Project ID, domínios de produção/staging
 
-* **Neon DB**: API Key, Project ID, connection strings
+- **Neon DB**: API Key, Project ID, connection strings
 
-* **NextAuth**: Secret, URL, provedores OAuth
+- **NextAuth**: Secret, URL, provedores OAuth
 
-* **APIs Externas**: OpenAI, Anthropic, Gemini
+- **APIs Externas**: OpenAI, Anthropic, Gemini
 
-* **Configurações Opcionais**: Redis, uploads, email
+- **Configurações Opcionais**: Redis, uploads, email
 
-***
+---
 
 ## ⚡ 4. Sistema de Cache e Performance
 
 ### 🚀 Cache Multi-Camadas
 
-* **Redis**: Cache distribuído para sessões e dados frequentes
+- **Redis**: Cache distribuído para sessões e dados frequentes
 
-* **Next.js Cache**: Cache de páginas e componentes
+- **Next.js Cache**: Cache de páginas e componentes
 
-* **Database Cache**: Query caching no Neon DB
+- **Database Cache**: Query caching no Neon DB
 
-* **CDN**: Cache de assets estáticos
+- **CDN**: Cache de assets estáticos
 
-* **Service Worker**: Cache offline para PWA
+- **Service Worker**: Cache offline para PWA
 
 ### 📊 Métricas de Performance
 
-* **Response Time**: Monitoramento de latência
+- **Response Time**: Monitoramento de latência
 
-* **Cache Hit Rate**: Taxa de acerto do cache
+- **Cache Hit Rate**: Taxa de acerto do cache
 
-* **Database Performance**: Tempo de queries
+- **Database Performance**: Tempo de queries
 
-* **Memory Usage**: Uso de memória da aplicação
+- **Memory Usage**: Uso de memória da aplicação
 
-* **CPU Usage**: Monitoramento de processamento
+- **CPU Usage**: Monitoramento de processamento
 
 ### 🔧 Otimizações Implementadas
 
-* **Lazy Loading**: Carregamento sob demanda
+- **Lazy Loading**: Carregamento sob demanda
 
-* **Image Optimization**: Compressão e formatos modernos
+- **Image Optimization**: Compressão e formatos modernos
 
-* **Code Splitting**: Divisão de bundles JavaScript
+- **Code Splitting**: Divisão de bundles JavaScript
 
-* **Prefetching**: Pré-carregamento de recursos
+- **Prefetching**: Pré-carregamento de recursos
 
-* **Compression**: Gzip/Brotli para assets
+- **Compression**: Gzip/Brotli para assets
 
-***
+---
 
 ## 🔒 5. Segurança e Autenticação
 
 ### 🛡️ Sistema de Autenticação
 
-* **NextAuth.js**: Framework de autenticação robusto
+- **NextAuth.js**: Framework de autenticação robusto
 
-* **OAuth Providers**: Google, GitHub, Microsoft
+- **OAuth Providers**: Google, GitHub, Microsoft
 
-* **JWT Tokens**: Tokens seguros com expiração
+- **JWT Tokens**: Tokens seguros com expiração
 
-* **Session Management**: Gestão de sessões ativas
+- **Session Management**: Gestão de sessões ativas
 
-* **Two-Factor Authentication**: 2FA opcional
+- **Two-Factor Authentication**: 2FA opcional
 
 ### 🔐 Segurança de Dados
 
-* **Row Level Security (RLS)**: Isolamento de dados por usuário
+- **Row Level Security (RLS)**: Isolamento de dados por usuário
 
-* **Encryption**: Criptografia de dados sensíveis
+- **Encryption**: Criptografia de dados sensíveis
 
-* **Input Validation**: Validação rigorosa de entradas
+- **Input Validation**: Validação rigorosa de entradas
 
-* **SQL Injection Protection**: Prepared statements
+- **SQL Injection Protection**: Prepared statements
 
-* **XSS Protection**: Sanitização de conteúdo
+- **XSS Protection**: Sanitização de conteúdo
 
 ### 🚨 Monitoramento de Segurança
 
-* **Audit Logs**: Registro de todas as ações
+- **Audit Logs**: Registro de todas as ações
 
-* \*\*Faile
-
+- \*\*Faile

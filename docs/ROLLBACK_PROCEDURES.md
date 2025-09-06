@@ -2,22 +2,26 @@
 
 ## Visão Geral
 
-Este documento detalha os procedimentos específicos de rollback para diferentes cenários de falha durante ou após a migração do FisioFlow para Railway + Neon DB.
+Este documento detalha os procedimentos específicos de rollback para diferentes cenários de falha
+durante ou após a migração do FisioFlow para Railway + Neon DB.
 
 ## Classificação de Incidentes
 
 ### Severidade 1 - Crítica (Rollback Imediato)
+
 - Aplicação completamente inacessível
 - Perda de dados detectada
 - Falhas de segurança
 - Corrupção do banco de dados
 
 ### Severidade 2 - Alta (Rollback em 15 min)
+
 - Funcionalidades principais indisponíveis
 - Performance degradada significativamente
 - Erros em > 50% das requisições
 
 ### Severidade 3 - Média (Rollback em 1 hora)
+
 - Funcionalidades secundárias com problemas
 - Performance levemente degradada
 - Erros em < 10% das requisições
@@ -27,6 +31,7 @@ Este documento detalha os procedimentos específicos de rollback para diferentes
 ### Rollback Severidade 1 (< 5 minutos)
 
 #### Passo 1: Ativação do Plano de Emergência
+
 ```bash
 # Executar script de emergência
 ./scripts/emergency-rollback.sh
@@ -37,6 +42,7 @@ echo "EMERGENCY ROLLBACK INITIATED" | railway logs
 ```
 
 #### Passo 2: Isolamento do Problema
+
 ```bash
 # Parar tráfego para nova versão
 railway scale --replicas=0
@@ -46,6 +52,7 @@ railway env set MAINTENANCE_MODE=true
 ```
 
 #### Passo 3: Rollback do Banco (se necessário)
+
 ```bash
 # Usar backup mais recente
 psql $ROLLBACK_DATABASE_URL < $(ls -t backups/*.sql | head -1)
@@ -58,6 +65,7 @@ npx prisma validate
 ### Rollback Severidade 2 (< 15 minutos)
 
 #### Passo 1: Análise Rápida
+
 ```bash
 # Verificar logs dos últimos 10 minutos
 railway logs --since=10m --filter="ERROR|FATAL"
@@ -67,6 +75,7 @@ railway metrics --period=15m
 ```
 
 #### Passo 2: Rollback Seletivo
+
 ```bash
 # Rollback apenas da aplicação
 railway rollback --app-only
@@ -76,6 +85,7 @@ echo "Keeping current database state"
 ```
 
 #### Passo 3: Verificação
+
 ```bash
 # Health check
 curl -f https://seu-app.railway.app/api/health || echo "Health check failed"
@@ -87,6 +97,7 @@ npm run test:critical
 ### Rollback Severidade 3 (< 1 hora)
 
 #### Passo 1: Investigação Detalhada
+
 ```bash
 # Análise completa de logs
 railway logs --since=1h > investigation.log
@@ -96,6 +107,7 @@ npm run performance:analyze
 ```
 
 #### Passo 2: Rollback Planejado
+
 ```bash
 # Notificar usuários
 echo "Planned maintenance in 15 minutes" | railway notify
@@ -110,6 +122,7 @@ railway rollback --planned
 ## Scripts de Rollback Automatizados
 
 ### Script Principal: emergency-rollback.sh
+
 ```bash
 #!/bin/bash
 
@@ -142,6 +155,7 @@ fi
 ```
 
 ### Script de Rollback do Banco: db-rollback.sh
+
 ```bash
 #!/bin/bash
 
@@ -182,6 +196,7 @@ echo "[$(date)] DATABASE ROLLBACK COMPLETED"
 ## Checklist de Rollback
 
 ### Pré-Rollback
+
 - [ ] Identificar severidade do incidente
 - [ ] Notificar equipe responsável
 - [ ] Criar backup de emergência
@@ -189,6 +204,7 @@ echo "[$(date)] DATABASE ROLLBACK COMPLETED"
 - [ ] Verificar disponibilidade de backups
 
 ### Durante o Rollback
+
 - [ ] Executar procedimento apropriado para severidade
 - [ ] Monitorar logs em tempo real
 - [ ] Verificar health checks
@@ -196,6 +212,7 @@ echo "[$(date)] DATABASE ROLLBACK COMPLETED"
 - [ ] Documentar ações tomadas
 
 ### Pós-Rollback
+
 - [ ] Confirmar estabilidade do sistema
 - [ ] Notificar usuários sobre resolução
 - [ ] Analisar causa raiz
@@ -205,6 +222,7 @@ echo "[$(date)] DATABASE ROLLBACK COMPLETED"
 ## Pontos de Verificação
 
 ### Health Checks Críticos
+
 ```bash
 # API principal
 curl -f https://seu-app.railway.app/api/health
@@ -220,6 +238,7 @@ curl -f https://seu-app.railway.app/api/health/storage
 ```
 
 ### Testes de Funcionalidade
+
 ```bash
 # Testes críticos
 npm run test:critical
@@ -236,6 +255,7 @@ npm run test:performance
 ### Templates de Mensagem
 
 #### Início do Rollback
+
 ```
 🚨 ROLLBACK EM ANDAMENTO
 Detectamos um problema e estamos revertendo para a versão anterior.
@@ -244,6 +264,7 @@ Status: https://status.fisioflow.com
 ```
 
 #### Rollback Concluído
+
 ```
 ✅ ROLLBACK CONCLUÍDO
 O sistema foi revertido com sucesso.
@@ -252,6 +273,7 @@ Pedimos desculpas pelo inconveniente.
 ```
 
 #### Rollback Falhou
+
 ```
 ❌ INTERVENÇÃO MANUAL NECESSÁRIA
 O rollback automático falhou.
@@ -264,27 +286,32 @@ Atualizações em: https://status.fisioflow.com
 ### Escalação por Severidade
 
 #### Severidade 1
+
 1. **DevOps Lead** - [telefone] (imediato)
 2. **CTO** - [telefone] (5 min)
 3. **CEO** - [telefone] (15 min)
 
 #### Severidade 2
+
 1. **DevOps Team** - [slack] (imediato)
 2. **Tech Lead** - [telefone] (10 min)
 3. **DevOps Lead** - [telefone] (30 min)
 
 #### Severidade 3
+
 1. **DevOps Team** - [slack] (imediato)
 2. **Tech Lead** - [slack] (1 hora)
 
 ## Lições Aprendidas
 
 ### Histórico de Rollbacks
+
 | Data | Severidade | Causa | Tempo de Resolução | Lições |
-|------|------------|-------|-------------------|--------|
-| - | - | - | - | - |
+| ---- | ---------- | ----- | ------------------ | ------ |
+| -    | -          | -     | -                  | -      |
 
 ### Melhorias Implementadas
+
 - [ ] Monitoramento aprimorado
 - [ ] Testes automatizados adicionais
 - [ ] Procedimentos de rollback otimizados
@@ -299,6 +326,4 @@ Atualizações em: https://status.fisioflow.com
 
 ---
 
-**Última atualização**: $(date)
-**Versão**: 1.0.0
-**Próxima revisão**: $(date -d '+1 month')
+**Última atualização**: $(date) **Versão**: 1.0.0 **Próxima revisão**: $(date -d '+1 month')

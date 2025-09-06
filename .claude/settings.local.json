@@ -41,8 +41,18 @@
       "WebFetch(domain:station.railway.com)",
       "WebFetch(domain:railway.com)",
       "WebFetch(domain:docs.railway.com)",
+<<<<<<< HEAD
       "Bash(npm ls:*)",
       "Bash(del .babelrc.js)"
+=======
+      "Bash(cp:*)",
+      "Bash(set RAILWAY_TOKEN=6c8ed942-9408-460d-adb2-d9908fdfa7e9)",
+      "Bash(chmod:*)",
+      "Bash(git restore:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(sed:*)",
+      "Bash(find:*)"
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
     ],
     "deny": [],
     "ask": []

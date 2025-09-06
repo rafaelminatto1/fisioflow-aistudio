@@ -2,7 +2,10 @@
 
 ## Overview
 
-FisioFlow is a comprehensive physiotherapy management system built with Next.js 14, featuring advanced analytics, AI-powered insights, and integrated communication systems. This API documentation provides detailed information about all available endpoints, authentication, and usage examples.
+FisioFlow is a comprehensive physiotherapy management system built with Next.js 14, featuring
+advanced analytics, AI-powered insights, and integrated communication systems. This API
+documentation provides detailed information about all available endpoints, authentication, and usage
+examples.
 
 ## Base URL
 
@@ -11,9 +14,11 @@ FisioFlow is a comprehensive physiotherapy management system built with Next.js 
 
 ## Authentication
 
-FisioFlow uses NextAuth.js for authentication with session-based security. All protected routes require a valid session.
+FisioFlow uses NextAuth.js for authentication with session-based security. All protected routes
+require a valid session.
 
 ### Session Structure
+
 ```json
 {
   "user": {
@@ -47,9 +52,11 @@ FisioFlow uses NextAuth.js for authentication with session-based security. All p
 ### Health Check
 
 #### GET /api/health
+
 Check system health and service availability.
 
 **Response**:
+
 ```json
 {
   "status": "healthy" | "unhealthy" | "degraded",
@@ -84,9 +91,11 @@ Check system health and service availability.
 ## Patient Management
 
 ### GET /api/pacientes
+
 Retrieve list of patients.
 
 **Query Parameters**:
+
 - `limit` (number): Maximum number of results (default: 50, max: 100)
 - `offset` (number): Number of results to skip (default: 0)
 - `search` (string): Search by name, email, or phone
@@ -95,6 +104,7 @@ Retrieve list of patients.
 - `sortOrder` (string): Sort direction (`asc`, `desc`)
 
 **Response**:
+
 ```json
 {
   "patients": [
@@ -124,9 +134,11 @@ Retrieve list of patients.
 ```
 
 ### POST /api/pacientes
+
 Create a new patient.
 
 **Request Body**:
+
 ```json
 {
   "name": "Maria Santos",
@@ -150,6 +162,7 @@ Create a new patient.
 ```
 
 **Response**:
+
 ```json
 {
   "id": "patient_456",
@@ -162,9 +175,11 @@ Create a new patient.
 ```
 
 ### GET /api/pacientes/[id]
+
 Retrieve specific patient details.
 
 **Response**:
+
 ```json
 {
   "id": "patient_123",
@@ -211,11 +226,13 @@ Retrieve specific patient details.
 ```
 
 ### PUT /api/pacientes/[id]
+
 Update patient information.
 
 **Request Body**: Same as POST but with partial updates allowed.
 
 ### DELETE /api/pacientes/[id]
+
 Soft delete a patient (sets status to Inactive).
 
 ---
@@ -223,9 +240,11 @@ Soft delete a patient (sets status to Inactive).
 ## Appointment Management
 
 ### GET /api/appointments
+
 Retrieve appointments list.
 
 **Query Parameters**:
+
 - `therapistId` (string): Filter by therapist
 - `patientId` (string): Filter by patient
 - `status` (string): Filter by status
@@ -233,6 +252,7 @@ Retrieve appointments list.
 - `dateRange` (string): Date range filter (`today`, `week`, `month`)
 
 **Response**:
+
 ```json
 {
   "appointments": [
@@ -258,9 +278,11 @@ Retrieve appointments list.
 ```
 
 ### POST /api/appointments
+
 Create new appointment.
 
 **Request Body**:
+
 ```json
 {
   "patientId": "patient_456",
@@ -275,9 +297,11 @@ Create new appointment.
 ```
 
 ### PUT /api/appointments/[id]
+
 Update appointment details.
 
 ### DELETE /api/appointments/[id]
+
 Cancel appointment.
 
 ---
@@ -285,13 +309,16 @@ Cancel appointment.
 ## Analytics & Insights
 
 ### GET /api/analytics/advanced
+
 Get comprehensive dashboard analytics.
 
 **Query Parameters**:
+
 - `range` (string): Time range (`7d`, `30d`, `90d`, `1y`)
 - `userId` (string): Therapist ID for filtered data
 
 **Response**:
+
 ```json
 {
   "overview": {
@@ -352,9 +379,11 @@ Get comprehensive dashboard analytics.
 ```
 
 ### GET /api/analytics/patient-insights/[patientId]
+
 Get AI-powered insights for specific patient.
 
 **Response**:
+
 ```json
 {
   "patientId": "patient_123",
@@ -378,10 +407,7 @@ Get AI-powered insights for specific patient.
   },
   "predictions": {
     "dischargeProbability": 85,
-    "recommendedActions": [
-      "Continue current treatment protocol",
-      "Schedule follow-up in 2 weeks"
-    ]
+    "recommendedActions": ["Continue current treatment protocol", "Schedule follow-up in 2 weeks"]
   }
 }
 ```
@@ -391,9 +417,11 @@ Get AI-powered insights for specific patient.
 ## Communication
 
 ### POST /api/communication/email/send
+
 Send email to patient.
 
 **Request Body**:
+
 ```json
 {
   "patientId": "patient_123",
@@ -405,6 +433,7 @@ Send email to patient.
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
@@ -414,9 +443,11 @@ Send email to patient.
 ```
 
 ### POST /api/communication/whatsapp/send
+
 Send WhatsApp message to patient.
 
 **Request Body**:
+
 ```json
 {
   "patientId": "patient_123",
@@ -431,18 +462,22 @@ Send WhatsApp message to patient.
 ## Pain Tracking
 
 ### GET /api/pain-points
+
 Get pain points for a patient.
 
 **Query Parameters**:
+
 - `patientId` (string): Required patient ID
 - `limit` (number): Maximum results
 - `startDate` (string): Filter from date
 - `endDate` (string): Filter to date
 
 ### POST /api/pain-points
+
 Record new pain point.
 
 **Request Body**:
+
 ```json
 {
   "patientId": "patient_123",
@@ -460,16 +495,20 @@ Record new pain point.
 ## Metrics Tracking
 
 ### GET /api/metrics
+
 Get patient metrics.
 
 **Query Parameters**:
+
 - `patientId` (string): Required patient ID
 - `metricType` (string): Filter by metric type
 
 ### POST /api/metrics
+
 Record new metric measurement.
 
 **Request Body**:
+
 ```json
 {
   "patientId": "patient_123",
@@ -486,16 +525,20 @@ Record new metric measurement.
 ## SOAP Notes
 
 ### GET /api/soap-notes
+
 Get SOAP notes for a patient.
 
 **Query Parameters**:
+
 - `patientId` (string): Required patient ID
 - `limit` (number): Maximum results
 
 ### POST /api/soap-notes
+
 Create new SOAP note.
 
 **Request Body**:
+
 ```json
 {
   "patientId": "patient_123",
@@ -514,6 +557,7 @@ Create new SOAP note.
 All endpoints return consistent error responses:
 
 ### Error Response Format
+
 ```json
 {
   "error": "Error type",
@@ -527,6 +571,7 @@ All endpoints return consistent error responses:
 ```
 
 ### HTTP Status Codes
+
 - `200` - Success
 - `201` - Created
 - `400` - Bad Request (validation errors)
@@ -559,6 +604,7 @@ X-Request-ID: {unique_request_id}
 ## SDKs and Libraries
 
 ### JavaScript/TypeScript
+
 ```javascript
 // Using fetch API
 const response = await fetch('/api/pacientes', {
@@ -566,13 +612,14 @@ const response = await fetch('/api/pacientes', {
   headers: {
     'Content-Type': 'application/json',
   },
-  credentials: 'include' // Important for session cookies
+  credentials: 'include', // Important for session cookies
 });
 
 const patients = await response.json();
 ```
 
 ### React Hook Example
+
 ```javascript
 import { useState, useEffect } from 'react';
 
@@ -607,12 +654,13 @@ function usePatients() {
 ## Webhooks
 
 ### WhatsApp Webhooks
+
 FisioFlow can receive WhatsApp webhook events:
 
-**Endpoint**: `/api/webhooks/whatsapp`
-**Method**: `POST`
+**Endpoint**: `/api/webhooks/whatsapp` **Method**: `POST`
 
 **Webhook Payload**:
+
 ```json
 {
   "object": "whatsapp_business_account",
@@ -652,7 +700,9 @@ FisioFlow can receive WhatsApp webhook events:
 ## Monitoring and Logging
 
 ### Request Logging
+
 All API requests are logged with:
+
 - Request ID
 - User ID (if authenticated)
 - IP address
@@ -662,7 +712,9 @@ All API requests are logged with:
 - Error details (if any)
 
 ### Metrics Collection
+
 The system automatically tracks:
+
 - API response times
 - Error rates
 - User activity patterns
@@ -674,6 +726,7 @@ The system automatically tracks:
 ## Version History
 
 ### v1.0.0 (Current)
+
 - Initial API release
 - Patient management
 - Appointment scheduling
@@ -681,12 +734,14 @@ The system automatically tracks:
 - Email notifications
 
 ### v1.1.0
+
 - Advanced analytics
 - AI-powered insights
 - WhatsApp integration
 - Enhanced security features
 
 ### v1.2.0 (Planned)
+
 - Mobile app API
 - Advanced reporting
 - Integration webhooks
@@ -697,6 +752,7 @@ The system automatically tracks:
 ## Support
 
 For API support and questions:
+
 - **Documentation**: https://docs.fisioflow.com.br
 - **Email**: api-support@fisioflow.com.br
 - **GitHub Issues**: https://github.com/fisioflow/api/issues
@@ -706,12 +762,15 @@ For API support and questions:
 ## Rate Limiting Details
 
 ### Default Limits
+
 - **Public endpoints**: 1000 requests/hour
 - **Authenticated endpoints**: 5000 requests/hour
 - **Premium accounts**: 10000 requests/hour
 
 ### Headers
+
 Rate limit information is included in response headers:
+
 ```
 X-RateLimit-Limit: 1000
 X-RateLimit-Remaining: 999
@@ -720,4 +779,5 @@ X-RateLimit-Reset: 1640995200
 
 ---
 
-This documentation is automatically updated with each API release. For the most current information, always refer to the online documentation at https://docs.fisioflow.com.br.
+This documentation is automatically updated with each API release. For the most current information,
+always refer to the online documentation at https://docs.fisioflow.com.br.

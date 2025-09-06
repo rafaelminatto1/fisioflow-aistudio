@@ -18,7 +18,7 @@ const colors = {
   yellow: '\x1b[33m',
   blue: '\x1b[34m',
   magenta: '\x1b[35m',
-  cyan: '\x1b[36m'
+  cyan: '\x1b[36m',
 };
 
 function log(message, color = 'reset') {
@@ -80,18 +80,13 @@ function validateProjectStructure() {
     'package.json',
     'next.config.js',
     'tsconfig.json',
-    'prisma/schema.prisma'
+    'prisma/schema.prisma',
   ];
-  
-  const requiredDirs = [
-    'src',
-    'src/app',
-    'src/components',
-    'src/lib'
-  ];
-  
+
+  const requiredDirs = ['src', 'src/app', 'src/components', 'src/lib'];
+
   let isValid = true;
-  
+
   // Check required files
   for (const file of requiredFiles) {
     if (!fs.existsSync(file)) {
@@ -101,7 +96,7 @@ function validateProjectStructure() {
       logSuccess(`Found: ${file}`);
     }
   }
-  
+
   // Check required directories
   for (const dir of requiredDirs) {
     if (!fs.existsSync(dir)) {
@@ -111,30 +106,28 @@ function validateProjectStructure() {
       logSuccess(`Found: ${dir}`);
     }
   }
-  
+
   return isValid;
 }
 
 // Check environment variables
 function checkEnvironmentVariables() {
   logStep('4', 'Checking environment variables...');
-  
-  const requiredEnvVars = [
-    'DATABASE_URL',
-    'NEXTAUTH_SECRET',
-    'NEXTAUTH_URL'
-  ];
-  
+
+  const requiredEnvVars = ['DATABASE_URL', 'NEXTAUTH_SECRET', 'NEXTAUTH_URL'];
+
   // Check .env.local file
   const envFile = '.env.local';
   if (!fs.existsSync(envFile)) {
-    logWarning(`${envFile} not found. Make sure environment variables are configured in Railway.`);
+    logWarning(
+      `${envFile} not found. Make sure environment variables are configured in Railway.`
+    );
     return true; // Railway handles env vars
   }
-  
+
   const envContent = fs.readFileSync(envFile, 'utf8');
   let allPresent = true;
-  
+
   for (const envVar of requiredEnvVars) {
     if (envContent.includes(`${envVar}=`)) {
       logSuccess(`Found: ${envVar}`);
@@ -142,7 +135,7 @@ function checkEnvironmentVariables() {
       logWarning(`Missing: ${envVar} (should be configured in Railway)`);
     }
   }
-  
+
   return true;
 }
 
@@ -211,16 +204,16 @@ function performHealthCheck(url) {
     logWarning('Skipping health check - no URL available');
     return true;
   }
-  
+
   logStep('9', 'Performing health check...');
   try {
     const https = require('https');
     const http = require('http');
-    
+
     const client = url.startsWith('https') ? https : http;
-    
-    return new Promise((resolve) => {
-      const req = client.get(url, (res) => {
+
+    return new Promise(resolve => {
+      const req = client.get(url, res => {
         if (res.statusCode === 200) {
           logSuccess('Health check passed');
           resolve(true);
@@ -229,12 +222,12 @@ function performHealthCheck(url) {
           resolve(true); // Don't fail deployment for this
         }
       });
-      
-      req.on('error', (error) => {
+
+      req.on('error', error => {
         logWarning(`Health check failed: ${error.message}`);
         resolve(true); // Don't fail deployment for this
       });
-      
+
       req.setTimeout(10000, () => {
         logWarning('Health check timed out');
         req.destroy();
@@ -251,7 +244,7 @@ function performHealthCheck(url) {
 async function main() {
   log('🚀 FisioFlow Railway Deployment Script', 'bright');
   log('=========================================', 'bright');
-  
+
   // Pre-deployment checks
   if (!checkRailwayCLI()) return process.exit(1);
   if (!checkRailwayAuth()) return process.exit(1);
@@ -259,19 +252,19 @@ async function main() {
   if (!checkEnvironmentVariables()) return process.exit(1);
   if (!runBuild()) return process.exit(1);
   if (!checkRailwayProject()) return process.exit(1);
-  
+
   // Deploy
   if (!deployToRailway()) return process.exit(1);
-  
+
   // Post-deployment checks
   const url = getDeploymentURL();
   await performHealthCheck(url);
-  
+
   log('\n🎉 Deployment completed successfully!', 'green');
   if (url) {
     log(`🌐 Your application is available at: ${url}`, 'cyan');
   }
-  
+
   log('\n📋 Next steps:', 'yellow');
   log('- Verify your application is working correctly', 'yellow');
   log('- Check Railway logs: railway logs', 'yellow');
@@ -280,7 +273,7 @@ async function main() {
 
 // Run the script
 if (require.main === module) {
-  main().catch((error) => {
+  main().catch(error => {
     logError(`Deployment script failed: ${error.message}`);
     process.exit(1);
   });
@@ -293,5 +286,5 @@ module.exports = {
   checkEnvironmentVariables,
   runBuild,
   deployToRailway,
-  performHealthCheck
+  performHealthCheck,
 };

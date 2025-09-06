@@ -49,28 +49,34 @@ const validateCPF = (cpf: string): boolean => {
 // Schema Zod para o formulário de Paciente
 export const patientFormSchema = z.object({
   // Etapa 1: Dados Pessoais
-  name: z.string().min(3, { message: "O nome deve ter pelo menos 3 caracteres." }),
-  cpf: z.string().refine(validateCPF, { message: "CPF inválido." }),
+  name: z
+    .string()
+    .min(3, { message: 'O nome deve ter pelo menos 3 caracteres.' }),
+  cpf: z.string().refine(validateCPF, { message: 'CPF inválido.' }),
   birthDate: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email({ message: "Email inválido." }).optional().or(z.literal('')),
-  
+  email: z
+    .string()
+    .email({ message: 'Email inválido.' })
+    .optional()
+    .or(z.literal('')),
+
   // Etapa 1: Endereço
   addressZip: z.string().optional(),
   addressStreet: z.string().optional(),
   addressNumber: z.string().optional(),
   addressCity: z.string().optional(),
   addressState: z.string().optional(),
-  
+
   // Etapa 2: Dados Médicos
   emergencyContactName: z.string().optional(),
   emergencyContactPhone: z.string().optional(),
   allergies: z.string().optional(),
   medicalAlerts: z.string().optional(),
-  
+
   // Etapa 3: Consentimento
   consentGiven: z.boolean().refine(val => val === true, {
-    message: "O consentimento LGPD é obrigatório."
+    message: 'O consentimento LGPD é obrigatório.',
   }),
   whatsappConsent: z.enum(['opt_in', 'opt_out']),
 });

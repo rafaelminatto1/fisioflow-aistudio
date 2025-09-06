@@ -5,6 +5,7 @@
 ### Fase 1: Fundação (Semanas 1-4)
 
 #### Semana 1: Setup Inicial
+
 - [ ] Configurar ambiente de desenvolvimento
 - [ ] Instalar dependências base (Next.js, Prisma, Tailwind)
 - [ ] Configurar banco de dados PostgreSQL (Neon)
@@ -12,18 +13,21 @@
 - [ ] Criar estrutura de pastas e arquivos
 
 #### Semana 2: Sistema de Usuários
+
 - [ ] Implementar modelos User, Patient, Therapist
 - [ ] Criar páginas de login/registro
 - [ ] Implementar RBAC básico
 - [ ] Criar dashboard inicial para cada tipo de usuário
 
 #### Semana 3: Gestão de Pacientes
+
 - [ ] CRUD completo de pacientes
 - [ ] Formulário de cadastro com validações
 - [ ] Busca e filtros de pacientes
 - [ ] Histórico básico do paciente
 
 #### Semana 4: Sistema de Agendamentos
+
 - [ ] Modelo de agendamentos
 - [ ] Calendário básico (visualização)
 - [ ] Criação de agendamentos
@@ -32,24 +36,28 @@
 ### Fase 2: Funcionalidades Core (Semanas 5-8)
 
 #### Semana 5: Agenda Avançada
+
 - [ ] Drag & drop para reagendamentos
 - [ ] Visualizações (dia, semana, mês)
 - [ ] Conflitos e validações
 - [ ] Notificações básicas
 
 #### Semana 6: Prontuário Eletrônico
+
 - [ ] Modelo de avaliações fisioterapêuticas
 - [ ] Formulários de avaliação
 - [ ] Histórico de sessões
 - [ ] Upload de imagens
 
 #### Semana 7: Exercícios e Tratamentos
+
 - [ ] Biblioteca de exercícios
 - [ ] Planos de tratamento
 - [ ] Prescrição de exercícios
 - [ ] Acompanhamento de evolução
 
 #### Semana 8: Relatórios Básicos
+
 - [ ] Relatórios de pacientes
 - [ ] Estatísticas de agendamentos
 - [ ] Exportação em PDF
@@ -58,24 +66,28 @@
 ### Fase 3: IA e Automação (Semanas 9-12)
 
 #### Semana 9: Integração MCP
+
 - [ ] Configurar MCP Service
 - [ ] Integração com Gemini/Claude/OpenAI
 - [ ] Análise básica de texto
 - [ ] Sugestões automáticas
 
 #### Semana 10: Análise de Imagens
+
 - [ ] Upload e processamento de imagens posturais
 - [ ] Análise automática com IA
 - [ ] Anotações e marcações
 - [ ] Relatórios de análise
 
 #### Semana 11: Assistente IA
+
 - [ ] Chat integrado para terapeutas
 - [ ] Sugestões de diagnóstico
 - [ ] Recomendações de exercícios
 - [ ] Geração automática de relatórios
 
 #### Semana 12: Otimizações IA
+
 - [ ] Fine-tuning de prompts
 - [ ] Cache de respostas
 - [ ] Feedback loop
@@ -84,24 +96,28 @@
 ### Fase 4: Gestão Financeira (Semanas 13-16)
 
 #### Semana 13: Módulo Financeiro Base
+
 - [ ] Modelos financeiros
 - [ ] Controle de receitas/despesas
 - [ ] Faturamento básico
 - [ ] Relatórios financeiros
 
 #### Semana 14: Integração Bancária
+
 - [ ] API de bancos (PIX, TED)
 - [ ] Conciliação automática
 - [ ] Controle de fluxo de caixa
 - [ ] Alertas financeiros
 
 #### Semana 15: Convênios e Seguros
+
 - [ ] Cadastro de convênios
 - [ ] Autorização de procedimentos
 - [ ] Faturamento para convênios
 - [ ] Controle de limites
 
 #### Semana 16: Relatórios Avançados
+
 - [ ] DRE automatizado
 - [ ] Análise de rentabilidade
 - [ ] Projeções financeiras
@@ -123,6 +139,7 @@
 ```
 
 **Arquivos principais:**
+
 - `pages/api/auth/[...nextauth].ts`
 - `lib/auth/rbac.ts`
 - `middleware.ts`
@@ -141,6 +158,7 @@
 ```
 
 **Arquivos principais:**
+
 - `prisma/schema.prisma` (User, Patient, Therapist)
 - `pages/api/users/[...].ts`
 - `components/users/UserForm.tsx`
@@ -160,6 +178,7 @@
 ```
 
 **Arquivos principais:**
+
 - `pages/patients/index.tsx`
 - `pages/patients/[id].tsx`
 - `components/patients/PatientForm.tsx`
@@ -180,6 +199,7 @@
 ```
 
 **Arquivos principais:**
+
 - `components/scheduling/Calendar.tsx`
 - `components/scheduling/AppointmentModal.tsx`
 - `services/SchedulingService.ts`
@@ -199,6 +219,7 @@
 ```
 
 **Arquivos principais:**
+
 - `components/medical/AssessmentForm.tsx`
 - `components/medical/SessionHistory.tsx`
 - `services/MedicalRecordService.ts`
@@ -218,6 +239,7 @@
 ```
 
 **Arquivos principais:**
+
 - `services/ai/PhysioAIService.ts`
 - `components/ai/PosturalAnalysis.tsx`
 - `components/ai/AiAssistant.tsx`
@@ -313,7 +335,7 @@ echo "Execute 'npm run dev' para iniciar o desenvolvimento"
 ```typescript
 // Pirâmide de testes
 // 70% - Testes unitários
-// 20% - Testes de integração  
+// 20% - Testes de integração
 // 10% - Testes E2E
 
 // jest.config.js
@@ -473,24 +495,28 @@ module.exports = {
 
 ```markdown
 # Q1 2024 - Fundação
+
 - ✅ Sistema básico de agendamentos
 - ✅ Prontuário eletrônico
 - ✅ Gestão de pacientes
 - ✅ Autenticação e autorização
 
 # Q2 2024 - IA e Automação
+
 - 🔄 Análise de imagens posturais
 - 🔄 Assistente IA para terapeutas
 - 📋 Sugestões automáticas de exercícios
 - 📋 Relatórios inteligentes
 
 # Q3 2024 - Gestão Financeira
+
 - 📋 Módulo financeiro completo
 - 📋 Integração bancária
 - 📋 Faturamento automático
 - 📋 Relatórios financeiros
 
 # Q4 2024 - Funcionalidades Avançadas
+
 - 📋 Telemedicina
 - 📋 App mobile
 - 📋 Integração com wearables

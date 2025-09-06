@@ -1,8 +1,17 @@
 // hooks/useClinicalAnalytics.ts
 import { useState, useEffect } from 'react';
+<<<<<<< HEAD:src/hooks/useClinicalAnalytics.ts
 import { mockSoapNotes, mockAppointments, mockPatients } from '@/data/mockData';
 import type { MockPatient, MockAppointment } from '@/types';
 import { AppointmentStatus } from '../../../types';
+=======
+import {
+  mockSoapNotes,
+  mockAppointments,
+  mockPatients,
+} from '../data/mockData';
+import { AppointmentStatus } from '../types';
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3:hooks/useClinicalAnalytics.ts
 
 interface Kpis {
   dischargeRate: number;
@@ -24,7 +33,9 @@ const useClinicalAnalytics = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [kpis, setKpis] = useState<Kpis | null>(null);
   const [painEvolution, setPainEvolution] = useState<PainEvolutionData[]>([]);
-  const [successByPathology, setSuccessByPathology] = useState<SuccessByPathologyData[]>([]);
+  const [successByPathology, setSuccessByPathology] = useState<
+    SuccessByPathologyData[]
+  >([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,6 +45,7 @@ const useClinicalAnalytics = () => {
       // Calculate KPIs
       const ninetyDaysAgo = new Date();
       ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+<<<<<<< HEAD:src/hooks/useClinicalAnalytics.ts
       const dischargedPatients = mockPatients.filter((p: MockPatient) => p.status === 'Discharged' && p.lastVisit && new Date(p.lastVisit) > ninetyDaysAgo).length;
       const activePatients = mockPatients.filter((p: MockPatient) => p.status === 'Active').length;
       const dischargeRate = activePatients > 0 ? Math.round((dischargedPatients / (dischargedPatients + activePatients)) * 100) : 0;
@@ -41,6 +53,33 @@ const useClinicalAnalytics = () => {
       const completedAppointments = mockAppointments.filter((a: MockAppointment) => a.status === AppointmentStatus.Completed);
       const uniquePatientsWithSessions = new Set(completedAppointments.map((a: MockAppointment) => a.patientId));
       const avgSessions = uniquePatientsWithSessions.size > 0 ? Math.round(completedAppointments.length / uniquePatientsWithSessions.size) : 0;
+=======
+      const dischargedPatients = mockPatients.filter(
+        p => p.status === 'Discharged' && new Date(p.lastVisit) > ninetyDaysAgo
+      ).length;
+      const activePatients = mockPatients.filter(
+        p => p.status === 'Active'
+      ).length;
+      const dischargeRate =
+        activePatients > 0
+          ? Math.round(
+              (dischargedPatients / (dischargedPatients + activePatients)) * 100
+            )
+          : 0;
+
+      const completedAppointments = mockAppointments.filter(
+        a => a.status === AppointmentStatus.Completed
+      );
+      const uniquePatientsWithSessions = new Set(
+        completedAppointments.map(a => a.patientId)
+      );
+      const avgSessions =
+        uniquePatientsWithSessions.size > 0
+          ? Math.round(
+              completedAppointments.length / uniquePatientsWithSessions.size
+            )
+          : 0;
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3:hooks/useClinicalAnalytics.ts
 
       const calculatedKpis: Kpis = {
         dischargeRate,

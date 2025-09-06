@@ -1,87 +1,55 @@
+// src/components/pacientes/ClinicalHistoryTimeline.tsx
 'use client';
 
 import React from 'react';
-import { SoapNote } from '../../types';
-import { Calendar, User } from 'lucide-react';
+import { SoapNote } from '@/types';
+import { FileText } from 'lucide-react';
 
 interface ClinicalHistoryTimelineProps {
   notes: SoapNote[];
 }
 
-export default function ClinicalHistoryTimeline({ notes }: ClinicalHistoryTimelineProps) {
-  if (!notes || notes.length === 0) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-gray-500">Nenhuma anotação clínica encontrada.</p>
-      </div>
-    );
-  }
-
-  const sortedNotes = [...notes].sort((a, b) => 
-    new Date(b.date.split('/').reverse().join('-')).getTime() - new Date(a.date.split('/').reverse().join('-')).getTime()
-  );
-
+const ClinicalHistoryTimeline: React.FC<ClinicalHistoryTimelineProps> = ({
+  notes,
+}) => {
   return (
-    <div className="space-y-4">
-      {sortedNotes.map((note, index) => (
-        <div key={note.id} className="relative">
-          {index < sortedNotes.length - 1 && (
-            <div className="absolute left-4 top-8 h-full w-0.5 bg-gray-200" />
-          )}
-          
-          <div className="flex items-start space-x-4">
-            <div className="flex-shrink-0">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-100">
-                <Calendar className="h-4 w-4 text-blue-600" />
+    <div className='relative border-l-2 border-slate-200 ml-3'>
+      {notes.length > 0 ? (
+        <ul className='space-y-8'>
+          {notes.map(note => (
+            <li key={note.id} className='relative'>
+              <div className='absolute -left-[29px] top-1 w-6 h-6 rounded-full bg-sky-500 flex items-center justify-center ring-4 ring-white'>
+                <FileText className='w-3 h-3 text-white' />
               </div>
-            </div>
-            
-            <div className="flex-1 bg-white border border-gray-200 rounded-lg p-4 shadow-sm">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <User className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm font-medium text-gray-900">
-                    {note.therapist || 'Fisioterapeuta'}
-                  </span>
+              <div className='ml-8'>
+                <div className='flex items-center justify-between'>
+                  <p className='font-bold text-slate-800'>
+                    Sessão - {note.date}
+                  </p>
                 </div>
-                <span className="text-sm text-gray-500">
-                  {note.date}
-                </span>
+                <p className='text-sm text-slate-600 mt-1'>
+                  <strong className='font-semibold text-slate-700'>
+                    Avaliação:
+                  </strong>{' '}
+                  {note.assessment}
+                </p>
               </div>
-              
-              <div className="space-y-3">
-                {note.subjective && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-1">Subjetivo</h4>
-                    <p className="text-sm text-gray-600">{note.subjective}</p>
-                  </div>
-                )}
-                
-                {note.objective && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-1">Objetivo</h4>
-                    <p className="text-sm text-gray-600">{note.objective}</p>
-                  </div>
-                )}
-                
-                {note.assessment && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-1">Avaliação</h4>
-                    <p className="text-sm text-gray-600">{note.assessment}</p>
-                  </div>
-                )}
-                
-                {note.plan && (
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-700 mb-1">Plano</h4>
-                    <p className="text-sm text-gray-600">{note.plan}</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div className='pl-8 text-center text-slate-500'>
+          <FileText className='mx-auto h-12 w-12 text-slate-300' />
+          <h3 className='mt-2 text-sm font-medium text-slate-900'>
+            Nenhum histórico clínico
+          </h3>
+          <p className='mt-1 text-sm text-slate-500'>
+            Adicione a primeira anotação para este paciente.
+          </p>
         </div>
-      ))}
+      )}
     </div>
   );
-}
+};
+
+export default ClinicalHistoryTimeline;

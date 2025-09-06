@@ -5,18 +5,21 @@ Guia de ação rápida para situações críticas no sistema FisioFlow.
 ## ⚡ Classificação de Emergências
 
 ### 🔴 CRÍTICA (P0) - Ação Imediata
+
 - Sistema completamente inoperante
 - Perda de dados confirmada
 - Vazamento de dados pessoais
 - Falha total do banco de dados
 
 ### 🟡 ALTA (P1) - Ação em 15 min
+
 - Performance severamente degradada
 - Funcionalidades principais indisponíveis
 - Falha no sistema de backup
 - Alertas críticos de segurança
 
 ### 🟢 MÉDIA (P2) - Ação em 1 hora
+
 - Funcionalidades secundárias indisponíveis
 - Performance moderadamente degradada
 - Alertas de monitoramento
@@ -72,29 +75,32 @@ fi
 **Ações Imediatas:**
 
 1. **PARAR TODAS AS OPERAÇÕES**
+
    ```bash
    # Parar aplicação imediatamente
    pm2 stop all
    pkill -f "fisioflow"
-   
+
    # Isolar banco de dados
    # (Não executar mais queries)
    ```
 
 2. **NOTIFICAR AUTORIDADES**
+
    ```bash
    # Notificar equipe jurídica
    echo "PERDA DE DADOS DETECTADA" | mail -s "EMERGÊNCIA LGPD" juridico@empresa.com
-   
+
    # Notificar ANPD se necessário
    # (Dentro de 72 horas)
    ```
 
 3. **INICIAR RECUPERAÇÃO**
+
    ```bash
    # Listar backups disponíveis
    node scripts/recovery.js list --emergency
-   
+
    # Recuperar backup mais recente
    node scripts/recovery.js auto --verify-integrity
    ```
@@ -104,22 +110,24 @@ fi
 **Protocolo LGPD:**
 
 1. **Contenção Imediata (0-15 min)**
+
    ```bash
    # Isolar sistema
    iptables -A INPUT -p tcp --dport 3000 -j DROP
-   
+
    # Revogar tokens de acesso
    node scripts/revoke-all-tokens.js
-   
+
    # Capturar logs de acesso
    cp /var/log/nginx/access.log /backup/incident-$(date +%Y%m%d-%H%M%S).log
    ```
 
 2. **Investigação (15-60 min)**
+
    ```bash
    # Analisar logs de acesso
    grep -E "(SELECT|UPDATE|DELETE).*users" logs/app.log > incident-queries.log
-   
+
    # Identificar dados afetados
    node scripts/audit-data-access.js --since="1 hour ago"
    ```
@@ -149,16 +157,16 @@ curl -X PATCH "https://console.neon.tech/api/v2/projects/$NEON_PROJECT_ID/endpoi
 # Identificar queries problemáticas
 psql $DATABASE_URL -c "
 SELECT query, mean_exec_time, calls, total_exec_time
-FROM pg_stat_statements 
+FROM pg_stat_statements
 WHERE mean_exec_time > 1000
-ORDER BY mean_exec_time DESC 
+ORDER BY mean_exec_time DESC
 LIMIT 10;"
 
 # Matar queries longas se necessário
 psql $DATABASE_URL -c "
-SELECT pg_terminate_backend(pid) 
-FROM pg_stat_activity 
-WHERE state = 'active' 
+SELECT pg_terminate_backend(pid)
+FROM pg_stat_activity
+WHERE state = 'active'
 AND query_start < NOW() - INTERVAL '5 minutes'
 AND query NOT LIKE '%pg_stat_activity%';"
 ```
@@ -251,28 +259,28 @@ while true; do
     ./scripts/emergency-escalation.sh "API_DOWN"
     break
   fi
-  
+
   # Verificar banco de dados
   if ! node -e "require('./lib/neon-config').testConnection().catch(() => process.exit(1))"; then
     echo "❌ Banco de dados falhou - $(date)"
     ./scripts/emergency-escalation.sh "DATABASE_DOWN"
     break
   fi
-  
+
   # Verificar uso de memória
   MEMORY_USAGE=$(free | grep Mem | awk '{printf "%.0f", $3/$2 * 100.0}')
   if [ $MEMORY_USAGE -gt 90 ]; then
     echo "⚠️ Memória crítica: ${MEMORY_USAGE}% - $(date)"
     ./scripts/emergency-escalation.sh "HIGH_MEMORY"
   fi
-  
+
   # Verificar espaço em disco
   DISK_USAGE=$(df / | tail -1 | awk '{print $5}' | sed 's/%//')
   if [ $DISK_USAGE -gt 85 ]; then
     echo "⚠️ Disco crítico: ${DISK_USAGE}% - $(date)"
     ./scripts/emergency-escalation.sh "HIGH_DISK"
   fi
-  
+
   sleep 30
 done
 ```
@@ -280,16 +288,19 @@ done
 ## 📞 Contatos de Emergência
 
 ### Equipe Técnica
+
 - **CTO**: +55 11 99999-0001 (24h)
 - **DevOps Lead**: +55 11 99999-0002 (24h)
 - **DBA**: +55 11 99999-0003 (horário comercial)
 
 ### Fornecedores
+
 - **Neon DB Support**: support@neon.tech
 - **AWS Support**: Caso Enterprise #12345
 - **Slack Support**: workspace-admin@empresa.com
 
 ### Jurídico/Compliance
+
 - **LGPD Officer**: lgpd@empresa.com
 - **Jurídico**: juridico@empresa.com
 - **ANPD**: https://www.gov.br/anpd
@@ -297,18 +308,21 @@ done
 ## 📋 Checklist Pós-Incidente
 
 ### Imediatamente Após Resolução
+
 - [ ] Confirmar que sistema está operacional
 - [ ] Notificar usuários sobre resolução
 - [ ] Documentar timeline do incidente
 - [ ] Preservar logs relevantes
 
 ### Primeiras 24 horas
+
 - [ ] Análise de causa raiz
 - [ ] Relatório preliminar
 - [ ] Identificar melhorias necessárias
 - [ ] Atualizar procedimentos se necessário
 
 ### Primeira semana
+
 - [ ] Relatório final detalhado
 - [ ] Implementar melhorias identificadas
 - [ ] Treinar equipe em novos procedimentos
@@ -317,12 +331,14 @@ done
 ## 🔄 Simulações de Emergência
 
 ### Cronograma de Testes
+
 - **Mensal**: Teste de backup e recuperação
 - **Trimestral**: Simulação de falha completa
 - **Semestral**: Teste de vazamento de dados
 - **Anual**: Revisão completa dos procedimentos
 
 ### Comando para Simulação
+
 ```bash
 # Simular falha controlada
 node scripts/emergency-simulation.js --type=database_failure --duration=5min
@@ -337,6 +353,7 @@ node scripts/emergency-simulation.js --type=database_failure --duration=5min
 É melhor escalar desnecessariamente do que deixar um problema crítico sem resolução.
 
 **Ordem de Prioridade:**
+
 1. 🛡️ Segurança dos dados
 2. 👥 Segurança dos usuários
 3. 🔧 Restauração do serviço
@@ -344,4 +361,4 @@ node scripts/emergency-simulation.js --type=database_failure --duration=5min
 
 ---
 
-*Este documento deve ser revisado mensalmente e mantido sempre acessível à equipe técnica.*
+_Este documento deve ser revisado mensalmente e mantido sempre acessível à equipe técnica._

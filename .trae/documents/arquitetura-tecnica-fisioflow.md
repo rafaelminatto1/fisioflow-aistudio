@@ -5,6 +5,7 @@
 
 ```mermaid
 graph TD
+<<<<<<< HEAD
     A[Cliente Web/Mobile] --> B[Load Balancer]
     B --> C[Next.js Frontend]
     C --> D[API Gateway]
@@ -14,12 +15,195 @@ graph TD
     E --> H[File Storage]
     
     subgraph "Frontend Layer"
+=======
+    A[Cliente Browser] --> B[Cloudflare CDN]
+    B --> C[Vercel Edge Network]
+    C --> D[Next.js 14 Application]
+    D --> E[NextAuth.js]
+    D --> F[Neon DB Client]
+    F --> G[Neon DB]
+    F --> H[NextAuth.js]
+    D --> I[Upstash Redis]
+    D --> J[Cloudinary API]
+
+    subgraph "Frontend Layer"
+        D
+        E
+    end
+
+    subgraph "Backend Services"
+        F
+        G
+        H
+        I
+    end
+
+    subgraph "External Services"
+        J
+    end
+```
+
+## 2. Descrição Tecnológica
+
+- **Frontend**: Next.js 14 + React 18 + TypeScript + Tailwind CSS
+- **Autenticação**: NextAuth.js 5.0 + Neon DB
+- **Database**: Neon DB (PostgreSQL)
+- **Cache**: Upstash Redis
+- **Storage**: Cloudinary
+- **Deploy**: Vercel
+- **Monitoramento**: Vercel Analytics + Sentry
+
+## 3. Definições de Rotas
+
+| Rota                      | Propósito                                           |
+| ------------------------- | --------------------------------------------------- |
+| `/`                       | Página inicial com redirecionamento baseado em auth |
+| `/login`                  | Página de autenticação otimizada                    |
+| `/dashboard`              | Dashboard principal para terapeutas                 |
+| `/pacientes`              | Listagem e gestão de pacientes                      |
+| `/pacientes/[id]`         | Detalhes específicos do paciente                    |
+| `/agenda`                 | Sistema de agendamento                              |
+| `/teleconsulta`           | Interface de teleconsulta                           |
+| `/portal`                 | Portal do paciente                                  |
+| `/partner`                | Portal do educador físico                           |
+| `/api/auth/[...nextauth]` | Endpoints de autenticação                           |
+| `/api/pacientes`          | API REST para pacientes                             |
+| `/api/appointments`       | API REST para agendamentos                          |
+
+## 4. Definições de API
+
+### 4.1 Autenticação
+
+**POST /api/auth/signin**
+
+Request: | Param | Type | Required | Description | |-------|------|----------|-------------| | email
+| string | true | Email do usuário | | password | string | true | Senha do usuário | | csrfToken |
+string | true | Token CSRF |
+
+Response: | Param | Type | Description | |-------|------|-------------| | user | User | Dados do
+usuário autenticado | | expires | string | Data de expiração da sessão |
+
+Example:
+
+```json
+{
+  "user": {
+    "id": "uuid",
+    "name": "Dr. Roberto",
+    "email": "roberto@fisioflow.com",
+    "role": "Fisioterapeuta"
+  },
+  "expires": "2024-12-31T23:59:59.999Z"
+}
+```
+
+### 4.2 Gestão de Pacientes
+
+**GET /api/pacientes**
+
+Query Parameters: | Param | Type | Required | Description |
+|-------|------|----------|-------------| | page | number | false | Número da página (default: 1) |
+| limit | number | false | Itens por página (default: 10) | | search | string | false | Termo de
+busca | | status | string | false | Filtro por status |
+
+Response:
+
+```json
+{
+  "patients": [
+    {
+      "id": "uuid",
+      "name": "João Silva",
+      "email": "joao@email.com",
+      "status": "Active",
+      "lastVisit": "2024-01-15T10:00:00Z"
+    }
+  ],
+  "pagination": {
+    "total": 150,
+    "page": 1,
+    "limit": 10,
+    "totalPages": 15
+  }
+}
+```
+
+**POST /api/pacientes**
+
+Request:
+
+```json
+{
+  "name": "Maria Santos",
+  "email": "maria@email.com",
+  "phone": "+5511999999999",
+  "cpf": "123.456.789-00",
+  "birthDate": "1985-03-15",
+  "address": {
+    "street": "Rua das Flores, 123",
+    "city": "São Paulo",
+    "state": "SP",
+    "zip": "01234-567"
+  }
+}
+```
+
+### 4.3 Sistema de Agendamentos
+
+**GET /api/appointments**
+
+Query Parameters: | Param | Type | Required | Description |
+|-------|------|----------|-------------| | startDate | string | true | Data inicial (ISO) | |
+endDate | string | true | Data final (ISO) | | therapistId | string | false | ID do terapeuta | |
+patientId | string | false | ID do paciente |
+
+**POST /api/appointments**
+
+Request:
+
+```json
+{
+  "patientId": "uuid",
+  "therapistId": "uuid",
+  "startTime": "2024-01-20T14:00:00Z",
+  "endTime": "2024-01-20T15:00:00Z",
+  "type": "Sessão",
+  "observations": "Primeira sessão pós-cirurgia"
+}
+```
+
+## 5. Arquitetura do Servidor
+
+```mermaid
+graph TD
+    A[Next.js App Router] --> B[Middleware Layer]
+    B --> C[API Routes]
+    C --> D[Service Layer]
+    D --> E[Repository Layer]
+    E --> F[(Neon DB)]
+
+    B --> G[Auth Middleware]
+    B --> H[Rate Limiting]
+    B --> I[CORS Handler]
+
+    D --> J[Cache Service]
+    J --> K[(Redis Cache)]
+
+    subgraph "Application Layer"
+        A
+        B
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         C
         I[PWA Service Worker]
         J[React Native App]
     end
+<<<<<<< HEAD
     
     subgraph "API Layer"
+=======
+
+    subgraph "Business Logic"
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         D
         K[Authentication Service]
         L[Patient Service]
@@ -27,7 +211,7 @@ graph TD
         N[AI Service]
         O[Analytics Service]
     end
-    
+
     subgraph "Data Layer"
         F
         G
@@ -213,6 +397,7 @@ graph TD
 erDiagram
     USER ||--o{ PATIENT : manages
     USER ||--o{ APPOINTMENT : schedules
+<<<<<<< HEAD
     USER ||--o{ CLINIC : belongs_to
     
     PATIENT ||--o{ APPOINTMENT : has
@@ -230,6 +415,15 @@ erDiagram
     CLINIC ||--o{ EQUIPMENT : owns
     CLINIC ||--o{ SUBSCRIPTION : has
     
+=======
+    PATIENT ||--o{ APPOINTMENT : attends
+    PATIENT ||--o{ PAIN_POINT : reports
+    PATIENT ||--o{ METRIC_RESULT : tracks
+    APPOINTMENT ||--o{ SOAP_NOTE : documents
+    USER ||--o{ COMMUNICATION_LOG : creates
+    PATIENT ||--o{ COMMUNICATION_LOG : receives
+
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
     USER {
         uuid id PK
         string email UK
@@ -239,7 +433,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     PATIENT {
         uuid id PK
         uuid user_id FK
@@ -252,7 +446,7 @@ erDiagram
         timestamp created_at
         timestamp updated_at
     }
-    
+
     APPOINTMENT {
         uuid id PK
         uuid patient_id FK
@@ -275,8 +469,13 @@ erDiagram
         json attachments
         timestamp created_at
     }
+<<<<<<< HEAD
     
     TREATMENT_PLAN {
+=======
+
+    PAIN_POINT {
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         uuid id PK
         uuid patient_id FK
         string diagnosis
@@ -299,8 +498,22 @@ erDiagram
         json parameters
         timestamp created_at
     }
+<<<<<<< HEAD
     
     TELECONSULTA {
+=======
+
+    METRIC_RESULT {
+        uuid id PK
+        uuid patient_id FK
+        string metric_name
+        float value
+        string unit
+        timestamp measured_at
+    }
+
+    SOAP_NOTE {
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         uuid id PK
         uuid appointment_id FK
         string room_id
@@ -309,8 +522,13 @@ erDiagram
         timestamp started_at
         timestamp ended_at
     }
+<<<<<<< HEAD
     
     PAYMENT {
+=======
+
+    COMMUNICATION_LOG {
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         uuid id PK
         uuid patient_id FK
         uuid appointment_id FK
@@ -514,6 +732,7 @@ model Teleconsulta {
   @@map("teleconsultas")
 }
 
+<<<<<<< HEAD
 model AiChat {
   id        String    @id @default(cuid())
   userId    String
@@ -528,6 +747,12 @@ model AiChat {
   
   @@map("ai_chats")
 }
+=======
+-- Políticas de acesso
+CREATE POLICY "Users can view their own data" ON patients
+    FOR SELECT USING (auth.uid()::text = id::text OR
+                     EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('Admin', 'Fisioterapeuta')));
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
 model Payment {
   id            String    @id @default(cuid())
@@ -662,6 +887,7 @@ enum SubscriptionStatus {
 
 ### 7.1 Teleconsulta com WebRTC
 ```typescript
+<<<<<<< HEAD
 // hooks/useTeleconsulta.ts
 export const useTeleconsulta = () => {
   const [localStream, setLocalStream] = useState<MediaStream | null>(null)
@@ -688,10 +914,70 @@ export const useTeleconsulta = () => {
   
   return { localStream, remoteStream, startCall }
 }
+=======
+// middleware.ts
+import { withAuth } from 'next-auth/middleware';
+import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
+
+export default withAuth(
+  function middleware(req: NextRequest) {
+    // Rate limiting
+    const ip = req.ip ?? '127.0.0.1';
+    const rateLimitKey = `rate_limit:${ip}`;
+
+    // CSRF protection
+    if (req.method === 'POST') {
+      const csrfToken = req.headers.get('x-csrf-token');
+      if (!csrfToken) {
+        return new NextResponse('CSRF token missing', { status: 403 });
+      }
+    }
+
+    return NextResponse.next();
+  },
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        // Verificar se o usuário tem permissão para acessar a rota
+        const { pathname } = req.nextUrl;
+
+        if (pathname.startsWith('/admin')) {
+          return token?.role === 'Admin';
+        }
+
+        if (pathname.startsWith('/portal')) {
+          return token?.role === 'Paciente';
+        }
+
+        if (pathname.startsWith('/partner')) {
+          return token?.role === 'EducadorFisico';
+        }
+
+        return !!token;
+      },
+    },
+  }
+);
+
+export const config = {
+  matcher: [
+    '/dashboard/:path*',
+    '/pacientes/:path*',
+    '/agenda/:path*',
+    '/admin/:path*',
+    '/portal/:path*',
+    '/partner/:path*',
+    '/api/pacientes/:path*',
+    '/api/appointments/:path*',
+  ],
+};
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 ```
 
 ### 7.2 IA Assistente Avançada
 ```typescript
+<<<<<<< HEAD
 // services/aiService.ts
 export class AIService {
   async diagnosisAssist(symptoms: string[], patientHistory: any) {
@@ -916,3 +1202,84 @@ export class MetricsCollector {
 ---
 
 **Esta arquitetura técnica fornece a base sólida para implementar todas as funcionalidades do plano executivo, garantindo escalabilidade, segurança e performance.**
+=======
+// app/api/auth/[...nextauth]/route.ts
+import NextAuth from 'next-auth';
+import CredentialsProvider from 'next-auth/providers/credentials';
+import { Pool } from 'pg';
+import bcrypt from 'bcryptjs';
+
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL!,
+  ssl: { rejectUnauthorized: false },
+});
+
+const handler = NextAuth({
+  providers: [
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: 'Email', type: 'email' },
+        password: { label: 'Password', type: 'password' },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [
+          credentials.email,
+        ]);
+        const user = result.rows[0];
+
+        if (!user || !user.password_hash) {
+          return null;
+        }
+
+        const isValidPassword = await bcrypt.compare(credentials.password, user.password_hash);
+
+        if (!isValidPassword) {
+          return null;
+        }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          role: user.role,
+          avatarUrl: user.avatar_url,
+        };
+      },
+    }),
+  ],
+  session: {
+    strategy: 'jwt',
+    maxAge: 24 * 60 * 60, // 24 horas
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = user.role;
+        token.avatarUrl = user.avatarUrl;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      session.user.id = token.sub!;
+      session.user.role = token.role as string;
+      session.user.avatarUrl = token.avatarUrl as string;
+      return session;
+    },
+  },
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
+});
+
+export { handler as GET, handler as POST };
+```
+
+Esta arquitetura técnica fornece uma base sólida e escalável para o sistema FisioFlow, com foco em
+performance, segurança e manutenibilidade.
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3

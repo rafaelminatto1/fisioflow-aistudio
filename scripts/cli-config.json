@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0",
+  "name": "FisioFlow CLI Configuration",
+  "tools": {
+    "railway": {
+      "enabled": true,
+      "commands": {
+        "deploy": "railway up",
+        "logs": "railway logs --follow",
+        "status": "railway status",
+        "variables": "railway variables"
+      }
+    },
+    "neon": {
+      "enabled": true,
+      "commands": {
+        "status": "npx @neondatabase/cli status",
+        "backup": "npx @neondatabase/cli backup create",
+        "restore": "npx @neondatabase/cli backup restore"
+      }
+    },
+    "prisma": {
+      "enabled": true,
+      "commands": {
+        "studio": "npx prisma studio",
+        "migrate": "npx prisma migrate dev",
+        "generate": "npx prisma generate",
+        "reset": "npx prisma migrate reset --force"
+      }
+    }
+  },
+  "aliases": {
+    "windows": "scripts/cli-aliases.ps1",
+    "unix": "scripts/cli-aliases.sh"
+  }
+}

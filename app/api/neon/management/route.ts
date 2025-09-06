@@ -7,7 +7,7 @@ async function neonApiRequest(endpoint: string, options: RequestInit = {}) {
   const response = await fetch(url, {
     ...options,
     headers: {
-      'Authorization': `Bearer ${neonApiConfig.apiKey}`,
+      Authorization: `Bearer ${neonApiConfig.apiKey}`,
       'Content-Type': 'application/json',
       ...options.headers,
     },
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const operation = searchParams.get('operation');
     const authHeader = request.headers.get('authorization');
-    
+
     // Authentication
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
@@ -38,64 +38,76 @@ export async function GET(request: NextRequest) {
 
     const token = authHeader.split(' ')[1];
     if (token !== process.env.NEON_API_KEY) {
-      return NextResponse.json(
-        { error: 'Invalid API key' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
 
     switch (operation) {
       case 'project_info':
-        const projectData = await neonApiRequest(`/projects/${neonApiConfig.projectId}`);
+        const projectData = await neonApiRequest(
+          `/projects/${neonApiConfig.projectId}`
+        );
         return NextResponse.json({
           success: true,
           data: projectData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'branches':
-        const branchesData = await neonApiRequest(`/projects/${neonApiConfig.projectId}/branches`);
+        const branchesData = await neonApiRequest(
+          `/projects/${neonApiConfig.projectId}/branches`
+        );
         return NextResponse.json({
           success: true,
           data: branchesData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'endpoints':
-        const endpointsData = await neonApiRequest(`/projects/${neonApiConfig.projectId}/endpoints`);
+        const endpointsData = await neonApiRequest(
+          `/projects/${neonApiConfig.projectId}/endpoints`
+        );
         return NextResponse.json({
           success: true,
           data: endpointsData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'databases':
-        const databasesData = await neonApiRequest(`/projects/${neonApiConfig.projectId}/branches/${neonApiConfig.branchId}/databases`);
+        const databasesData = await neonApiRequest(
+          `/projects/${neonApiConfig.projectId}/branches/${neonApiConfig.branchId}/databases`
+        );
         return NextResponse.json({
           success: true,
           data: databasesData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'operations':
-        const operationsData = await neonApiRequest(`/projects/${neonApiConfig.projectId}/operations`);
+        const operationsData = await neonApiRequest(
+          `/projects/${neonApiConfig.projectId}/operations`
+        );
         return NextResponse.json({
           success: true,
           data: operationsData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'consumption':
-        const consumptionData = await neonApiRequest(`/projects/${neonApiConfig.projectId}/consumption`);
+        const consumptionData = await neonApiRequest(
+          `/projects/${neonApiConfig.projectId}/consumption`
+        );
         return NextResponse.json({
           success: true,
           data: consumptionData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       default:
         return NextResponse.json(
-          { error: 'Invalid operation. Supported operations: project_info, branches, endpoints, databases, operations, consumption' },
+          {
+            error:
+              'Invalid operation. Supported operations: project_info, branches, endpoints, databases, operations, consumption',
+          },
           { status: 400 }
         );
     }
@@ -106,7 +118,7 @@ export async function GET(request: NextRequest) {
         success: false,
         error: 'Failed to fetch management data',
         details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
@@ -117,7 +129,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Missing or invalid authorization header' },
@@ -127,10 +139,7 @@ export async function POST(request: NextRequest) {
 
     const token = authHeader.split(' ')[1];
     if (token !== process.env.NEON_API_KEY) {
-      return NextResponse.json(
-        { error: 'Invalid API key' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -154,8 +163,8 @@ export async function POST(request: NextRequest) {
               branch: {
                 name,
                 parent_id: parent_id || neonApiConfig.branchId,
-              }
-            })
+              },
+            }),
           }
         );
 
@@ -163,7 +172,7 @@ export async function POST(request: NextRequest) {
           success: true,
           operation: 'create_branch',
           data: branchData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'delete_branch':
@@ -184,7 +193,7 @@ export async function POST(request: NextRequest) {
           success: true,
           operation: 'delete_branch',
           message: `Branch ${branch_id} deleted successfully`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'scale_endpoint':
@@ -202,9 +211,9 @@ export async function POST(request: NextRequest) {
             method: 'PATCH',
             body: JSON.stringify({
               endpoint: {
-                compute_units: parseFloat(compute_units)
-              }
-            })
+                compute_units: parseFloat(compute_units),
+              },
+            }),
           }
         );
 
@@ -212,7 +221,7 @@ export async function POST(request: NextRequest) {
           success: true,
           operation: 'scale_endpoint',
           data: scaleData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'suspend_endpoint':
@@ -233,7 +242,7 @@ export async function POST(request: NextRequest) {
           success: true,
           operation: 'suspend_endpoint',
           data: suspendData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'resume_endpoint':
@@ -254,7 +263,7 @@ export async function POST(request: NextRequest) {
           success: true,
           operation: 'resume_endpoint',
           data: resumeData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'create_database':
@@ -273,9 +282,9 @@ export async function POST(request: NextRequest) {
             body: JSON.stringify({
               database: {
                 name: database_name,
-                owner_name: owner_name || 'neondb_owner'
-              }
-            })
+                owner_name: owner_name || 'neondb_owner',
+              },
+            }),
           }
         );
 
@@ -283,13 +292,13 @@ export async function POST(request: NextRequest) {
           success: true,
           operation: 'create_database',
           data: databaseData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'backup_branch':
         // Create a backup by creating a new branch
         const backupName = `backup-${new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-')}`;
-        
+
         const backupData = await neonApiRequest(
           `/projects/${neonApiConfig.projectId}/branches`,
           {
@@ -298,8 +307,8 @@ export async function POST(request: NextRequest) {
               branch: {
                 name: backupName,
                 parent_id: neonApiConfig.branchId,
-              }
-            })
+              },
+            }),
           }
         );
 
@@ -308,17 +317,22 @@ export async function POST(request: NextRequest) {
           operation: 'backup_branch',
           data: backupData,
           message: `Backup created with name: ${backupName}`,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       default:
         return NextResponse.json(
-          { 
-            error: 'Invalid operation', 
+          {
+            error: 'Invalid operation',
             supportedOperations: [
-              'create_branch', 'delete_branch', 'scale_endpoint', 
-              'suspend_endpoint', 'resume_endpoint', 'create_database', 'backup_branch'
-            ]
+              'create_branch',
+              'delete_branch',
+              'scale_endpoint',
+              'suspend_endpoint',
+              'resume_endpoint',
+              'create_database',
+              'backup_branch',
+            ],
           },
           { status: 400 }
         );
@@ -330,7 +344,7 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'Failed to execute management operation',
         details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );
@@ -341,7 +355,7 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
         { error: 'Missing or invalid authorization header' },
@@ -351,10 +365,7 @@ export async function PUT(request: NextRequest) {
 
     const token = authHeader.split(' ')[1];
     if (token !== process.env.NEON_API_KEY) {
-      return NextResponse.json(
-        { error: 'Invalid API key' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid API key' }, { status: 401 });
     }
 
     const body = await request.json();
@@ -363,7 +374,7 @@ export async function PUT(request: NextRequest) {
     switch (operation) {
       case 'update_project':
         const { name, settings } = params;
-        
+
         const updateData = await neonApiRequest(
           `/projects/${neonApiConfig.projectId}`,
           {
@@ -371,9 +382,9 @@ export async function PUT(request: NextRequest) {
             body: JSON.stringify({
               project: {
                 name,
-                settings
-              }
-            })
+                settings,
+              },
+            }),
           }
         );
 
@@ -381,7 +392,7 @@ export async function PUT(request: NextRequest) {
           success: true,
           operation: 'update_project',
           data: updateData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       case 'update_endpoint':
@@ -398,8 +409,8 @@ export async function PUT(request: NextRequest) {
           {
             method: 'PATCH',
             body: JSON.stringify({
-              endpoint: endpoint_settings
-            })
+              endpoint: endpoint_settings,
+            }),
           }
         );
 
@@ -407,14 +418,14 @@ export async function PUT(request: NextRequest) {
           success: true,
           operation: 'update_endpoint',
           data: endpointUpdateData,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         });
 
       default:
         return NextResponse.json(
-          { 
-            error: 'Invalid operation', 
-            supportedOperations: ['update_project', 'update_endpoint']
+          {
+            error: 'Invalid operation',
+            supportedOperations: ['update_project', 'update_endpoint'],
           },
           { status: 400 }
         );
@@ -426,7 +437,7 @@ export async function PUT(request: NextRequest) {
         success: false,
         error: 'Failed to update management settings',
         details: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       },
       { status: 500 }
     );

@@ -1,6 +1,17 @@
+<<<<<<< HEAD
 
 import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
 import { User } from '../src/types';
+=======
+import React, {
+  createContext,
+  useState,
+  useContext,
+  useEffect,
+  ReactNode,
+} from 'react';
+import { User } from '../types';
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 import * as authService from '../services/authService';
 
 interface AuthContextType {
@@ -13,7 +24,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -25,7 +38,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           setUser(sessionUser);
         }
       } catch (error) {
-        console.error("Session check failed:", error);
+        console.error('Session check failed:', error);
         setUser(null);
       } finally {
         setIsLoading(false);
@@ -46,7 +59,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, isAuthenticated: !!user, isLoading, login, logout }}>
+    <AuthContext.Provider
+      value={{ user, isAuthenticated: !!user, isLoading, login, logout }}
+    >
       {children}
     </AuthContext.Provider>
   );

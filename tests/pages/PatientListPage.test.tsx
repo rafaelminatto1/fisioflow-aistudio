@@ -1,4 +1,3 @@
-
 // tests/pages/PatientListPage.test.tsx
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
@@ -14,7 +13,13 @@ vi.mock('../../hooks/usePatients');
 
 // Mock child components to isolate the test
 vi.mock('../../components/PageHeader', () => ({
-  default: ({ title, children }: { title: string, children: React.ReactNode }) => (
+  default: ({
+    title,
+    children,
+  }: {
+    title: string;
+    children: React.ReactNode;
+  }) => (
     <div>
       <h1>{title}</h1>
       {children}
@@ -23,9 +28,9 @@ vi.mock('../../components/PageHeader', () => ({
 }));
 
 vi.mock('../../components/PatientFormModal', () => ({
-  default: ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) =>
+  default: ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) =>
     isOpen ? (
-      <div data-testid="patient-form-modal">
+      <div data-testid='patient-form-modal'>
         Modal Aberto <button onClick={onClose}>Fechar</button>
       </div>
     ) : null,
@@ -43,35 +48,33 @@ vi.mock('../../hooks/useDebounce', () => ({
   useDebounce: (value: any) => value,
 }));
 
-
 const mockUsePatients = usePatients as Mock;
 const mockNavigate = vi.fn();
 
 vi.mock('react-router-dom', async () => {
-    const original = await vi.importActual('react-router-dom');
-    return {
-        ...original,
-        useNavigate: () => mockNavigate,
-    };
+  const original = await vi.importActual('react-router-dom');
+  return {
+    ...original,
+    useNavigate: () => mockNavigate,
+  };
 });
 
-
 describe('PatientListPage', () => {
-    const mockFetchInitial = vi.fn();
-    const mockFetchMore = vi.fn();
+  const mockFetchInitial = vi.fn();
+  const mockFetchMore = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     // Default mock implementation for usePatients
     mockUsePatients.mockReturnValue({
-        patients: [],
-        isLoading: true,
-        isLoadingMore: false,
-        hasMore: false,
-        error: null,
-        fetchInitialPatients: mockFetchInitial,
-        fetchMorePatients: mockFetchMore,
-        addPatient: vi.fn(),
+      patients: [],
+      isLoading: true,
+      isLoadingMore: false,
+      hasMore: false,
+      error: null,
+      fetchInitialPatients: mockFetchInitial,
+      fetchMorePatients: mockFetchMore,
+      addPatient: vi.fn(),
     });
   });
 
@@ -85,7 +88,10 @@ describe('PatientListPage', () => {
 
   it('deve chamar fetchInitialPatients na montagem', () => {
     renderComponent();
-    expect(mockFetchInitial).toHaveBeenCalledWith({ searchTerm: '', statusFilter: 'All' });
+    expect(mockFetchInitial).toHaveBeenCalledWith({
+      searchTerm: '',
+      statusFilter: 'All',
+    });
   });
 
   it('deve renderizar o estado de carregamento corretamente', () => {
@@ -96,40 +102,75 @@ describe('PatientListPage', () => {
   });
 
   it('deve renderizar o estado de erro corretamente', () => {
-    mockUsePatients.mockReturnValue({ ...mockUsePatients(), isLoading: false, error: new Error('Falha na API') });
+    mockUsePatients.mockReturnValue({
+      ...mockUsePatients(),
+      isLoading: false,
+      error: new Error('Falha na API'),
+    });
     renderComponent();
-    expect(screen.getByText(/Falha ao carregar pacientes/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Falha ao carregar pacientes/i)
+    ).toBeInTheDocument();
   });
 
   it('deve renderizar a lista de pacientes quando os dados são carregados', () => {
     const mockData: PatientSummary[] = [
-      { id: '1', name: 'Ana Beatriz Costa', email: 'ana@email.com', phone: '123', status: 'Active', lastVisit: new Date().toISOString(), avatarUrl: '' },
-      { id: '2', name: 'Bruno Gomes', email: 'bruno@email.com', phone: '456', status: 'Inactive', lastVisit: new Date().toISOString(), avatarUrl: '' },
+      {
+        id: '1',
+        name: 'Ana Beatriz Costa',
+        email: 'ana@email.com',
+        phone: '123',
+        status: 'Active',
+        lastVisit: new Date().toISOString(),
+        avatarUrl: '',
+      },
+      {
+        id: '2',
+        name: 'Bruno Gomes',
+        email: 'bruno@email.com',
+        phone: '456',
+        status: 'Inactive',
+        lastVisit: new Date().toISOString(),
+        avatarUrl: '',
+      },
     ];
-    mockUsePatients.mockReturnValue({ ...mockUsePatients(), patients: mockData, isLoading: false });
-    
+    mockUsePatients.mockReturnValue({
+      ...mockUsePatients(),
+      patients: mockData,
+      isLoading: false,
+    });
+
     renderComponent();
     expect(screen.getByText('Ana Beatriz Costa')).toBeInTheDocument();
     expect(screen.getByText('Bruno Gomes')).toBeInTheDocument();
   });
 
-   it('deve chamar fetchInitialPatients ao alterar o filtro de busca', async () => {
-        renderComponent();
-        const searchInput = screen.getByPlaceholderText(/Buscar por nome ou CPF/i);
-        fireEvent.change(searchInput, { target: { value: 'test' } });
-        
-        await waitFor(() => {
-            expect(mockFetchInitial).toHaveBeenCalledWith({ searchTerm: 'test', statusFilter: 'All' });
-        });
-   });
+  it('deve chamar fetchInitialPatients ao alterar o filtro de busca', async () => {
+    renderComponent();
+    const searchInput = screen.getByPlaceholderText(/Buscar por nome ou CPF/i);
+    fireEvent.change(searchInput, { target: { value: 'test' } });
 
-   it('deve chamar fetchMorePatients ao clicar no botão "Carregar Mais"', () => {
-       mockUsePatients.mockReturnValue({ ...mockUsePatients(), isLoading: false, hasMore: true });
-       renderComponent();
-       
-       const loadMoreButton = screen.getByRole('button', { name: /Carregar Mais/i });
-       fireEvent.click(loadMoreButton);
+    await waitFor(() => {
+      expect(mockFetchInitial).toHaveBeenCalledWith({
+        searchTerm: 'test',
+        statusFilter: 'All',
+      });
+    });
+  });
 
-       expect(mockFetchMore).toHaveBeenCalled();
-   });
+  it('deve chamar fetchMorePatients ao clicar no botão "Carregar Mais"', () => {
+    mockUsePatients.mockReturnValue({
+      ...mockUsePatients(),
+      isLoading: false,
+      hasMore: true,
+    });
+    renderComponent();
+
+    const loadMoreButton = screen.getByRole('button', {
+      name: /Carregar Mais/i,
+    });
+    fireEvent.click(loadMoreButton);
+
+    expect(mockFetchMore).toHaveBeenCalled();
+  });
 });

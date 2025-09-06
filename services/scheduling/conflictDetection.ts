@@ -7,7 +7,7 @@ import { Appointment } from '../../types';
  * @returns True if they overlap, false otherwise.
  */
 const appointmentsOverlap = (a: Appointment, b: Appointment): boolean => {
-    return a.startTime < b.endTime && a.endTime > b.startTime;
+  return a.startTime < b.endTime && a.endTime > b.startTime;
 };
 
 /**
@@ -18,25 +18,27 @@ const appointmentsOverlap = (a: Appointment, b: Appointment): boolean => {
  * @returns The conflicting appointment if one is found, otherwise undefined.
  */
 export const findConflict = (
-    newAppointments: Appointment[],
-    existingAppointments: Appointment[],
-    ignoreId?: string
+  newAppointments: Appointment[],
+  existingAppointments: Appointment[],
+  ignoreId?: string
 ): Appointment | undefined => {
-    const relevantAppointments = existingAppointments.filter(app => app.id !== ignoreId);
+  const relevantAppointments = existingAppointments.filter(
+    app => app.id !== ignoreId
+  );
 
-    for (const newApp of newAppointments) {
-        const conflict = relevantAppointments.find(existingApp => {
-            // Check for conflict only if it's the same therapist
-            if (newApp.therapistId === existingApp.therapistId) {
-                return appointmentsOverlap(newApp, existingApp);
-            }
-            return false;
-        });
-        
-        if (conflict) {
-            return conflict;
-        }
+  for (const newApp of newAppointments) {
+    const conflict = relevantAppointments.find(existingApp => {
+      // Check for conflict only if it's the same therapist
+      if (newApp.therapistId === existingApp.therapistId) {
+        return appointmentsOverlap(newApp, existingApp);
+      }
+      return false;
+    });
+
+    if (conflict) {
+      return conflict;
     }
-    
-    return undefined;
+  }
+
+  return undefined;
 };

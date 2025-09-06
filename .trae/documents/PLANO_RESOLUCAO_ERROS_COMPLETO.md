@@ -5,6 +5,7 @@
 ### 1.1 Railway MCP
 
 #### Configuração Básica
+
 ```json
 {
   "mcpServers": {
@@ -21,6 +22,7 @@
 ```
 
 #### Funcionalidades Principais
+
 - **Deploy Management**: Controle de deployments e rollbacks
 - **Environment Variables**: Gestão de variáveis de ambiente
 - **Service Monitoring**: Monitoramento de serviços e logs
@@ -28,6 +30,7 @@
 - **Database Integration**: Conexão com bancos de dados
 
 #### Comandos Essenciais
+
 ```bash
 # Verificar status do projeto
 railway status
@@ -48,6 +51,7 @@ railway connect
 ### 1.2 Neon DB MCP
 
 #### Configuração Básica
+
 ```json
 {
   "mcpServers": {
@@ -65,6 +69,7 @@ railway connect
 ```
 
 #### Funcionalidades Principais
+
 - **Database Operations**: CRUD operations e queries
 - **Schema Management**: Migrations e alterações de schema
 - **Connection Pooling**: Gestão de conexões
@@ -72,6 +77,7 @@ railway connect
 - **Backup & Recovery**: Backup automático e recuperação
 
 #### Comandos Essenciais
+
 ```bash
 # Conectar ao banco
 neon connect
@@ -92,6 +98,7 @@ neon branch create
 ### 1.3 Contexto MCP
 
 #### Configuração Básica
+
 ```json
 {
   "mcpServers": {
@@ -108,6 +115,7 @@ neon branch create
 ```
 
 #### Funcionalidades Principais
+
 - **Code Analysis**: Análise estática de código
 - **Dependency Tracking**: Rastreamento de dependências
 - **Error Context**: Contexto detalhado de erros
@@ -119,6 +127,7 @@ neon branch create
 ### 2.1 TypeScript MCP
 
 #### Configuração
+
 ```json
 {
   "mcpServers": {
@@ -134,6 +143,7 @@ neon branch create
 ```
 
 #### Benefícios para Claude Code
+
 - **Type Checking**: Verificação de tipos em tempo real
 - **Code Completion**: Autocompletar inteligente
 - **Refactoring**: Refatoração segura de código
@@ -142,6 +152,7 @@ neon branch create
 ### 2.2 Git MCP
 
 #### Configuração
+
 ```json
 {
   "mcpServers": {
@@ -157,6 +168,7 @@ neon branch create
 ```
 
 #### Benefícios
+
 - **Version Control**: Controle de versão integrado
 - **Diff Analysis**: Análise de diferenças
 - **Commit History**: Histórico de commits
@@ -165,6 +177,7 @@ neon branch create
 ### 2.3 Docker MCP
 
 #### Configuração
+
 ```json
 {
   "mcpServers": {
@@ -180,6 +193,7 @@ neon branch create
 ```
 
 #### Benefícios
+
 - **Container Management**: Gestão de containers
 - **Image Building**: Construção de imagens
 - **Environment Consistency**: Consistência de ambiente
@@ -188,18 +202,21 @@ neon branch create
 ### 2.4 Análise de Adequação para Claude Code
 
 #### MCPs Essenciais (Alta Prioridade)
+
 1. **Railway MCP**: Fundamental para deploy e monitoramento
 2. **Neon DB MCP**: Essencial para operações de banco de dados
 3. **TypeScript MCP**: Crítico para desenvolvimento TypeScript
 4. **Context MCP**: Importante para análise de código
 
 #### MCPs Complementares (Média Prioridade)
+
 1. **Git MCP**: Útil para controle de versão
 2. **Docker MCP**: Importante para containerização
 3. **ESLint MCP**: Útil para qualidade de código
 4. **Jest MCP**: Importante para testes
 
 #### MCPs Opcionais (Baixa Prioridade)
+
 1. **Webpack MCP**: Para configurações avançadas de build
 2. **Prisma MCP**: Para ORM específico
 3. **Next.js MCP**: Para funcionalidades específicas do framework
@@ -209,6 +226,7 @@ neon branch create
 ### 3.1 Detecção Proativa de Erros
 
 #### Monitoramento Contínuo
+
 ```bash
 # Script de monitoramento automático
 #!/bin/bash
@@ -230,6 +248,7 @@ node scripts/analyze-logs.js
 ```
 
 #### Alertas Automáticos
+
 ```javascript
 // scripts/error-detection.js
 const fs = require('fs');
@@ -266,6 +285,7 @@ class ErrorDetector {
 ### 3.2 Diagnóstico Preciso
 
 #### Framework de Diagnóstico
+
 ```javascript
 // lib/diagnostic-framework.js
 class DiagnosticFramework {
@@ -274,9 +294,9 @@ class DiagnosticFramework {
       type: this.categorizeError(error),
       severity: this.assessSeverity(error),
       context: await this.gatherContext(error),
-      recommendations: this.generateRecommendations(error)
+      recommendations: this.generateRecommendations(error),
     };
-    
+
     return diagnosis;
   }
 
@@ -291,7 +311,7 @@ class DiagnosticFramework {
   assessSeverity(error) {
     const criticalKeywords = ['ECONNREFUSED', 'FATAL', 'CRITICAL'];
     const warningKeywords = ['WARNING', 'DEPRECATED'];
-    
+
     if (criticalKeywords.some(keyword => error.message.includes(keyword))) {
       return 'CRITICAL';
     }
@@ -307,7 +327,7 @@ class DiagnosticFramework {
       environment: process.env.NODE_ENV,
       railwayStatus: await this.getRailwayStatus(),
       neonStatus: await this.getNeonStatus(),
-      buildInfo: await this.getBuildInfo()
+      buildInfo: await this.getBuildInfo(),
     };
   }
 }
@@ -315,16 +335,17 @@ class DiagnosticFramework {
 
 #### Matriz de Diagnóstico
 
-| Tipo de Erro | Sintomas | Causa Provável | Diagnóstico |
-|--------------|----------|----------------|-------------|
-| Railway Deploy | Build failed, 500 errors | Env vars, dependencies | Verificar logs, variáveis |
-| Neon DB Connection | ECONNREFUSED, timeout | Network, credentials | Testar conexão, verificar URL |
-| TypeScript | Type errors, compilation | Types, imports | Verificar tipos, dependências |
-| Build Process | Webpack errors, missing files | Config, assets | Verificar config, paths |
+| Tipo de Erro       | Sintomas                      | Causa Provável         | Diagnóstico                   |
+| ------------------ | ----------------------------- | ---------------------- | ----------------------------- |
+| Railway Deploy     | Build failed, 500 errors      | Env vars, dependencies | Verificar logs, variáveis     |
+| Neon DB Connection | ECONNREFUSED, timeout         | Network, credentials   | Testar conexão, verificar URL |
+| TypeScript         | Type errors, compilation      | Types, imports         | Verificar tipos, dependências |
+| Build Process      | Webpack errors, missing files | Config, assets         | Verificar config, paths       |
 
 ### 3.3 Implementação de Correções
 
 #### Sistema de Correção Automática
+
 ```javascript
 // lib/auto-fix-system.js
 class AutoFixSystem {
@@ -345,33 +366,33 @@ class AutoFixSystem {
 
   async fixRailwayIssues(diagnosis) {
     const fixes = [];
-    
+
     // Verificar e corrigir variáveis de ambiente
     if (diagnosis.context.railwayStatus?.missingVars) {
       fixes.push(await this.updateRailwayVars());
     }
-    
+
     // Verificar e corrigir configuração de deploy
     if (diagnosis.context.railwayStatus?.deployConfig) {
       fixes.push(await this.updateDeployConfig());
     }
-    
+
     return { success: true, fixes };
   }
 
   async fixNeonIssues(diagnosis) {
     const fixes = [];
-    
+
     // Verificar e corrigir string de conexão
     if (diagnosis.context.neonStatus?.connectionError) {
       fixes.push(await this.updateDatabaseUrl());
     }
-    
+
     // Verificar e aplicar migrations
     if (diagnosis.context.neonStatus?.schemaMismatch) {
       fixes.push(await this.runMigrations());
     }
-    
+
     return { success: true, fixes };
   }
 }
@@ -380,6 +401,7 @@ class AutoFixSystem {
 #### Playbook de Correções
 
 ##### Erros do Railway
+
 ```bash
 # 1. Erro de Deploy
 railway logs --tail 100
@@ -396,6 +418,7 @@ railway domain list
 ```
 
 ##### Erros do Neon DB
+
 ```bash
 # 1. Erro de Conexão
 neon connection test
@@ -413,6 +436,7 @@ neon query-stats
 ```
 
 ##### Erros do TypeScript
+
 ```bash
 # 1. Erros de Tipo
 npx tsc --noEmit
@@ -430,6 +454,7 @@ npm run lint --fix
 ### 3.4 Prevenção de Problemas Futuros
 
 #### Sistema de Prevenção
+
 ```javascript
 // lib/prevention-system.js
 class PreventionSystem {
@@ -464,7 +489,7 @@ class PreventionSystem {
       responseTime: [],
       errorRate: [],
       throughput: [],
-      dbConnections: []
+      dbConnections: [],
     };
 
     setInterval(async () => {
@@ -472,7 +497,7 @@ class PreventionSystem {
       metrics.errorRate.push(await this.calculateErrorRate());
       metrics.throughput.push(await this.measureThroughput());
       metrics.dbConnections.push(await this.countDbConnections());
-      
+
       await this.analyzeMetrics(metrics);
     }, 300000); // A cada 5 minutos
   }
@@ -482,6 +507,7 @@ class PreventionSystem {
 #### Checklist de Prevenção
 
 ##### Configuração Inicial
+
 - [ ] Configurar todos os MCPs necessários
 - [ ] Definir variáveis de ambiente corretamente
 - [ ] Configurar monitoramento automático
@@ -489,6 +515,7 @@ class PreventionSystem {
 - [ ] Configurar alertas
 
 ##### Manutenção Regular
+
 - [ ] Atualizar dependências semanalmente
 - [ ] Revisar logs diariamente
 - [ ] Executar testes de integração
@@ -496,6 +523,7 @@ class PreventionSystem {
 - [ ] Backup de configurações
 
 ##### Monitoramento Contínuo
+
 - [ ] Métricas de performance
 - [ ] Logs de erro
 - [ ] Status dos serviços
@@ -507,6 +535,7 @@ class PreventionSystem {
 ### 4.1 Erros de Integração Railway-Neon
 
 #### Problema: Falha na Conexão Database
+
 ```javascript
 // Solução robusta com retry e fallback
 class RobustDatabaseConnection {
@@ -516,14 +545,14 @@ class RobustDatabaseConnection {
     this.fallbackConnections = [
       process.env.DATABASE_URL,
       process.env.DATABASE_URL_BACKUP,
-      process.env.DATABASE_URL_LOCAL
+      process.env.DATABASE_URL_LOCAL,
     ];
   }
 
   async connect() {
     for (const connectionUrl of this.fallbackConnections) {
       if (!connectionUrl) continue;
-      
+
       for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
         try {
           const connection = await this.attemptConnection(connectionUrl);
@@ -531,14 +560,14 @@ class RobustDatabaseConnection {
           return connection;
         } catch (error) {
           console.log(`Attempt ${attempt} failed for ${connectionUrl}:`, error.message);
-          
+
           if (attempt < this.maxRetries) {
             await this.delay(this.retryDelay * attempt);
           }
         }
       }
     }
-    
+
     throw new Error('All database connection attempts failed');
   }
 }
@@ -547,6 +576,7 @@ class RobustDatabaseConnection {
 ### 4.2 Erros de Deploy Railway-TypeScript
 
 #### Problema: Build Failure por Tipos
+
 ```javascript
 // Solução com verificação pré-deploy
 class PreDeployValidator {
@@ -555,16 +585,16 @@ class PreDeployValidator {
       this.validateTypeScript(),
       this.validateEnvironmentVars(),
       this.validateDependencies(),
-      this.validateBuildConfig()
+      this.validateBuildConfig(),
     ];
 
     const results = await Promise.allSettled(validations);
     const failures = results.filter(r => r.status === 'rejected');
-    
+
     if (failures.length > 0) {
       throw new Error(`Pre-deploy validation failed: ${failures.map(f => f.reason).join(', ')}`);
     }
-    
+
     return true;
   }
 
@@ -586,6 +616,7 @@ class PreDeployValidator {
 ### 4.3 Erros de Performance Neon-TypeScript
 
 #### Problema: Queries Lentas
+
 ```javascript
 // Solução com otimização automática
 class QueryOptimizer {
@@ -596,7 +627,7 @@ class QueryOptimizer {
 
   async executeQuery(query, params) {
     const cacheKey = this.generateCacheKey(query, params);
-    
+
     // Verificar cache primeiro
     if (this.queryCache.has(cacheKey)) {
       return this.queryCache.get(cacheKey);
@@ -625,6 +656,7 @@ class QueryOptimizer {
 ## 5. Scripts de Automação
 
 ### 5.1 Script de Verificação Completa
+
 ```bash
 #!/bin/bash
 # scripts/health-check.sh
@@ -655,6 +687,7 @@ echo "✅ Verificação completa finalizada"
 ```
 
 ### 5.2 Script de Correção Automática
+
 ```bash
 #!/bin/bash
 # scripts/auto-fix.sh
@@ -694,6 +727,7 @@ echo "✅ Correção automática finalizada"
 ## 6. Monitoramento e Alertas
 
 ### 6.1 Sistema de Alertas
+
 ```javascript
 // lib/alert-system.js
 class AlertSystem {
@@ -701,7 +735,7 @@ class AlertSystem {
     this.channels = {
       email: process.env.ALERT_EMAIL,
       slack: process.env.SLACK_WEBHOOK,
-      discord: process.env.DISCORD_WEBHOOK
+      discord: process.env.DISCORD_WEBHOOK,
     };
   }
 
@@ -712,20 +746,20 @@ class AlertSystem {
       message,
       severity,
       environment: process.env.NODE_ENV,
-      service: 'FisioFlow'
+      service: 'FisioFlow',
     };
 
     // Enviar para todos os canais configurados
     const promises = [];
-    
+
     if (this.channels.email) {
       promises.push(this.sendEmailAlert(alert));
     }
-    
+
     if (this.channels.slack) {
       promises.push(this.sendSlackAlert(alert));
     }
-    
+
     if (this.channels.discord) {
       promises.push(this.sendDiscordAlert(alert));
     }
@@ -736,6 +770,7 @@ class AlertSystem {
 ```
 
 ### 6.2 Dashboard de Monitoramento
+
 ```javascript
 // components/MonitoringDashboard.tsx
 import React, { useEffect, useState } from 'react';
@@ -788,7 +823,8 @@ export function MonitoringDashboard() {
 
 ## 7. Conclusão
 
-Este plano abrangente fornece uma estrutura completa para identificar, diagnosticar e resolver erros relacionados ao Railway, Neon DB e TypeScript. A implementação deste sistema garantirá:
+Este plano abrangente fornece uma estrutura completa para identificar, diagnosticar e resolver erros
+relacionados ao Railway, Neon DB e TypeScript. A implementação deste sistema garantirá:
 
 - **Detecção Proativa**: Identificação precoce de problemas
 - **Diagnóstico Preciso**: Análise detalhada de erros
@@ -796,4 +832,5 @@ Este plano abrangente fornece uma estrutura completa para identificar, diagnosti
 - **Prevenção Efetiva**: Medidas preventivas robustas
 - **Monitoramento Contínuo**: Visibilidade completa do sistema
 
-A combinação dos MCPs recomendados com os fluxos de trabalho estabelecidos criará um ambiente de desenvolvimento robusto e confiável para o projeto FisioFlow.
+A combinação dos MCPs recomendados com os fluxos de trabalho estabelecidos criará um ambiente de
+desenvolvimento robusto e confiável para o projeto FisioFlow.

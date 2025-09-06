@@ -34,8 +34,11 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
   response.headers.set('X-Frame-Options', 'DENY');
   response.headers.set('X-XSS-Protection', '1; mode=block');
   response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
-  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
-  
+  response.headers.set(
+    'Permissions-Policy',
+    'camera=(), microphone=(), geolocation=()'
+  );
+
   // CSP Header
   response.headers.set(
     'Content-Security-Policy',
@@ -73,9 +76,9 @@ export function checkRateLimit(
   }
 
   if (clientData.count >= maxRequests) {
-    return { 
-      allowed: false, 
-      resetTime: clientData.resetTime 
+    return {
+      allowed: false,
+      resetTime: clientData.resetTime,
     };
   }
 
@@ -98,7 +101,7 @@ export function sanitizeInput(input: string): string {
 
 export function validateApiKey(apiKey: string | null): boolean {
   if (!apiKey) return false;
-  
+
   // Basic API key validation
   return apiKey.length >= 20 && /^[a-zA-Z0-9_-]+$/.test(apiKey);
 }
@@ -107,19 +110,25 @@ export function generateCSRFToken(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
-export function validateCSRFToken(token: string, sessionToken: string): boolean {
+export function validateCSRFToken(
+  token: string,
+  sessionToken: string
+): boolean {
   // Simple CSRF validation - in production, use more sophisticated methods
   return token === sessionToken && token.length > 0;
 }
 
 // Cleanup old rate limit entries
-setInterval(() => {
-  const now = Date.now();
-  Array.from(rateLimitStore.entries()).forEach(([key, value]) => {
-    if (now > value.resetTime) {
-      rateLimitStore.delete(key);
-    }
-  });
-}, 5 * 60 * 1000); // Cleanup every 5 minutes
+setInterval(
+  () => {
+    const now = Date.now();
+    Array.from(rateLimitStore.entries()).forEach(([key, value]) => {
+      if (now > value.resetTime) {
+        rateLimitStore.delete(key);
+      }
+    });
+  },
+  5 * 60 * 1000
+); // Cleanup every 5 minutes
 
 export { defaultConfig };

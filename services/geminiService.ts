@@ -1,10 +1,8 @@
-
-
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { ClinicalMaterialData, Patient, SoapNote } from "../types";
+import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ClinicalMaterialData, Patient, SoapNote } from '../types';
 
 if (!process.env.API_KEY) {
-  throw new Error("API_KEY is not set in environment variables.");
+  throw new Error('API_KEY is not set in environment variables.');
 }
 
 const ai = new GoogleGenerativeAI(process.env.API_KEY);
@@ -69,43 +67,52 @@ Com base nas informações brutas coletadas durante a avaliação, redija um Lau
 `;
 
 export interface EvaluationFormData {
-    nome_paciente: string;
-    profissao_paciente: string;
-    idade_paciente: string;
-    queixa_principal: string;
-    hda: string;
-    hmp: string;
-    inspecao_palpacao: string;
-    adm: string;
-    teste_forca: string;
-    testes_especiais: string;
-    escala_dor: string;
-    objetivos_paciente: string;
+  nome_paciente: string;
+  profissao_paciente: string;
+  idade_paciente: string;
+  queixa_principal: string;
+  hda: string;
+  hmp: string;
+  inspecao_palpacao: string;
+  adm: string;
+  teste_forca: string;
+  testes_especiais: string;
+  escala_dor: string;
+  objetivos_paciente: string;
 }
 
-export const generateEvaluationReport = async (data: EvaluationFormData): Promise<string> => {
-    let prompt = PROMPT_TEMPLATE;
-    const today = new Date().toLocaleDateString('pt-BR');
+export const generateEvaluationReport = async (
+  data: EvaluationFormData
+): Promise<string> => {
+  let prompt = PROMPT_TEMPLATE;
+  const today = new Date().toLocaleDateString('pt-BR');
 
-    // Create a new object for replacements to avoid modifying the original data
-    const replacements: { [key: string]: string } = {
-        ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value || 'Não informado'])),
-        data_atual: today,
-    };
-    
-    for (const key in replacements) {
-        prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
-    }
-    
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating evaluation report:", error);
-        throw new Error("Falha ao gerar o laudo com a IA. Por favor, tente novamente.");
-    }
+  // Create a new object for replacements to avoid modifying the original data
+  const replacements: { [key: string]: string } = {
+    ...Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        value || 'Não informado',
+      ])
+    ),
+    data_atual: today,
+  };
+
+  for (const key in replacements) {
+    prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
+  }
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating evaluation report:', error);
+    throw new Error(
+      'Falha ao gerar o laudo com a IA. Por favor, tente novamente.'
+    );
+  }
 };
 
 const PROMPT_TEMPLATE_EVOLUTION = `
@@ -142,38 +149,47 @@ Converta as anotações do fisioterapeuta para o formato SOAP (Subjetivo, Objeti
 `;
 
 export interface SessionEvolutionFormData {
-    nome_paciente: string;
-    numero_sessao: string;
-    relato_paciente: string;
-    escala_dor_hoje: string;
-    dados_objetivos: string;
-    intervencoes: string;
-    analise_fisio: string;
-    proximos_passos: string;
+  nome_paciente: string;
+  numero_sessao: string;
+  relato_paciente: string;
+  escala_dor_hoje: string;
+  dados_objetivos: string;
+  intervencoes: string;
+  analise_fisio: string;
+  proximos_passos: string;
 }
 
-export const generateSessionEvolution = async (data: SessionEvolutionFormData): Promise<string> => {
-    let prompt = PROMPT_TEMPLATE_EVOLUTION;
-    const today = new Date().toLocaleDateString('pt-BR');
+export const generateSessionEvolution = async (
+  data: SessionEvolutionFormData
+): Promise<string> => {
+  let prompt = PROMPT_TEMPLATE_EVOLUTION;
+  const today = new Date().toLocaleDateString('pt-BR');
 
-    const replacements: { [key: string]: string } = {
-        ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value || 'Não informado'])),
-        data_atual: today,
-    };
-    
-    for (const key in replacements) {
-        prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
-    }
-    
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating session evolution:", error);
-        throw new Error("Falha ao gerar a evolução com a IA. Por favor, tente novamente.");
-    }
+  const replacements: { [key: string]: string } = {
+    ...Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        value || 'Não informado',
+      ])
+    ),
+    data_atual: today,
+  };
+
+  for (const key in replacements) {
+    prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
+  }
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating session evolution:', error);
+    throw new Error(
+      'Falha ao gerar a evolução com a IA. Por favor, tente novamente.'
+    );
+  }
 };
 
 const PROMPT_TEMPLATE_HEP = `
@@ -225,24 +241,26 @@ CREFITO: {{crefito_fisio}}
 `;
 
 export interface HepFormData {
-    nome_paciente: string;
-    diagnostico_paciente: string;
-    objetivo_hep: string;
-    lista_exercicios: string;
-    series: string;
-    repeticoes: string;
-    frequencia: string;
-    observacoes: string;
+  nome_paciente: string;
+  diagnostico_paciente: string;
+  objetivo_hep: string;
+  lista_exercicios: string;
+  series: string;
+  repeticoes: string;
+  frequencia: string;
+  observacoes: string;
 }
 
 export const generateHep = async (data: HepFormData): Promise<string> => {
-    // This is a simplified replacement logic. A real implementation would use a templating engine like Handlebars.
-    // The prompt is written with a pseudo-templating syntax for clarity.
-    // The AI is expected to understand the structure and fill it in accordingly.
-    const exerciseList = data.lista_exercicios.split(',').map(e => e.trim());
-    const exercisesFormatted = exerciseList.map((ex, i) => `${i+1}. **${ex}**\n * **Como fazer:** ...`).join('\n\n');
-    
-    let prompt = `
+  // This is a simplified replacement logic. A real implementation would use a templating engine like Handlebars.
+  // The prompt is written with a pseudo-templating syntax for clarity.
+  // The AI is expected to understand the structure and fill it in accordingly.
+  const exerciseList = data.lista_exercicios.split(',').map(e => e.trim());
+  const exercisesFormatted = exerciseList
+    .map((ex, i) => `${i + 1}. **${ex}**\n * **Como fazer:** ...`)
+    .join('\n\n');
+
+  let prompt = `
 # Persona
 Você é um Fisioterapeuta especialista em Cinesiologia e Biomecânica. Sua habilidade é criar programas de exercícios seguros, eficazes e fáceis de entender para pacientes leigos.
 
@@ -289,17 +307,18 @@ Dr. Roberto
 CREFITO: 12345-F
 `;
 
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating HEP:", error);
-        throw new Error("Falha ao gerar o plano de exercícios com a IA. Por favor, tente novamente.");
-    }
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating HEP:', error);
+    throw new Error(
+      'Falha ao gerar o plano de exercícios com a IA. Por favor, tente novamente.'
+    );
+  }
 };
-
 
 const PROMPT_TEMPLATE_RISK_ANALYSIS = `
 # Persona
@@ -337,35 +356,44 @@ Analise os dados do paciente {{nome_paciente}} e calcule o nível de risco de ab
 `;
 
 export interface RiskAnalysisFormData {
-    nome_paciente: string;
-    sessoes_realizadas: string;
-    sessoes_prescritas: string;
-    faltas: string;
-    remarcacoes: string;
-    ultimo_feedback: string;
-    aderencia_hep: 'Alta' | 'Média' | 'Baixa' | 'Não informada';
+  nome_paciente: string;
+  sessoes_realizadas: string;
+  sessoes_prescritas: string;
+  faltas: string;
+  remarcacoes: string;
+  ultimo_feedback: string;
+  aderencia_hep: 'Alta' | 'Média' | 'Baixa' | 'Não informada';
 }
 
-export const generateRiskAnalysis = async (data: RiskAnalysisFormData): Promise<string> => {
-    let prompt = PROMPT_TEMPLATE_RISK_ANALYSIS;
-    
-    const replacements: { [key: string]: string } = {
-        ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value || 'Não informado'])),
-    };
-    
-    for (const key in replacements) {
-        prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
-    }
-    
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating risk analysis:", error);
-        throw new Error("Falha ao gerar a análise de risco com a IA. Por favor, tente novamente.");
-    }
+export const generateRiskAnalysis = async (
+  data: RiskAnalysisFormData
+): Promise<string> => {
+  let prompt = PROMPT_TEMPLATE_RISK_ANALYSIS;
+
+  const replacements: { [key: string]: string } = {
+    ...Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        value || 'Não informado',
+      ])
+    ),
+  };
+
+  for (const key in replacements) {
+    prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
+  }
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating risk analysis:', error);
+    throw new Error(
+      'Falha ao gerar a análise de risco com a IA. Por favor, tente novamente.'
+    );
+  }
 };
 
 const PROMPT_TEMPLATE_PATIENT_PROGRESS = `
@@ -413,60 +441,73 @@ Continue assim! Cada exercício e cada sessão te deixam mais perto do seu objet
 `;
 
 export interface PatientProgressData {
-    nome_paciente: string;
-    dor_inicial: string;
-    dor_atual: string;
-    limitacao_inicial: string;
-    status_atual: string;
-    conquista_recente: string;
-    nome_fisio: string;
+  nome_paciente: string;
+  dor_inicial: string;
+  dor_atual: string;
+  limitacao_inicial: string;
+  status_atual: string;
+  conquista_recente: string;
+  nome_fisio: string;
 }
 
-export const generatePatientProgressSummary = async (data: PatientProgressData): Promise<string> => {
-    let prompt = PROMPT_TEMPLATE_PATIENT_PROGRESS;
-    
-    const initialPain = parseInt(data.dor_inicial, 10);
-    const currentPain = parseInt(data.dor_atual, 10);
-    let improvementPercentage = '0';
+export const generatePatientProgressSummary = async (
+  data: PatientProgressData
+): Promise<string> => {
+  let prompt = PROMPT_TEMPLATE_PATIENT_PROGRESS;
 
-    if (!isNaN(initialPain) && !isNaN(currentPain) && initialPain > 0) {
-        const improvement = ((initialPain - currentPain) / initialPain) * 100;
-        improvementPercentage = Math.max(0, Math.round(improvement)).toString();
-    } else if (initialPain === 0 && currentPain === 0) {
-        improvementPercentage = '100'; // Maintained perfect score
-    }
+  const initialPain = parseInt(data.dor_inicial, 10);
+  const currentPain = parseInt(data.dor_atual, 10);
+  let improvementPercentage = '0';
 
-    const replacements: { [key: string]: string } = {
-        ...Object.fromEntries(Object.entries(data).map(([key, value]) => [key, value || 'Não informado'])),
-        calculo_percentual_melhora: improvementPercentage,
-    };
-    
-    for (const key in replacements) {
-        prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
-    }
+  if (!isNaN(initialPain) && !isNaN(currentPain) && initialPain > 0) {
+    const improvement = ((initialPain - currentPain) / initialPain) * 100;
+    improvementPercentage = Math.max(0, Math.round(improvement)).toString();
+  } else if (initialPain === 0 && currentPain === 0) {
+    improvementPercentage = '100'; // Maintained perfect score
+  }
 
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating patient progress summary:", error);
-        throw new Error("Falha ao gerar o resumo de progresso com a IA.");
-    }
+  const replacements: { [key: string]: string } = {
+    ...Object.fromEntries(
+      Object.entries(data).map(([key, value]) => [
+        key,
+        value || 'Não informado',
+      ])
+    ),
+    calculo_percentual_melhora: improvementPercentage,
+  };
+
+  for (const key in replacements) {
+    prompt = prompt.replace(new RegExp(`{{${key}}}`, 'g'), replacements[key]);
+  }
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating patient progress summary:', error);
+    throw new Error('Falha ao gerar o resumo de progresso com a IA.');
+  }
 };
 
 export interface AppointmentReminderData {
-    nome_paciente: string;
-    data_consulta: Date;
-    hora_consulta: string;
-    nome_fisio: string;
+  nome_paciente: string;
+  data_consulta: Date;
+  hora_consulta: string;
+  nome_fisio: string;
 }
 
-export const generateAppointmentReminder = async (data: AppointmentReminderData): Promise<string> => {
-    const formattedDate = data.data_consulta.toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' });
+export const generateAppointmentReminder = async (
+  data: AppointmentReminderData
+): Promise<string> => {
+  const formattedDate = data.data_consulta.toLocaleDateString('pt-BR', {
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+  });
 
-    const prompt = `
+  const prompt = `
 # Persona
 Você é o coordenador de cuidados da FisioFlow. Sua comunicação é cuidadosa, informativa e focada em garantir que o paciente tenha a melhor experiência possível.
 
@@ -483,24 +524,26 @@ Escreva uma mensagem de lembrete amigável e informativa no formato de texto par
 6.  Finalize com "*Equipe FisioFlow*".
 7.  O tom deve ser positivo e encorajador.
 `;
-    
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating appointment reminder:", error);
-        throw new Error("Falha ao gerar o lembrete com a IA.");
-    }
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating appointment reminder:', error);
+    throw new Error('Falha ao gerar o lembrete com a IA.');
+  }
 };
 
 export interface InactivePatientEmailData {
-    dias_inatividade: string;
+  dias_inatividade: string;
 }
 
-export const generateInactivePatientEmail = async (data: InactivePatientEmailData): Promise<string> => {
-    const prompt = `
+export const generateInactivePatientEmail = async (
+  data: InactivePatientEmailData
+): Promise<string> => {
+  const prompt = `
 # Persona
 Você é um especialista em Marketing de Relacionamento para a área da saúde. Sua comunicação é empática, pessoal e focada em reativar o vínculo com o paciente, sem ser excessivamente comercial.
 
@@ -531,24 +574,28 @@ O resultado deve ser **APENAS o código HTML** do corpo do e-mail, sem \`\`\`htm
 <p>Um grande abraço,<br>
 Equipe FisioFlow</p>
 `;
-    
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        
-        let htmlContent = response.text();
-        
-        // Cleanup response in case the model adds markdown fences
-        htmlContent = htmlContent.replace(/^```html\n/, '').replace(/\n```$/, '').trim();
 
-        return htmlContent;
-    } catch (error) {
-        console.error("Error generating inactive patient email:", error);
-        throw new Error("Falha ao gerar o e-mail com a IA. Por favor, tente novamente.");
-    }
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+
+    let htmlContent = response.text();
+
+    // Cleanup response in case the model adds markdown fences
+    htmlContent = htmlContent
+      .replace(/^```html\n/, '')
+      .replace(/\n```$/, '')
+      .trim();
+
+    return htmlContent;
+  } catch (error) {
+    console.error('Error generating inactive patient email:', error);
+    throw new Error(
+      'Falha ao gerar o e-mail com a IA. Por favor, tente novamente.'
+    );
+  }
 };
-
 
 const PROMPT_TEMPLATE_MATERIAL_CONTENT = `
 # Persona
@@ -583,21 +630,29 @@ Com base no tipo e no nome do material, gere o conteúdo explicativo em formato 
 (Adicione 2-3 dicas práticas ou pontos de atenção para o fisioterapeuta).
 `;
 
-export const generateClinicalMaterialContent = async (data: ClinicalMaterialData): Promise<string> => {
-    let prompt = PROMPT_TEMPLATE_MATERIAL_CONTENT;
-    
-    prompt = prompt.replace(new RegExp(`{{nome_material}}`, 'g'), data.nome_material);
-    prompt = prompt.replace(new RegExp(`{{tipo_material}}`, 'g'), data.tipo_material);
-    
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating clinical material content:", error);
-        throw new Error("Falha ao gerar o conteúdo do material com a IA.");
-    }
+export const generateClinicalMaterialContent = async (
+  data: ClinicalMaterialData
+): Promise<string> => {
+  let prompt = PROMPT_TEMPLATE_MATERIAL_CONTENT;
+
+  prompt = prompt.replace(
+    new RegExp(`{{nome_material}}`, 'g'),
+    data.nome_material
+  );
+  prompt = prompt.replace(
+    new RegExp(`{{tipo_material}}`, 'g'),
+    data.tipo_material
+  );
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating clinical material content:', error);
+    throw new Error('Falha ao gerar o conteúdo do material com a IA.');
+  }
 };
 
 const PROMPT_TEMPLATE_PARSE_PROTOCOL = `
@@ -617,33 +672,38 @@ Você é um assistente especialista em fisioterapia. Sua função é analisar o 
 `;
 
 export interface ParsedTreatmentPlan {
-    treatmentGoals: string;
-    exercises: { 
-        exerciseName: string; 
-        sets: number; 
-        repetitions: string; 
-    }[];
+  treatmentGoals: string;
+  exercises: {
+    exerciseName: string;
+    sets: number;
+    repetitions: string;
+  }[];
 }
 
-export const parseProtocolForTreatmentPlan = async (protocolContent: string): Promise<ParsedTreatmentPlan> => {
-    const prompt = PROMPT_TEMPLATE_PARSE_PROTOCOL.replace('{{protocolContent}}', protocolContent);
+export const parseProtocolForTreatmentPlan = async (
+  protocolContent: string
+): Promise<ParsedTreatmentPlan> => {
+  const prompt = PROMPT_TEMPLATE_PARSE_PROTOCOL.replace(
+    '{{protocolContent}}',
+    protocolContent
+  );
 
-    try {
-        const model = ai.getGenerativeModel({ 
-            model: 'gemini-1.5-flash',
-            generationConfig: {
-                responseMimeType: "application/json"
-            }
-        });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
+  try {
+    const model = ai.getGenerativeModel({
+      model: 'gemini-1.5-flash',
+      generationConfig: {
+        responseMimeType: 'application/json',
+      },
+    });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
 
-        const jsonStr = response.text().trim();
-        return JSON.parse(jsonStr) as ParsedTreatmentPlan;
-    } catch (error) {
-        console.error("Error parsing protocol with Gemini:", error);
-        throw new Error("Falha ao analisar o protocolo com a IA.");
-    }
+    const jsonStr = response.text().trim();
+    return JSON.parse(jsonStr) as ParsedTreatmentPlan;
+  } catch (error) {
+    console.error('Error parsing protocol with Gemini:', error);
+    throw new Error('Falha ao analisar o protocolo com a IA.');
+  }
 };
 
 const PROMPT_TEMPLATE_CLINICAL_SUMMARY = `
@@ -672,31 +732,42 @@ Analise o histórico de sessões e gere um resumo do progresso clínico do pacie
 (Sugira uma ou duas ações para a próxima fase do tratamento. Ex: "Progredir para exercícios de fortalecimento em cadeia cinética fechada", "Revisar e ajustar o plano de exercícios domiciliares".)
 `;
 
-export const generatePatientClinicalSummary = async (patient: Patient, notes: SoapNote[]): Promise<string> => {
-    if (notes.length < 2) {
-        return "Dados insuficientes para gerar um resumo. São necessárias pelo menos duas sessões registradas.";
-    }
+export const generatePatientClinicalSummary = async (
+  patient: Patient,
+  notes: SoapNote[]
+): Promise<string> => {
+  if (notes.length < 2) {
+    return 'Dados insuficientes para gerar um resumo. São necessárias pelo menos duas sessões registradas.';
+  }
 
-    const historico_sessoes = notes
-        .slice(0, 5) // Use the 5 most recent notes
-        .reverse() // Oldest first
-        .map(n => `- Data: ${n.date}, Dor: ${n.painScale}/10, S: ${n.subjective}, A: ${n.assessment}`)
-        .join('\n');
+  const historico_sessoes = notes
+    .slice(0, 5) // Use the 5 most recent notes
+    .reverse() // Oldest first
+    .map(
+      n =>
+        `- Data: ${n.date}, Dor: ${n.painScale}/10, S: ${n.subjective}, A: ${n.assessment}`
+    )
+    .join('\n');
 
-    let prompt = PROMPT_TEMPLATE_CLINICAL_SUMMARY
-        .replace('{{nome_paciente}}', patient.name)
-        .replace('{{diagnostico}}', patient.conditions?.[0]?.name || 'Não especificado')
-        .replace('{{historico_sessoes}}', historico_sessoes);
-        
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating clinical summary:", error);
-        throw new Error("Falha ao gerar o resumo clínico com a IA.");
-    }
+  let prompt = PROMPT_TEMPLATE_CLINICAL_SUMMARY.replace(
+    '{{nome_paciente}}',
+    patient.name
+  )
+    .replace(
+      '{{diagnostico}}',
+      patient.conditions?.[0]?.name || 'Não especificado'
+    )
+    .replace('{{historico_sessoes}}', historico_sessoes);
+
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating clinical summary:', error);
+    throw new Error('Falha ao gerar o resumo clínico com a IA.');
+  }
 };
 
 const PROMPT_TEMPLATE_RETENTION = `
@@ -719,22 +790,25 @@ Crie uma sugestão de mensagem de WhatsApp para o fisioterapeuta enviar ao pacie
 `;
 
 export interface RetentionSuggestionData {
-    nome_paciente: string;
-    motivo_alerta: string;
+  nome_paciente: string;
+  motivo_alerta: string;
 }
 
-export const generateRetentionSuggestion = async (data: RetentionSuggestionData): Promise<string> => {
-    let prompt = PROMPT_TEMPLATE_RETENTION
-        .replace(new RegExp(`{{nome_paciente}}`, 'g'), data.nome_paciente.split(' ')[0])
-        .replace(new RegExp(`{{motivo_alerta}}`, 'g'), data.motivo_alerta);
+export const generateRetentionSuggestion = async (
+  data: RetentionSuggestionData
+): Promise<string> => {
+  let prompt = PROMPT_TEMPLATE_RETENTION.replace(
+    new RegExp(`{{nome_paciente}}`, 'g'),
+    data.nome_paciente.split(' ')[0]
+  ).replace(new RegExp(`{{motivo_alerta}}`, 'g'), data.motivo_alerta);
 
-    try {
-        const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        return response.text();
-    } catch (error) {
-        console.error("Error generating retention suggestion:", error);
-        throw new Error("Falha ao gerar a sugestão com a IA.");
-    }
+  try {
+    const model = ai.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    return response.text();
+  } catch (error) {
+    console.error('Error generating retention suggestion:', error);
+    throw new Error('Falha ao gerar a sugestão com a IA.');
+  }
 };

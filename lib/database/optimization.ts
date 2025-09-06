@@ -51,7 +51,7 @@ export class DatabaseOptimizer {
     };
   }> {
     const skip = (page - 1) * limit;
-    
+
     // Use cursor-based pagination when cursor is provided
     if (cursor) {
       const data = await query
@@ -61,7 +61,9 @@ export class DatabaseOptimizer {
 
       const hasNextPage = data.length > limit;
       const results = hasNextPage ? data.slice(0, -1) : data;
-      const nextCursor = hasNextPage ? results[results.length - 1]?.id : undefined;
+      const nextCursor = hasNextPage
+        ? results[results.length - 1]?.id
+        : undefined;
 
       return {
         data: results,
@@ -123,14 +125,14 @@ export class DatabaseOptimizer {
     filters: any = {}
   ) {
     const cacheKey = `search:patients:${searchTerm}:${JSON.stringify(filters)}:${limit}`;
-    
+
     return this.cachedQuery(
       cacheKey,
       async () => {
         // Try full-text search first (if available)
         try {
           return await trackDatabaseOperation('search_patients_fulltext', () =>
-            cachedPrisma.client.patient.findMany({
+            cachedPrisma.patient.findMany({
               where: {
                 ...filters,
                 OR: [
@@ -153,9 +155,9 @@ export class DatabaseOptimizer {
         } catch (error) {
           // Fallback to ILIKE search
           structuredLogger.debug('Full-text search not available, using ILIKE');
-          
+
           return await trackDatabaseOperation('search_patients_ilike', () =>
-            cachedPrisma.client.patient.findMany({
+            cachedPrisma.patient.findMany({
               where: {
                 ...filters,
                 OR: [
@@ -188,37 +190,38 @@ export class DatabaseOptimizer {
     therapistId?: string
   ) {
     const cacheKey = `appointments:${startDate.toISOString()}:${endDate.toISOString()}:${therapistId || 'all'}`;
-    
+
     return this.cachedQuery(
       cacheKey,
-      () => trackDatabaseOperation('get_appointments_by_date', () =>
-        cachedPrisma.client.appointment.findMany({
-          where: {
-            startTime: { gte: startDate },
-            endTime: { lte: endDate },
-            ...(therapistId && { therapistId }),
-          },
-          include: {
-            patient: {
-              select: {
-                id: true,
-                name: true,
-                phone: true,
-                medicalAlerts: true,
+      () =>
+        trackDatabaseOperation('get_appointments_by_date', () =>
+          cachedPrisma.appointment.findMany({
+            where: {
+              startTime: { gte: startDate },
+              endTime: { lte: endDate },
+              ...(therapistId && { therapistId }),
+            },
+            include: {
+              patient: {
+                select: {
+                  id: true,
+                  name: true,
+                  phone: true,
+                  medicalAlerts: true,
+                },
+              },
+              therapist: {
+                select: {
+                  id: true,
+                  name: true,
+                },
               },
             },
-            therapist: {
-              select: {
-                id: true,
-                name: true,
-              },
+            orderBy: {
+              startTime: 'asc',
             },
-          },
-          orderBy: {
-            startTime: 'asc',
-          },
-        })
-      ),
+          })
+        ),
       { ttl: 300, tags: ['appointments'] }
     );
   }
@@ -226,20 +229,20 @@ export class DatabaseOptimizer {
   // Analytics queries with aggregations
   static async getPatientStats(patientId: string) {
     const cacheKey = `patient_stats:${patientId}`;
-    
+
     return this.cachedQuery(
       cacheKey,
       async () => {
         const [appointmentStats, recentMetrics] = await Promise.all([
           trackDatabaseOperation('patient_appointment_stats', () =>
-            cachedPrisma.client.appointment.groupBy({
+            cachedPrisma.appointment.groupBy({
               by: ['status'],
               where: { patientId },
               _count: { status: true },
             })
           ),
           trackDatabaseOperation('patient_recent_metrics', () =>
-            cachedPrisma.client.metricResult.findMany({
+            cachedPrisma.metricResult.findMany({
               where: { patientId },
               orderBy: { measuredAt: 'desc' },
               take: 10,
@@ -248,10 +251,13 @@ export class DatabaseOptimizer {
         ]);
 
         return {
-          appointmentStats: (appointmentStats as any[]).reduce((acc: Record<string, number>, stat: any) => {
-            acc[stat.status] = stat._count.status;
-            return acc;
-          }, {} as Record<string, number>),
+          appointmentStats: (appointmentStats as any[]).reduce(
+            (acc: Record<string, number>, stat: any) => {
+              acc[stat.status] = stat._count.status;
+              return acc;
+            },
+            {} as Record<string, number>
+          ),
           recentMetrics,
         };
       },
@@ -281,7 +287,7 @@ export class DatabaseOptimizer {
   }> {
     try {
       const start = Date.now();
-      await cachedPrisma.client.$queryRaw`SELECT 1 as health_check`;
+      await cachedPrisma.$queryRaw`SELECT 1 as health_check`;
       const responseTime = Date.now() - start;
 
       return {
@@ -305,7 +311,7 @@ export class DatabaseOptimizer {
 
     try {
       // This would work with PostgreSQL's pg_stat_statements extension
-      const slowQueries = await cachedPrisma.client.$queryRaw`
+      const slowQueries = await cachedPrisma.$queryRaw`
         SELECT query, calls, total_time, mean_time, rows
         FROM pg_stat_statements
         WHERE mean_time > 100
@@ -315,9 +321,9 @@ export class DatabaseOptimizer {
 
       return { slowQueries };
     } catch (error) {
-      return { 
+      return {
         message: 'pg_stat_statements extension not available',
-        error: (error as Error).message 
+        error: (error as Error).message,
       };
     }
   }

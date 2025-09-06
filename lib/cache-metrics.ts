@@ -1,13 +1,13 @@
 // lib/cache-metrics.ts - Advanced Cache Metrics and Monitoring System
-import { 
-  cache, 
-  patientCache, 
-  appointmentCache, 
-  reportCache, 
+import {
+  cache,
+  patientCache,
+  appointmentCache,
+  reportCache,
   analyticsCache,
   sessionCache,
   queryCache,
-  CacheWarmer
+  CacheWarmer,
 } from './cache';
 import { cacheInvalidator } from './cache-invalidation';
 import { sessionManager } from './session-cache';
@@ -146,7 +146,8 @@ export class CacheMetricsManager {
   /**
    * Start monitoring cache metrics
    */
-  startMonitoring(intervalMs = 60000): void { // Default: 1 minute
+  startMonitoring(intervalMs = 60000): void {
+    // Default: 1 minute
     if (this.monitoringInterval) {
       clearInterval(this.monitoringInterval);
     }
@@ -204,24 +205,21 @@ export class CacheMetricsManager {
         totalMisses += metrics.misses;
         totalOperations += metrics.operations;
         totalErrors += metrics.errors;
-        
+
         if (metrics.avgResponseTime > 0) {
           totalResponseTime += metrics.avgResponseTime;
           responseTimeCount++;
         }
       }
 
-      const overallHitRate = totalOperations > 0 
-        ? (totalHits / totalOperations) * 100 
-        : 0;
-      
-      const avgResponseTime = responseTimeCount > 0 
-        ? totalResponseTime / responseTimeCount 
-        : 0;
-      
-      const errorRate = totalOperations > 0 
-        ? (totalErrors / totalOperations) * 100 
-        : 0;
+      const overallHitRate =
+        totalOperations > 0 ? (totalHits / totalOperations) * 100 : 0;
+
+      const avgResponseTime =
+        responseTimeCount > 0 ? totalResponseTime / responseTimeCount : 0;
+
+      const errorRate =
+        totalOperations > 0 ? (totalErrors / totalOperations) * 100 : 0;
 
       // Get Redis stats
       const redisStats = await cache.getRedisStats();
@@ -261,7 +259,6 @@ export class CacheMetricsManager {
       });
 
       return summary;
-
     } catch (error) {
       edgeLogger.error('Error collecting cache metrics', error as Error);
       throw error;
@@ -291,18 +288,18 @@ export class CacheMetricsManager {
         const value = this.getMetricValue(summary, rule.metric);
         if (value === undefined) continue;
 
-        const shouldAlert = rule.condition === 'above' 
-          ? value > rule.threshold 
-          : value < rule.threshold;
+        const shouldAlert =
+          rule.condition === 'above'
+            ? value > rule.threshold
+            : value < rule.threshold;
 
         if (shouldAlert) {
           this.triggerAlert(rule, value);
         } else {
           this.resolveAlert(rule);
         }
-
       } catch (error) {
-        edgeLogger.error('Error checking alert rule', error as Error, { rule: rule.metric });
+        edgeLogger.error(`Error checking alert rule: ${rule.metric}`, error as Error);
       }
     }
   }
@@ -310,7 +307,10 @@ export class CacheMetricsManager {
   /**
    * Get metric value by path
    */
-  private getMetricValue(summary: CacheMetricsSummary, metricPath: string): number | undefined {
+  private getMetricValue(
+    summary: CacheMetricsSummary,
+    metricPath: string
+  ): number | undefined {
     const parts = metricPath.split('.');
     let value: any = summary;
 
@@ -380,7 +380,7 @@ export class CacheMetricsManager {
    * Send notification for alert (placeholder)
    */
   private sendNotification(alert: MetricAlert): void {
-    // TODO: Implement actual notification logic
+    //  Implement actual notification logic
     // This could send to Slack, email, webhook, etc.
     edgeLogger.info('Alert notification would be sent', {
       alertId: alert.id,
@@ -399,7 +399,7 @@ export class CacheMetricsManager {
    * Get metrics history
    */
   getMetricsHistory(minutes = 60): CacheMetricsSummary[] {
-    const cutoffTime = Date.now() - (minutes * 60 * 1000);
+    const cutoffTime = Date.now() - minutes * 60 * 1000;
     return this.metricsHistory.filter(m => m.timestamp >= cutoffTime);
   }
 
@@ -433,7 +433,7 @@ export class CacheMetricsManager {
   removeAlertRule(metric: string): void {
     const initialLength = this.alertRules.length;
     this.alertRules = this.alertRules.filter(rule => rule.metric !== metric);
-    
+
     if (this.alertRules.length < initialLength) {
       edgeLogger.info('Alert rule removed', { metric });
     }
@@ -468,14 +468,22 @@ export class CacheMetricsManager {
     };
     recommendations: string[];
   } {
-    const cutoffTime = Date.now() - (hours * 60 * 60 * 1000);
-    const relevantMetrics = this.metricsHistory.filter(m => m.timestamp >= cutoffTime);
+    const cutoffTime = Date.now() - hours * 60 * 60 * 1000;
+    const relevantMetrics = this.metricsHistory.filter(
+      m => m.timestamp >= cutoffTime
+    );
 
     if (relevantMetrics.length === 0) {
       return {
-        summary: { avgHitRate: 0, totalOperations: 0, peakHitRate: 0, lowestHitRate: 0, avgResponseTime: 0 },
+        summary: {
+          avgHitRate: 0,
+          totalOperations: 0,
+          peakHitRate: 0,
+          lowestHitRate: 0,
+          avgResponseTime: 0,
+        },
         trends: { hitRate: [], responseTime: [], operations: [] },
-        recommendations: ['Insufficient data for analysis']
+        recommendations: ['Insufficient data for analysis'],
       };
     }
 
@@ -485,38 +493,60 @@ export class CacheMetricsManager {
     const operations = relevantMetrics.map(m => m.overall.totalOperations);
 
     const avgHitRate = hitRates.reduce((a, b) => a + b, 0) / hitRates.length;
-    const avgResponseTime = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
+    const avgResponseTime =
+      responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
     const totalOperations = operations.reduce((a, b) => a + b, 0);
     const peakHitRate = Math.max(...hitRates);
     const lowestHitRate = Math.min(...hitRates);
 
     // Generate trends
     const trends = {
-      hitRate: relevantMetrics.map(m => ({ timestamp: m.timestamp, value: m.overall.hitRate })),
-      responseTime: relevantMetrics.map(m => ({ timestamp: m.timestamp, value: m.overall.avgResponseTime })),
-      operations: relevantMetrics.map(m => ({ timestamp: m.timestamp, value: m.overall.totalOperations })),
+      hitRate: relevantMetrics.map(m => ({
+        timestamp: m.timestamp,
+        value: m.overall.hitRate,
+      })),
+      responseTime: relevantMetrics.map(m => ({
+        timestamp: m.timestamp,
+        value: m.overall.avgResponseTime,
+      })),
+      operations: relevantMetrics.map(m => ({
+        timestamp: m.timestamp,
+        value: m.overall.totalOperations,
+      })),
     };
 
     // Generate recommendations
     const recommendations: string[] = [];
-    
+
     if (avgHitRate < 60) {
-      recommendations.push('Consider increasing cache TTL for frequently accessed data');
+      recommendations.push(
+        'Consider increasing cache TTL for frequently accessed data'
+      );
     }
-    
+
     if (avgResponseTime > 50) {
-      recommendations.push('Cache response times are high - consider memory cache optimization');
+      recommendations.push(
+        'Cache response times are high - consider memory cache optimization'
+      );
     }
-    
+
     if (peakHitRate - lowestHitRate > 30) {
-      recommendations.push('Hit rate varies significantly - review cache invalidation patterns');
+      recommendations.push(
+        'Hit rate varies significantly - review cache invalidation patterns'
+      );
     }
 
     const memoryUsage = relevantMetrics[relevantMetrics.length - 1]?.managers;
     if (memoryUsage) {
-      const totalMemorySize = Object.values(memoryUsage).reduce((sum, m) => sum + m.totalSize, 0);
-      if (totalMemorySize > 800 * 1024 * 1024) { // 800MB
-        recommendations.push('Memory cache usage is high - consider implementing cache eviction policies');
+      const totalMemorySize = Object.values(memoryUsage).reduce(
+        (sum, m) => sum + m.totalSize,
+        0
+      );
+      if (totalMemorySize > 800 * 1024 * 1024) {
+        // 800MB
+        recommendations.push(
+          'Memory cache usage is high - consider implementing cache eviction policies'
+        );
       }
     }
 
@@ -548,11 +578,11 @@ export class CacheMetricsManager {
     score = score * 0.6 + hitRateScore * 0.4;
 
     // Response time score (30% weight)
-    const responseTimeScore = Math.max(0, 100 - (metrics.avgResponseTime / 2));
+    const responseTimeScore = Math.max(0, 100 - metrics.avgResponseTime / 2);
     score = score * 0.7 + responseTimeScore * 0.3;
 
     // Error rate score (20% weight)
-    const errorRateScore = Math.max(0, 100 - (metrics.errorRate * 10));
+    const errorRateScore = Math.max(0, 100 - metrics.errorRate * 10);
     score = score * 0.8 + errorRateScore * 0.2;
 
     // Active alerts penalty (10% weight)

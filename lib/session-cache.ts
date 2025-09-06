@@ -35,12 +35,12 @@ export class DistributedSessionManager {
    * Create a new session
    */
   async createSession(
-    sessionData: SessionData, 
+    sessionData: SessionData,
     options: SessionOptions = {}
   ): Promise<string> {
     const sessionId = this.generateSessionId();
     const mergedOptions = { ...this.defaultOptions, ...options };
-    
+
     const session = {
       ...sessionData,
       createdAt: Date.now(),
@@ -50,18 +50,18 @@ export class DistributedSessionManager {
 
     try {
       // Store session data
-      await sessionCache.set(
-        `${this.sessionPrefix}:${sessionId}`,
-        session,
-        {
-          ttl: mergedOptions.maxAge,
-          tags: ['sessions', `user:${sessionData.userId}`],
-          layer: 'both',
-        }
-      );
+      await sessionCache.set(`${this.sessionPrefix}:${sessionId}`, session, {
+        ttl: mergedOptions.maxAge,
+        tags: ['sessions', `user:${sessionData.userId}`],
+        layer: 'both',
+      });
 
       // Track user sessions for concurrent session management
-      await this.addUserSession(sessionData.userId, sessionId, mergedOptions.maxAge!);
+      await this.addUserSession(
+        sessionData.userId,
+        sessionId,
+        mergedOptions.maxAge!
+      );
 
       edgeLogger.info('Session created', {
         sessionId,
@@ -71,7 +71,7 @@ export class DistributedSessionManager {
 
       return sessionId;
     } catch (error) {
-      edgeLogger.error('Failed to create session', error as Error, { sessionId });
+      edgeLogger.error(`Failed to create session ${sessionId}`, error as Error);
       throw error;
     }
   }
@@ -81,10 +81,9 @@ export class DistributedSessionManager {
    */
   async getSession(sessionId: string): Promise<SessionData | null> {
     try {
-      const session = await sessionCache.get<SessionData & { createdAt: number; sessionId: string }>(
-        `${this.sessionPrefix}:${sessionId}`,
-        { layer: 'both' }
-      );
+      const session = await sessionCache.get<
+        SessionData & { createdAt: number; sessionId: string }
+      >(`${this.sessionPrefix}:${sessionId}`, { layer: 'both' });
 
       if (!session) {
         return null;
@@ -93,7 +92,7 @@ export class DistributedSessionManager {
       // Check if session is expired (additional check)
       const now = Date.now();
       const maxAge = this.defaultOptions.maxAge! * 1000;
-      
+
       if (now - session.lastActivity > maxAge) {
         await this.destroySession(sessionId);
         return null;
@@ -101,7 +100,7 @@ export class DistributedSessionManager {
 
       return session;
     } catch (error) {
-      edgeLogger.error('Failed to get session', error as Error, { sessionId });
+      edgeLogger.error('Failed to get session', error as Error);
       return null;
     }
   }
@@ -109,7 +108,10 @@ export class DistributedSessionManager {
   /**
    * Update session activity
    */
-  async touchSession(sessionId: string, updateData?: Partial<SessionData>): Promise<boolean> {
+  async touchSession(
+    sessionId: string,
+    updateData?: Partial<SessionData>
+  ): Promise<boolean> {
     try {
       const session = await this.getSession(sessionId);
       if (!session) return false;
@@ -132,7 +134,7 @@ export class DistributedSessionManager {
 
       return true;
     } catch (error) {
-      edgeLogger.error('Failed to touch session', error as Error, { sessionId });
+      edgeLogger.error(`Failed to touch session ${sessionId}`, error as Error);
       return false;
     }
   }
@@ -158,7 +160,7 @@ export class DistributedSessionManager {
 
       return true;
     } catch (error) {
-      edgeLogger.error('Failed to destroy session', error as Error, { sessionId });
+      edgeLogger.error(`Failed to destroy session ${sessionId}`, error as Error);
       return false;
     }
   }
@@ -187,7 +189,7 @@ export class DistributedSessionManager {
 
       return destroyedCount;
     } catch (error) {
-      edgeLogger.error('Failed to destroy user sessions', error as Error, { userId });
+      edgeLogger.error(`Failed to destroy user sessions for ${userId}`, error as Error);
       return 0;
     }
   }
@@ -228,7 +230,7 @@ export class DistributedSessionManager {
 
       return validSessions;
     } catch (error) {
-      edgeLogger.error('Failed to get user sessions', error as Error, { userId });
+      edgeLogger.error(`Failed to get user sessions for ${userId}`, error as Error);
       return [];
     }
   }
@@ -244,13 +246,13 @@ export class DistributedSessionManager {
   }> {
     try {
       const cacheMetrics = sessionCache.getMetrics();
-      
+
       // This is a simplified implementation
       // In production, you might want to store more detailed metrics
-      
+
       return {
         totalSessions: 0, // Would need to implement session counting
-        activeUsers: 0,   // Would need to implement user counting
+        activeUsers: 0, // Would need to implement user counting
         avgSessionDuration: 0, // Would need to track session durations
         cacheStats: cacheMetrics,
       };
@@ -270,11 +272,11 @@ export class DistributedSessionManager {
    */
   async cleanupExpiredSessions(): Promise<number> {
     let cleanedCount = 0;
-    
+
     try {
       // This is a simplified cleanup - in production you'd want a more efficient approach
       // Perhaps using Redis SCAN or maintaining an expiration index
-      
+
       edgeLogger.info('Session cleanup completed', { cleanedCount });
       return cleanedCount;
     } catch (error) {
@@ -289,9 +291,13 @@ export class DistributedSessionManager {
     return crypto.randomBytes(32).toString('hex');
   }
 
-  private async addUserSession(userId: string, sessionId: string, ttl: number): Promise<void> {
+  private async addUserSession(
+    userId: string,
+    sessionId: string,
+    ttl: number
+  ): Promise<void> {
     const userSessions = await this.getUserSessions(userId);
-    
+
     // Limit concurrent sessions (optional)
     const maxSessions = 10;
     if (userSessions.length >= maxSessions) {
@@ -315,7 +321,10 @@ export class DistributedSessionManager {
     );
   }
 
-  private async removeUserSession(userId: string, sessionId: string): Promise<void> {
+  private async removeUserSession(
+    userId: string,
+    sessionId: string
+  ): Promise<void> {
     const userSessions = await this.getUserSessions(userId);
     const updatedSessions = userSessions.filter(id => id !== sessionId);
 
@@ -354,7 +363,10 @@ export class SessionMiddleware {
   /**
    * Create session cookie
    */
-  static createSessionCookie(sessionId: string, options: SessionOptions = {}): string {
+  static createSessionCookie(
+    sessionId: string,
+    options: SessionOptions = {}
+  ): string {
     const mergedOptions = {
       maxAge: 24 * 60 * 60,
       secure: process.env.NODE_ENV === 'production',
@@ -363,11 +375,11 @@ export class SessionMiddleware {
     };
 
     let cookie = `session=${sessionId}; Max-Age=${mergedOptions.maxAge}; Path=/`;
-    
+
     if (mergedOptions.secure) {
       cookie += '; Secure';
     }
-    
+
     if (mergedOptions.sameSite) {
       cookie += `; SameSite=${mergedOptions.sameSite}`;
     }

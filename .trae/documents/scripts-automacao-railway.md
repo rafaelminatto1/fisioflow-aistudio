@@ -166,7 +166,7 @@ echo "==========================="
 send_slack_notification() {
     local message="$1"
     local color="$2"
-    
+
     if [ ! -z "$SLACK_WEBHOOK" ]; then
         curl -X POST -H 'Content-type: application/json' \
             --data "{\"attachments\":[{\"color\":\"$color\",\"text\":\"$message\"}]}" \
@@ -207,7 +207,7 @@ critical_pages=("/login" "/dashboard" "/api/auth/session")
 for page in "${critical_pages[@]}"; do
     echo "🔍 Verificando $page..."
     page_status=$(curl -s -o /dev/null -w "%{http_code}" "$APP_URL$page")
-    
+
     if [ "$page_status" = "200" ] || [ "$page_status" = "302" ]; then
         echo "✅ $page OK ($page_status)"
     else
@@ -311,12 +311,12 @@ npm install
 if [ ! -f ".env.local" ]; then
     echo "⚙️ Configurando .env.local..."
     cp .env.example .env.local
-    
+
     echo "📝 Configure as variáveis em .env.local:"
     echo "   - DATABASE_URL (Neon DB local ou Docker)"
     echo "   - NEXTAUTH_SECRET (gere com: openssl rand -base64 32)"
     echo "   - Outras variáveis conforme necessário"
-    
+
     # Abrir arquivo para edição
     if command -v code &> /dev/null; then
         code .env.local
@@ -332,7 +332,7 @@ read -p "🐳 Usar Docker para banco local? (Y/n): " -n 1 -r
 echo
 if [[ ! $REPLY =~ ^[Nn]$ ]]; then
     echo "🐳 Iniciando PostgreSQL com Docker..."
-    
+
     # Criar docker-compose para desenvolvimento
     cat > docker-compose.dev.yml << EOF
 version: '3.8'
@@ -358,11 +358,11 @@ volumes:
 EOF
 
     docker-compose -f docker-compose.dev.yml up -d
-    
+
     # Aguardar banco inicializar
     echo "⏳ Aguardando banco inicializar..."
     sleep 10
-    
+
     # Atualizar .env.local com URL local
     sed -i 's|DATABASE_URL=.*|DATABASE_URL="postgresql://postgres:postgres@localhost:5432/fisioflow_dev"|' .env.local
 fi
@@ -397,7 +397,7 @@ echo "==================="
 if [ ! -f ".env.test" ]; then
     echo "⚙️ Configurando ambiente de teste..."
     cp .env.example .env.test
-    
+
     # Configurar banco de teste
     sed -i 's|DATABASE_URL=.*|DATABASE_URL="postgresql://postgres:postgres@localhost:5432/fisioflow_test"|' .env.test
 fi
@@ -522,7 +522,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    
+
     services:
       postgres:
         image: postgres:15
@@ -530,56 +530,53 @@ jobs:
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: fisioflow_test
         options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
         ports:
           - 5432:5432
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
           cache: 'npm'
-      
+
       - name: Install dependencies
         run: npm ci
-      
+
       - name: Setup test database
         run: |
           npx prisma migrate deploy
           npx prisma generate
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fisioflow_test
-      
+
       - name: Run tests
         run: npm test
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fisioflow_test
-      
+
       - name: Build application
         run: npm run build
-  
+
   deploy:
     needs: test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
-    
+
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install Railway CLI
         run: npm install -g @railway/cli
-      
+
       - name: Deploy to Railway
         run: railway up --detach
         env:
           RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-      
+
       - name: Health check
         run: |
           sleep 30
@@ -633,7 +630,7 @@ update: ## Atualizar dependências
 	./scripts/update-dependencies.sh
 ```
 
-***
+---
 
 **Como usar os scripts:**
 
@@ -645,11 +642,10 @@ update: ## Atualizar dependências
 
 **Ou usando Makefile:**
 
-* `make setup` - Setup inicial
+- `make setup` - Setup inicial
 
-* `make deploy` - Deploy para produção
+- `make deploy` - Deploy para produção
 
-* `make health` - Health check
+- `make health` - Health check
 
-* `make backup` - Backup do banco
-
+- `make backup` - Backup do banco

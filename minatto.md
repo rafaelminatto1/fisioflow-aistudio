@@ -3,6 +3,7 @@
 ## 🚨 PROBLEMA PRINCIPAL
 
 ### Erro de Compilação TypeScript
+
 - **Arquivo:** `services/reportService.ts`
 - **Erro:** `Module 'html2pdf.js' has no declaration file`
 - **Impacto:** Build falha completamente, impedindo deploy
@@ -10,6 +11,7 @@
 ## 📋 CONTEXTO DO AMBIENTE
 
 ### Stack Tecnológica
+
 - **Frontend:** Next.js 14 com TypeScript
 - **Backend:** Node.js com Prisma ORM
 - **Database:** PostgreSQL (Neon DB)
@@ -18,6 +20,7 @@
 - **MCP:** Model Context Protocol para integração de IA
 
 ### Estrutura do Projeto
+
 ```
 fisioflow-aistudio/
 ├── services/reportService.ts (🔴 PROBLEMA)
@@ -31,12 +34,14 @@ fisioflow-aistudio/
 ## 🎯 COMPORTAMENTO ESPERADO vs ATUAL
 
 ### Esperado
+
 - ✅ Build TypeScript sem erros
 - ✅ Deploy bem-sucedido no Railway
 - ✅ Aplicação funcionando em produção
 - ✅ Integração MCP operacional
 
 ### Atual
+
 - ❌ Build falha com erro de tipos
 - ❌ Deploy não pode ser executado
 - ❌ Variáveis de ambiente com placeholders
@@ -58,6 +63,7 @@ Type error: Cannot find module 'html2pdf.js' or its corresponding type declarati
 ## 🔍 ARQUIVOS CRÍTICOS PARA ANÁLISE
 
 ### 1. services/reportService.ts
+
 ```typescript
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import html2pdf from 'html2pdf.js'; // 🔴 PROBLEMA AQUI
@@ -67,6 +73,7 @@ import html2pdf from 'html2pdf.js'; // 🔴 PROBLEMA AQUI
 ```
 
 ### 2. .env (Variáveis com Placeholder)
+
 ```env
 # 🔴 PROBLEMAS: Valores placeholder
 GEMINI_API_KEY=your-gemini-api-key-here
@@ -79,6 +86,7 @@ RAILWAY_ENVIRONMENT=production
 ```
 
 ### 3. mcp.config.json
+
 ```json
 {
   "providers": {
@@ -101,6 +109,7 @@ RAILWAY_ENVIRONMENT=production
 ## 🛠️ SOLUÇÕES REQUERIDAS
 
 ### 1. URGENTE - Resolver Erro TypeScript
+
 ```bash
 # Instalar tipos para html2pdf.js
 npm install --save-dev @types/html2pdf.js
@@ -110,17 +119,20 @@ echo 'declare module "html2pdf.js";' > types/html2pdf.d.ts
 ```
 
 ### 2. CRÍTICO - Validar Variáveis de Ambiente
+
 - [ ] Verificar se todas as API keys estão configuradas
 - [ ] Substituir placeholders por valores reais
 - [ ] Validar conexão com Neon DB
 - [ ] Testar autenticação com provedores de IA
 
 ### 3. IMPORTANTE - Verificar Configuração MCP
+
 - [ ] Validar sintaxe do mcp.config.json
 - [ ] Testar conectividade com provedores
 - [ ] Verificar se variáveis de ambiente são carregadas corretamente
 
 ### 4. DEPLOY - Preparar para Railway
+
 - [ ] Executar `npm run build` com sucesso
 - [ ] Verificar railway.json e railway.toml
 - [ ] Testar health check endpoint
@@ -167,4 +179,5 @@ npm run deploy
 
 ---
 
-**NOTA:** Este arquivo foi criado para ser lido pelo Claude Code CLI. Por favor, analise cada seção e implemente as soluções na ordem de prioridade indicada.
+**NOTA:** Este arquivo foi criado para ser lido pelo Claude Code CLI. Por favor, analise cada seção
+e implemente as soluções na ordem de prioridade indicada.

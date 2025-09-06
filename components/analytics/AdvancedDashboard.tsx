@@ -1,42 +1,48 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { 
-  LineChart, 
-  Line, 
-  AreaChart, 
-  Area, 
-  BarChart, 
-  Bar, 
-  PieChart, 
-  Pie, 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  LineChart,
+  Line,
+  AreaChart,
+  Area,
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
   Cell,
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
-  ResponsiveContainer 
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
 } from 'recharts';
-import { 
-  Activity, 
-  AlertTriangle, 
-  Brain, 
-  Calendar, 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  Clock, 
+import {
+  Activity,
+  AlertTriangle,
+  Brain,
+  Calendar,
+  TrendingUp,
+  TrendingDown,
+  Users,
+  // Clock, // Temporariamente comentado
   Target,
   RefreshCw,
   Download,
-  Filter
+  // Filter, // Temporariamente comentado
 } from 'lucide-react';
 
 interface AdvancedDashboardProps {
@@ -106,20 +112,22 @@ const COLORS = {
   warning: '#d97706',
   danger: '#dc2626',
   info: '#0891b2',
-  secondary: '#6b7280'
+  secondary: '#6b7280',
 };
 
 const RISK_COLORS = {
   low: '#059669',
   medium: '#d97706',
   high: '#dc2626',
-  critical: '#7c2d12'
+  critical: '#7c2d12',
 };
 
 export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTimeRange, setSelectedTimeRange] = useState<'7d' | '30d' | '90d' | '1y'>('30d');
+  const [selectedTimeRange, setSelectedTimeRange] = useState<
+    '7d' | '30d' | '90d' | '1y'
+  >('30d');
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
@@ -129,7 +137,9 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
   const loadDashboardData = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`/api/analytics/advanced?userId=${userId}&range=${selectedTimeRange}`);
+      const response = await fetch(
+        `/api/analytics/advanced?userId=${userId}&range=${selectedTimeRange}`
+      );
       if (response.ok) {
         const dashboardData = await response.json();
         setData(dashboardData);
@@ -149,10 +159,13 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
 
   const exportDashboard = async () => {
     try {
-      const response = await fetch(`/api/analytics/export?userId=${userId}&range=${selectedTimeRange}`, {
-        method: 'POST',
-      });
-      
+      const response = await fetch(
+        `/api/analytics/export?userId=${userId}&range=${selectedTimeRange}`,
+        {
+          method: 'POST',
+        }
+      );
+
       if (response.ok) {
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
@@ -171,9 +184,9 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-96">
-        <div className="flex items-center space-x-2">
-          <RefreshCw className="w-6 h-6 animate-spin" />
+      <div className='flex items-center justify-center h-96'>
+        <div className='flex items-center space-x-2'>
+          <RefreshCw className='w-6 h-6 animate-spin' />
           <span>Carregando dashboard...</span>
         </div>
       </div>
@@ -183,7 +196,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
   if (!data) {
     return (
       <Alert>
-        <AlertTriangle className="h-4 w-4" />
+        <AlertTriangle className='h-4 w-4' />
         <AlertDescription>
           Não foi possível carregar os dados do dashboard. Tente novamente.
         </AlertDescription>
@@ -192,89 +205,108 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className='space-y-6 p-6'>
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className='flex items-center justify-between'>
         <div>
-          <h1 className="text-3xl font-bold">Dashboard Avançado</h1>
-          <p className="text-muted-foreground">
+          <h1 className='text-3xl font-bold'>Dashboard Avançado</h1>
+          <p className='text-muted-foreground'>
             Insights inteligentes e análises preditivas
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <select 
+        <div className='flex items-center space-x-2'>
+          <select
             value={selectedTimeRange}
-            onChange={(e) => setSelectedTimeRange(e.target.value as any)}
-            className="px-3 py-2 border rounded-md"
+            onChange={e => setSelectedTimeRange(e.target.value as any)}
+            className='px-3 py-2 border rounded-md'
           >
-            <option value="7d">Últimos 7 dias</option>
-            <option value="30d">Últimos 30 dias</option>
-            <option value="90d">Últimos 90 dias</option>
-            <option value="1y">Último ano</option>
+            <option value='7d'>Últimos 7 dias</option>
+            <option value='30d'>Últimos 30 dias</option>
+            <option value='90d'>Últimos 90 dias</option>
+            <option value='1y'>Último ano</option>
           </select>
-          <Button 
-            onClick={handleRefresh} 
+          <Button
+            onClick={handleRefresh}
             disabled={refreshing}
-            variant="outline"
-            size="sm"
+            variant='outline'
+            size='sm'
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${refreshing ? 'animate-spin' : ''}`}
+            />
             Atualizar
           </Button>
-          <Button onClick={exportDashboard} variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
+          <Button onClick={exportDashboard} variant='outline' size='sm'>
+            <Download className='w-4 h-4 mr-2' />
             Exportar
           </Button>
         </div>
       </div>
 
       {/* Overview Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pacientes Ativos</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Pacientes Ativos
+            </CardTitle>
+            <Users className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.overview.activePatients}</div>
-            <p className="text-xs text-muted-foreground">
-              {data.overview.monthlyGrowth > 0 ? '+' : ''}{data.overview.monthlyGrowth}% vs mês anterior
+            <div className='text-2xl font-bold'>
+              {data.overview.activePatients}
+            </div>
+            <p className='text-xs text-muted-foreground'>
+              {data.overview.monthlyGrowth > 0 ? '+' : ''}
+              {data.overview.monthlyGrowth}% vs mês anterior
             </p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Taxa de Conclusão</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Taxa de Conclusão
+            </CardTitle>
+            <Target className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.overview.completionRate}%</div>
-            <Progress value={data.overview.completionRate} className="mt-2" />
+            <div className='text-2xl font-bold'>
+              {data.overview.completionRate}%
+            </div>
+            <Progress value={data.overview.completionRate} className='mt-2' />
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sessões/Paciente</CardTitle>
-            <Calendar className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Sessões/Paciente
+            </CardTitle>
+            <Calendar className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{data.overview.avgSessionsPerPatient.toFixed(1)}</div>
-            <p className="text-xs text-muted-foreground">Média por paciente</p>
+            <div className='text-2xl font-bold'>
+              {data.overview.avgSessionsPerPatient.toFixed(1)}
+            </div>
+            <p className='text-xs text-muted-foreground'>Média por paciente</p>
           </CardContent>
         </Card>
 
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Alertas Críticos</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+          <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+            <CardTitle className='text-sm font-medium'>
+              Alertas Críticos
+            </CardTitle>
+            <AlertTriangle className='h-4 w-4 text-muted-foreground' />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className='text-2xl font-bold'>
               {data.alerts.filter(alert => alert.severity === 'high').length}
             </div>
-            <p className="text-xs text-muted-foreground">Requerem atenção imediata</p>
+            <p className='text-xs text-muted-foreground'>
+              Requerem atenção imediata
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -283,8 +315,8 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
       {data.alerts.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center">
-              <AlertTriangle className="w-5 h-5 mr-2" />
+            <CardTitle className='flex items-center'>
+              <AlertTriangle className='w-5 h-5 mr-2' />
               Alertas Inteligentes
             </CardTitle>
             <CardDescription>
@@ -292,39 +324,42 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
-              {data.alerts.slice(0, 5).map((alert, index) => (
-                <div 
+            <div className='space-y-3'>
+              {data.alerts.slice(0, 5).map((alert) => (
+                <div
                   key={alert.timestamp + alert.message}
                   className={`p-3 border-l-4 rounded-md ${
-                    alert.severity === 'high' 
-                      ? 'border-red-500 bg-red-50' 
+                    alert.severity === 'high'
+                      ? 'border-red-500 bg-red-50'
                       : alert.severity === 'medium'
-                      ? 'border-yellow-500 bg-yellow-50'
-                      : 'border-blue-500 bg-blue-50'
+                        ? 'border-yellow-500 bg-yellow-50'
+                        : 'border-blue-500 bg-blue-50'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
+                  <div className='flex items-center justify-between'>
                     <div>
-                      <p className="font-medium">{alert.message}</p>
+                      <p className='font-medium'>{alert.message}</p>
                       {alert.patientName && (
-                        <p className="text-sm text-muted-foreground">
+                        <p className='text-sm text-muted-foreground'>
                           Paciente: {alert.patientName}
                         </p>
                       )}
-                      <p className="text-sm mt-1">{alert.actionRequired}</p>
+                      <p className='text-sm mt-1'>{alert.actionRequired}</p>
                     </div>
-                    <Badge 
+                    <Badge
                       variant={
-                        alert.severity === 'high' 
-                          ? 'destructive' 
-                          : alert.severity === 'medium' 
-                          ? 'default'
-                          : 'secondary'
+                        alert.severity === 'high'
+                          ? 'destructive'
+                          : alert.severity === 'medium'
+                            ? 'default'
+                            : 'secondary'
                       }
                     >
-                      {alert.severity === 'high' ? 'Alto' : 
-                       alert.severity === 'medium' ? 'Médio' : 'Baixo'}
+                      {alert.severity === 'high'
+                        ? 'Alto'
+                        : alert.severity === 'medium'
+                          ? 'Médio'
+                          : 'Baixo'}
                     </Badge>
                   </div>
                 </div>
@@ -335,16 +370,16 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
       )}
 
       {/* Main Analytics Tabs */}
-      <Tabs defaultValue="performance" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="patients">Pacientes</TabsTrigger>
-          <TabsTrigger value="predictions">Predições IA</TabsTrigger>
-          <TabsTrigger value="insights">Insights</TabsTrigger>
+      <Tabs defaultValue='performance' className='w-full'>
+        <TabsList className='grid w-full grid-cols-4'>
+          <TabsTrigger value='performance'>Performance</TabsTrigger>
+          <TabsTrigger value='patients'>Pacientes</TabsTrigger>
+          <TabsTrigger value='predictions'>Predições IA</TabsTrigger>
+          <TabsTrigger value='insights'>Insights</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="performance" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value='performance' className='space-y-6'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             {/* Weekly Appointments */}
             <Card>
               <CardHeader>
@@ -354,24 +389,24 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width='100%' height={300}>
                   <AreaChart data={data.performance.weeklyAppointments}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="week" />
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='week' />
                     <YAxis />
                     <Tooltip />
                     <Area
-                      type="monotone"
-                      dataKey="completed"
-                      stackId="1"
+                      type='monotone'
+                      dataKey='completed'
+                      stackId='1'
                       stroke={COLORS.success}
                       fill={COLORS.success}
                       fillOpacity={0.6}
                     />
                     <Area
-                      type="monotone"
-                      dataKey="noShow"
-                      stackId="1"
+                      type='monotone'
+                      dataKey='noShow'
+                      stackId='1'
                       stroke={COLORS.danger}
                       fill={COLORS.danger}
                       fillOpacity={0.6}
@@ -390,13 +425,13 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width='100%' height={300}>
                   <BarChart data={data.performance.treatmentSuccess}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="treatmentType" />
+                    <CartesianGrid strokeDasharray='3 3' />
+                    <XAxis dataKey='treatmentType' />
                     <YAxis />
                     <Tooltip />
-                    <Bar dataKey="successRate" fill={COLORS.primary} />
+                    <Bar dataKey='successRate' fill={COLORS.primary} />
                   </BarChart>
                 </ResponsiveContainer>
               </CardContent>
@@ -412,16 +447,16 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
+              <ResponsiveContainer width='100%' height={300}>
                 <LineChart data={data.performance.painReductionTrends}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
+                  <CartesianGrid strokeDasharray='3 3' />
+                  <XAxis dataKey='month' />
                   <YAxis />
                   <Tooltip />
                   <Legend />
                   <Line
-                    type="monotone"
-                    dataKey="avgPainReduction"
+                    type='monotone'
+                    dataKey='avgPainReduction'
                     stroke={COLORS.success}
                     strokeWidth={2}
                     dot={{ fill: COLORS.success }}
@@ -432,33 +467,53 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
           </Card>
         </TabsContent>
 
-        <TabsContent value="patients" className="space-y-6">
+        <TabsContent value='patients' className='space-y-6'>
           {/* Patient Risk Overview */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
             <Card>
               <CardHeader>
                 <CardTitle>Distribuição de Risco</CardTitle>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={200}>
+                <ResponsiveContainer width='100%' height={200}>
                   <PieChart>
                     <Pie
                       data={[
-                        { name: 'Baixo', value: data.patientInsights.filter(p => p.riskLevel === 'low').length },
-                        { name: 'Médio', value: data.patientInsights.filter(p => p.riskLevel === 'medium').length },
-                        { name: 'Alto', value: data.patientInsights.filter(p => p.riskLevel === 'high').length },
-                        { name: 'Crítico', value: data.patientInsights.filter(p => p.riskLevel === 'critical').length },
+                        {
+                          name: 'Baixo',
+                          value: data.patientInsights.filter(
+                            p => p.riskLevel === 'low'
+                          ).length,
+                        },
+                        {
+                          name: 'Médio',
+                          value: data.patientInsights.filter(
+                            p => p.riskLevel === 'medium'
+                          ).length,
+                        },
+                        {
+                          name: 'Alto',
+                          value: data.patientInsights.filter(
+                            p => p.riskLevel === 'high'
+                          ).length,
+                        },
+                        {
+                          name: 'Crítico',
+                          value: data.patientInsights.filter(
+                            p => p.riskLevel === 'critical'
+                          ).length,
+                        },
                       ]}
-                      cx="50%"
-                      cy="50%"
+                      cx='50%'
+                      cy='50%'
                       outerRadius={80}
-                      dataKey="value"
+                      dataKey='value'
                     >
                       {[
                         { color: RISK_COLORS.low },
                         { color: RISK_COLORS.medium },
                         { color: RISK_COLORS.high },
-                        { color: RISK_COLORS.critical }
+                        { color: RISK_COLORS.critical },
                       ].map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
@@ -470,7 +525,7 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
             </Card>
 
             {/* High Risk Patients */}
-            <Card className="lg:col-span-2">
+            <Card className='lg:col-span-2'>
               <CardHeader>
                 <CardTitle>Pacientes de Alto Risco</CardTitle>
                 <CardDescription>
@@ -478,33 +533,46 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
+                <div className='space-y-3'>
                   {data.patientInsights
-                    .filter(patient => patient.riskLevel === 'high' || patient.riskLevel === 'critical')
+                    .filter(
+                      patient =>
+                        patient.riskLevel === 'high' ||
+                        patient.riskLevel === 'critical'
+                    )
                     .slice(0, 5)
-                    .map((patient, index) => (
-                      <div key={patient.patientId} className="flex items-center justify-between p-3 border rounded-lg">
+                    .map((patient) => (
+                      <div
+                        key={patient.patientId}
+                        className='flex items-center justify-between p-3 border rounded-lg'
+                      >
                         <div>
-                          <p className="font-medium">{patient.patientName}</p>
-                          <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <p className='font-medium'>{patient.patientName}</p>
+                          <div className='flex items-center space-x-4 text-sm text-muted-foreground'>
                             <span>Progresso: {patient.recoveryProgress}%</span>
                             <span>Frequência: {patient.attendanceRate}%</span>
-                            <span className="flex items-center">
-                              Dor: 
+                            <span className='flex items-center'>
+                              Dor:
                               {patient.painTrend === 'improving' ? (
-                                <TrendingDown className="w-3 h-3 ml-1 text-green-500" />
+                                <TrendingDown className='w-3 h-3 ml-1 text-green-500' />
                               ) : patient.painTrend === 'worsening' ? (
-                                <TrendingUp className="w-3 h-3 ml-1 text-red-500" />
+                                <TrendingUp className='w-3 h-3 ml-1 text-red-500' />
                               ) : (
-                                <Activity className="w-3 h-3 ml-1 text-yellow-500" />
+                                <Activity className='w-3 h-3 ml-1 text-yellow-500' />
                               )}
                             </span>
                           </div>
                         </div>
-                        <Badge 
-                          variant={patient.riskLevel === 'critical' ? 'destructive' : 'default'}
+                        <Badge
+                          variant={
+                            patient.riskLevel === 'critical'
+                              ? 'destructive'
+                              : 'default'
+                          }
                         >
-                          {patient.riskLevel === 'critical' ? 'Crítico' : 'Alto Risco'}
+                          {patient.riskLevel === 'critical'
+                            ? 'Crítico'
+                            : 'Alto Risco'}
                         </Badge>
                       </div>
                     ))}
@@ -514,13 +582,13 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="predictions" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value='predictions' className='space-y-6'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             {/* Discharge Candidates */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <Brain className="w-5 h-5 mr-2" />
+                <CardTitle className='flex items-center'>
+                  <Brain className='w-5 h-5 mr-2' />
                   Candidatos à Alta
                 </CardTitle>
                 <CardDescription>
@@ -528,23 +596,31 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {data.predictions.dischargeCandidates.map((patient, index) => (
-                    <div key={patient.patientName + patient.expectedDate} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <div>
-                        <p className="font-medium">{patient.patientName}</p>
-                        <p className="text-sm text-muted-foreground">
-                          Previsão: {patient.expectedDate}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium text-green-700">
-                          {patient.probability}%
+                <div className='space-y-3'>
+                  {data.predictions.dischargeCandidates.map(
+                    (patient) => (
+                      <div
+                        key={patient.patientName + patient.expectedDate}
+                        className='flex items-center justify-between p-3 bg-green-50 rounded-lg'
+                      >
+                        <div>
+                          <p className='font-medium'>{patient.patientName}</p>
+                          <p className='text-sm text-muted-foreground'>
+                            Previsão: {patient.expectedDate}
+                          </p>
                         </div>
-                        <Progress value={patient.probability} className="w-20 mt-1" />
+                        <div className='text-right'>
+                          <div className='text-sm font-medium text-green-700'>
+                            {patient.probability}%
+                          </div>
+                          <Progress
+                            value={patient.probability}
+                            className='w-20 mt-1'
+                          />
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -552,8 +628,8 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
             {/* Risk Patients Interventions */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center">
-                  <AlertTriangle className="w-5 h-5 mr-2" />
+                <CardTitle className='flex items-center'>
+                  <AlertTriangle className='w-5 h-5 mr-2' />
                   Intervenções Recomendadas
                 </CardTitle>
                 <CardDescription>
@@ -561,31 +637,38 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {data.predictions.riskPatients.map((patient, index) => (
-                    <div key={patient.patientName + patient.riskFactors.join('-')} className="p-3 border rounded-lg">
-                      <p className="font-medium mb-2">{patient.patientName}</p>
-                      <div className="space-y-2">
+                <div className='space-y-4'>
+                  {data.predictions.riskPatients.map((patient) => (
+                    <div
+                      key={patient.patientName + patient.riskFactors.join('-')}
+                      className='p-3 border rounded-lg'
+                    >
+                      <p className='font-medium mb-2'>{patient.patientName}</p>
+                      <div className='space-y-2'>
                         <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-1">
+                          <p className='text-xs font-medium text-muted-foreground mb-1'>
                             Fatores de Risco:
                           </p>
-                          <div className="flex flex-wrap gap-1">
+                          <div className='flex flex-wrap gap-1'>
                             {patient.riskFactors.map((factor, idx) => (
-                              <Badge key={idx} variant="outline" className="text-xs">
+                              <Badge
+                                key={idx}
+                                variant='outline'
+                                className='text-xs'
+                              >
                                 {factor}
                               </Badge>
                             ))}
                           </div>
                         </div>
                         <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-1">
+                          <p className='text-xs font-medium text-muted-foreground mb-1'>
                             Ações Recomendadas:
                           </p>
-                          <ul className="text-sm space-y-1">
+                          <ul className='text-sm space-y-1'>
                             {patient.recommendedActions.map((action, idx) => (
-                              <li key={idx} className="flex items-start">
-                                <span className="w-2 h-2 bg-blue-500 rounded-full mt-2 mr-2 flex-shrink-0"></span>
+                              <li key={idx} className='flex items-start'>
+                                <span className='w-2 h-2 bg-blue-500 rounded-full mt-2 mr-2 flex-shrink-0'></span>
                                 {action}
                               </li>
                             ))}
@@ -600,25 +683,25 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
           </div>
         </TabsContent>
 
-        <TabsContent value="insights" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value='insights' className='space-y-6'>
+          <div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
             <Card>
               <CardHeader>
                 <CardTitle>Insights Operacionais</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium">Otimização de Horários</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Terças e quintas apresentam 23% menos agendamentos. 
+                <div className='space-y-3'>
+                  <div className='p-3 bg-blue-50 rounded-lg'>
+                    <h4 className='font-medium'>Otimização de Horários</h4>
+                    <p className='text-sm text-muted-foreground'>
+                      Terças e quintas apresentam 23% menos agendamentos.
                       Considere campanhas de incentivo para esses dias.
                     </p>
                   </div>
-                  <div className="p-3 bg-yellow-50 rounded-lg">
-                    <h4 className="font-medium">Capacidade</h4>
-                    <p className="text-sm text-muted-foreground">
-                      A capacidade está 85% utilizada nos horários de pico. 
+                  <div className='p-3 bg-yellow-50 rounded-lg'>
+                    <h4 className='font-medium'>Capacidade</h4>
+                    <p className='text-sm text-muted-foreground'>
+                      A capacidade está 85% utilizada nos horários de pico.
                       Avaliar expansão do atendimento vespertino.
                     </p>
                   </div>
@@ -631,18 +714,18 @@ export default function AdvancedDashboard({ userId }: AdvancedDashboardProps) {
                 <CardTitle>Insights Clínicos</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="p-3 bg-green-50 rounded-lg">
-                    <h4 className="font-medium">Efetividade do Tratamento</h4>
-                    <p className="text-sm text-muted-foreground">
-                      Pacientes com exercícios domiciliares têm 34% mais 
+                <div className='space-y-3'>
+                  <div className='p-3 bg-green-50 rounded-lg'>
+                    <h4 className='font-medium'>Efetividade do Tratamento</h4>
+                    <p className='text-sm text-muted-foreground'>
+                      Pacientes com exercícios domiciliares têm 34% mais
                       progresso na recuperação.
                     </p>
                   </div>
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <h4 className="font-medium">Padrão de Dor</h4>
-                    <p className="text-sm text-muted-foreground">
-                      86% dos pacientes relatam maior dor nas segundas-feiras. 
+                  <div className='p-3 bg-purple-50 rounded-lg'>
+                    <h4 className='font-medium'>Padrão de Dor</h4>
+                    <p className='text-sm text-muted-foreground'>
+                      86% dos pacientes relatam maior dor nas segundas-feiras.
                       Considere ajustes no protocolo de fim de semana.
                     </p>
                   </div>

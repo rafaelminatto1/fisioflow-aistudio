@@ -2,7 +2,8 @@
 
 ## Visão Geral
 
-Este documento descreve como configurar e usar o Model Context Protocol (MCP) para integração com Railway e Neon DB no projeto FisioFlow.
+Este documento descreve como configurar e usar o Model Context Protocol (MCP) para integração com
+Railway e Neon DB no projeto FisioFlow.
 
 ## 🚀 Configuração Rápida
 
@@ -145,11 +146,13 @@ O arquivo `mcp.config.json` contém:
 ## 🔍 Tipos de Query Suportados
 
 ### Infrastructure Queries
+
 - `deploy_management`: Gerenciamento de deploys
 - `infrastructure_monitoring`: Monitoramento de infraestrutura
 - `environment_config`: Configuração de ambiente
 
 ### Database Queries
+
 - `database_operations`: Operações de banco de dados
 - `database_monitoring`: Monitoramento de banco
 - `backup_restore`: Backup e restore
@@ -158,14 +161,14 @@ O arquivo `mcp.config.json` contém:
 
 ### TTL por Tipo de Query
 
-| Tipo | TTL (segundos) | Descrição |
-|------|----------------|----------|
-| deploy_management | 300 | Status de deploy |
-| infrastructure_monitoring | 60 | Métricas em tempo real |
-| database_operations | 600 | Operações de banco |
-| database_monitoring | 120 | Monitoramento DB |
-| backup_restore | 1800 | Status de backup |
-| environment_config | 3600 | Configurações |
+| Tipo                      | TTL (segundos) | Descrição              |
+| ------------------------- | -------------- | ---------------------- |
+| deploy_management         | 300            | Status de deploy       |
+| infrastructure_monitoring | 60             | Métricas em tempo real |
+| database_operations       | 600            | Operações de banco     |
+| database_monitoring       | 120            | Monitoramento DB       |
+| backup_restore            | 1800           | Status de backup       |
+| environment_config        | 3600           | Configurações          |
 
 ### Rate Limits
 
@@ -175,10 +178,12 @@ O arquivo `mcp.config.json` contém:
 ## 🛡️ Segurança
 
 ### Autenticação
+
 - **Railway**: Bearer Token com refresh automático
 - **Neon DB**: API Key com SSL obrigatório
 
 ### Validações
+
 - ✅ Validação automática de API keys
 - ✅ Rate limiting por usuário
 - ✅ SSL obrigatório para conexões DB
@@ -187,10 +192,12 @@ O arquivo `mcp.config.json` contém:
 ## 🔄 Health Checks
 
 ### Endpoints Monitorados
+
 - **Railway**: `https://backboard.railway.app/health`
 - **Neon DB**: `${NEON_DB_HOST}:5432`
 
 ### Configuração
+
 - Intervalo: 5 minutos
 - Timeout: 10 segundos
 - Retries: 3 tentativas
@@ -198,12 +205,14 @@ O arquivo `mcp.config.json` contém:
 ## 📈 Monitoramento
 
 ### Métricas Coletadas
+
 - Latência de requests
 - Taxa de erro
 - Uso de recursos
 - Status de conexões
 
 ### Alertas Configurados
+
 - CPU > 80%
 - Memória > 85%
 - Taxa de erro > 5%
@@ -216,6 +225,7 @@ O arquivo `mcp.config.json` contém:
 ### Problemas Comuns
 
 #### ❌ "Railway API connection failed"
+
 ```bash
 # Verificar API key
 echo $RAILWAY_API_KEY
@@ -225,6 +235,7 @@ npm run mcp:test-railway
 ```
 
 #### ❌ "Neon DB connection failed"
+
 ```bash
 # Verificar DATABASE_URL
 echo $DATABASE_URL
@@ -234,6 +245,7 @@ npm run mcp:test-neon
 ```
 
 #### ❌ "Rate limit exceeded"
+
 ```bash
 # Aguardar reset do limite
 # Verificar configuração de cache
@@ -243,6 +255,7 @@ npm run mcp:validate
 ### Logs
 
 Os logs são salvos em:
+
 - **Console**: Tempo real
 - **Arquivo**: `logs/mcp-infrastructure.log`
 - **Rotação**: Automática a cada 100MB
@@ -280,4 +293,5 @@ Para problemas ou dúvidas:
 
 ---
 
-**Nota**: Mantenha suas API keys seguras e nunca as commite no repositório. Use sempre o arquivo `.env.local` para credenciais reais.
+**Nota**: Mantenha suas API keys seguras e nunca as commite no repositório. Use sempre o arquivo
+`.env.local` para credenciais reais.

@@ -21,7 +21,12 @@ class MetricsCollector {
   private performanceMetrics: PerformanceMetric[] = [];
 
   // Record a custom metric
-  record(name: string, value: number, unit = 'count', tags: Record<string, string> = {}): void {
+  record(
+    name: string,
+    value: number,
+    unit = 'count',
+    tags: Record<string, string> = {}
+  ): void {
     this.metrics.push({
       name,
       value,
@@ -37,7 +42,12 @@ class MetricsCollector {
   }
 
   // Record performance timing
-  recordPerformance(operation: string, duration: number, status: 'success' | 'error' = 'success', metadata?: Record<string, any>): void {
+  recordPerformance(
+    operation: string,
+    duration: number,
+    status: 'success' | 'error' = 'success',
+    metadata?: Record<string, any>
+  ): void {
     this.performanceMetrics.push({
       operation,
       duration,
@@ -60,15 +70,22 @@ class MetricsCollector {
   } {
     const totalMetrics = this.metrics.length;
     const totalPerformanceMetrics = this.performanceMetrics.length;
-    
-    const successfulOperations = this.performanceMetrics.filter(m => m.status === 'success');
-    const averageResponseTime = successfulOperations.length > 0
-      ? successfulOperations.reduce((sum, m) => sum + m.duration, 0) / successfulOperations.length
-      : 0;
 
-    const errorRate = totalPerformanceMetrics > 0
-      ? (this.performanceMetrics.filter(m => m.status === 'error').length / totalPerformanceMetrics) * 100
-      : 0;
+    const successfulOperations = this.performanceMetrics.filter(
+      m => m.status === 'success'
+    );
+    const averageResponseTime =
+      successfulOperations.length > 0
+        ? successfulOperations.reduce((sum, m) => sum + m.duration, 0) /
+          successfulOperations.length
+        : 0;
+
+    const errorRate =
+      totalPerformanceMetrics > 0
+        ? (this.performanceMetrics.filter(m => m.status === 'error').length /
+            totalPerformanceMetrics) *
+          100
+        : 0;
 
     return {
       totalMetrics,
@@ -100,62 +117,77 @@ export const metrics = new MetricsCollector();
 
 // Business Metrics class for higher-level metrics
 export class BusinessMetrics {
-  static recordAPICall(endpoint: string, method: string, statusCode: number): void {
+  static recordAPICall(
+    endpoint: string,
+    method: string,
+    statusCode: number
+  ): void {
     metrics.record('api_calls_total', 1, 'count', {
       endpoint,
       method,
-      status: statusCode.toString()
+      status: statusCode.toString(),
     });
 
     structuredLogger.http('API call recorded', {
       endpoint,
       method,
       statusCode,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  static recordBusinessEvent(eventType: string, metadata: Record<string, any> = {}): void {
+  static recordBusinessEvent(
+    eventType: string,
+    metadata: Record<string, any> = {}
+  ): void {
     metrics.record('business_events', 1, 'count', {
       eventType,
-      ...metadata
+      ...metadata,
     });
 
     structuredLogger.info('Business event recorded', {
       eventType,
       metadata,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
   static recordSecurityEvent(type: string, severity: string): void {
     metrics.record('security_events', 1, 'count', {
       type,
-      severity
+      severity,
     });
 
     structuredLogger.logSecurityEvent('Security event recorded', {
       type,
       severity,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  static recordPerformance(operation: string, duration: number, status: 'success' | 'error' = 'success'): void {
+  static recordPerformance(
+    operation: string,
+    duration: number,
+    status: 'success' | 'error' = 'success'
+  ): void {
     metrics.recordPerformance(operation, duration, status);
-    
+
     structuredLogger.info('Performance recorded', {
       operation,
       duration,
       status,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 }
 
 // Timing decorator for automatic performance tracking
 export function timed(operation: string) {
-  return function (target: any, propertyName: string, descriptor: PropertyDescriptor) {
+  return function (
+    target: any,
+    propertyName: string,
+    descriptor: PropertyDescriptor
+  ) {
     const method = descriptor.value;
 
     descriptor.value = async function (...args: any[]) {
@@ -163,11 +195,19 @@ export function timed(operation: string) {
       try {
         const result = await method.apply(this, args);
         const duration = Date.now() - start;
-        BusinessMetrics.recordPerformance(`${operation}.${propertyName}`, duration, 'success');
+        BusinessMetrics.recordPerformance(
+          `${operation}.${propertyName}`,
+          duration,
+          'success'
+        );
         return result;
       } catch (error) {
         const duration = Date.now() - start;
-        BusinessMetrics.recordPerformance(`${operation}.${propertyName}`, duration, 'error');
+        BusinessMetrics.recordPerformance(
+          `${operation}.${propertyName}`,
+          duration,
+          'error'
+        );
         throw error;
       }
     };

@@ -4,6 +4,24 @@
 import { revalidatePath } from 'next/cache';
 import cachedPrisma from '@/lib/prisma';
 import { patientFormSchema, PatientFormData } from '../validations/patient';
+import { getCurrentUser } from '@/lib/auth';
+import { Role } from '@prisma/client';
+import { patientCache, CachePatterns } from '@/lib/cache';
+
+/**
+ * Helper function to check for authorized roles.
+ * @param allowedRoles - An array of roles that are allowed to perform the action.
+ */
+async function authorize(allowedRoles: Role[]) {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error('Usuário não autenticado.');
+  }
+  if (!allowedRoles.includes(user.role)) {
+    throw new Error('Acesso negado. Você não tem permissão para executar esta ação.');
+  }
+}
+
 
 /**
  * Cria um novo paciente no banco de dados.
@@ -11,21 +29,29 @@ import { patientFormSchema, PatientFormData } from '../validations/patient';
  * @param data - Os dados do formulário do paciente.
  */
 export async function createPatient(data: PatientFormData) {
+  // 0. Verificação de permissão
+  await authorize([Role.Admin, Role.Fisioterapeuta]);
+
   // 1. Validação do lado do servidor
   const validationResult = patientFormSchema.safeParse(data);
   if (!validationResult.success) {
     // Em um app real, retornaríamos os erros de forma estruturada
-    throw new Error('Dados inválidos: ' + validationResult.error.flatten().fieldErrors);
+    throw new Error(
+      'Dados inválidos: ' + validationResult.error.flatten().fieldErrors
+    );
   }
 
   const { ...patientData } = validationResult.data;
 
   // 2. Lógica de negócio (criação no DB)
+  let newPatient;
   try {
-    await cachedPrisma.client.patient.create({
+    newPatient = await cachedPrisma.patient.create({
       data: {
         ...patientData,
-        birthDate: patientData.birthDate ? new Date(patientData.birthDate) : null,
+        birthDate: patientData.birthDate
+          ? new Date(patientData.birthDate)
+          : null,
       },
     });
   } catch (error: any) {
@@ -36,11 +62,13 @@ export async function createPatient(data: PatientFormData) {
     throw new Error('Falha ao criar o paciente no banco de dados.');
   }
 
-  // 3. Revalidação do cache
-  // Invalida o cache da página de pacientes para que a nova lista seja buscada
+  // 3. Invalidação de Cache
+  // Invalida o cache da lista de pacientes para refletir a adição.
+  await patientCache.del('all-patients');
+
+  // Também invalida o cache do Next.js para a página de listagem.
   revalidatePath('/pacientes');
 }
-
 
 /**
  * Atualiza um paciente existente no banco de dados.
@@ -48,19 +76,24 @@ export async function createPatient(data: PatientFormData) {
  * @param data - Os dados do formulário do paciente.
  */
 export async function updatePatient(id: string, data: PatientFormData) {
+  // 0. Verificação de permissão
+  await authorize([Role.Admin, Role.Fisioterapeuta]);
+
   const validationResult = patientFormSchema.safeParse(data);
   if (!validationResult.success) {
     throw new Error('Dados inválidos.');
   }
 
   const { ...patientData } = validationResult.data;
-  
+
   try {
-    await cachedPrisma.client.patient.update({
+    await cachedPrisma.patient.update({
       where: { id },
       data: {
         ...patientData,
-        birthDate: patientData.birthDate ? new Date(patientData.birthDate) : null,
+        birthDate: patientData.birthDate
+          ? new Date(patientData.birthDate)
+          : null,
       },
     });
   } catch (error: any) {
@@ -70,7 +103,15 @@ export async function updatePatient(id: string, data: PatientFormData) {
     throw new Error('Falha ao atualizar o paciente.');
   }
 
-  // Revalida a página de detalhes e a página de lista
+  // 3. Invalidação de Cache
+  // Invalida o cache do paciente específico e da lista de pacientes.
+  const patientCacheKey = CachePatterns.patient(id).key;
+  await Promise.all([
+      patientCache.del(patientCacheKey),
+      patientCache.del('all-patients')
+  ]);
+
+  // Também invalida o cache do Next.js para a página de listagem e de detalhes.
   revalidatePath('/pacientes');
   revalidatePath(`/pacientes/${id}`);
 }

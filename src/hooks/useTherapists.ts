@@ -24,7 +24,7 @@ export const useTherapists = (): UseTherapistsResult => {
       setError(null);
     } catch (err) {
       setError(err as Error);
-      showToast("Falha ao carregar lista de terapeutas.", "error");
+      showToast('Falha ao carregar lista de terapeutas.', 'error');
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +33,6 @@ export const useTherapists = (): UseTherapistsResult => {
   useEffect(() => {
     fetchTherapists();
   }, [fetchTherapists]);
-
 
   return { therapists, isLoading, error };
 };

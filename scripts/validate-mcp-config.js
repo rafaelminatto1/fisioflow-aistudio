@@ -154,7 +154,7 @@ class MCPValidator {
   async validateNeonDBConfig() {
     logInfo('Validating Neon DB configuration...');
 
-    const neonConfig = this.mcpConfig?.providers?.neondb;
+    const neonConfig = this.mcpConfig?.providers?.neon;
     
     if (!neonConfig) {
       this.errors.push('Neon DB configuration not found in mcp.config.json');
@@ -210,9 +210,9 @@ class MCPValidator {
   async testRailwayConnection() {
     return new Promise((resolve, reject) => {
       const options = {
-        hostname: 'backboard.railway.app',
+        hostname: 'backboard.railway.com',
         port: 443,
-        path: '/graphql',
+        path: '/graphql/v2',
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.RAILWAY_API_KEY}`,

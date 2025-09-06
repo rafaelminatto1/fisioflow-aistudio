@@ -22,18 +22,16 @@ export default async function AdminLayout({ children }: AdminLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className='min-h-screen bg-gray-50'>
       {/* Admin Header */}
       <AdminHeader user={session.user} />
-      
-      <div className="flex">
+
+      <div className='flex'>
         {/* Sidebar Navigation */}
-        <Sidebar className="w-64 min-h-screen bg-white shadow-sm" />
-        
+        <Sidebar className='w-64 min-h-screen bg-white shadow-sm' />
+
         {/* Main Content */}
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+        <main className='flex-1 p-6'>{children}</main>
       </div>
     </div>
   );

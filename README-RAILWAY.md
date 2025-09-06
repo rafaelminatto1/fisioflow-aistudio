@@ -63,6 +63,7 @@ npm run deploy:railway-cli
 ```
 
 **O script automatizado faz:**
+
 - ✅ Verifica instalação do Railway CLI
 - ✅ Valida login automático
 - ✅ Cria/linka projeto
@@ -74,6 +75,7 @@ npm run deploy:railway-cli
 ### 📋 Comandos Step-by-Step
 
 #### 1. **Setup Inicial**
+
 ```bash
 # Criar novo projeto
 railway init fisioflow
@@ -86,6 +88,7 @@ railway status
 ```
 
 #### 2. **Configurar Variáveis**
+
 ```bash
 # Definir variáveis uma por vez
 railway variables set NODE_ENV=production
@@ -103,6 +106,7 @@ railway variables delete VARIABLE_NAME
 ```
 
 #### 3. **Deploy e Monitoramento**
+
 ```bash
 # Deploy simples
 railway up
@@ -119,6 +123,7 @@ railway up --dockerfile Dockerfile.prod
 ```
 
 #### 4. **Gerenciamento**
+
 ```bash
 # Ver logs em tempo real
 railway logs --follow
@@ -138,6 +143,7 @@ railway deployments
 ```
 
 #### 5. **Domínio e URLs**
+
 ```bash
 # Ver domínio atual
 railway domain
@@ -153,6 +159,7 @@ railway url
 ```
 
 #### 6. **Rollback e Recuperação**
+
 ```bash
 # Listar deployments
 railway deployments
@@ -263,6 +270,7 @@ railway usage
 ## 🔄 Deploy Automático (GitHub Actions)
 
 1. **Configurar Secrets no GitHub:**
+
    ```
    RAILWAY_TOKEN=seu-token
    RAILWAY_PROJECT_ID=seu-project-id
@@ -280,6 +288,7 @@ railway usage
 ## 🚨 Troubleshooting Rápido
 
 ### Build Falha
+
 ```bash
 npm run clean
 npm install
@@ -287,18 +296,21 @@ npm run build
 ```
 
 ### Database Error
+
 ```bash
 railway variables get DATABASE_URL
 npx prisma db pull
 ```
 
 ### Memory Issues
+
 ```bash
 railway logs --filter "memory"
 railway variables set RAILWAY_MAX_MEMORY 1024
 ```
 
 ### Rollback
+
 ```bash
 railway rollback
 railway status
@@ -328,6 +340,5 @@ railway status
 
 ---
 
-**🎯 Objetivo**: Deploy em produção otimizado e monitorado
-**⚡ Performance**: < 500ms response time, 99.9% uptime
-**🔒 Segurança**: HTTPS, CORS, Rate limiting, Logs estruturados
+**🎯 Objetivo**: Deploy em produção otimizado e monitorado **⚡ Performance**: < 500ms response
+time, 99.9% uptime **🔒 Segurança**: HTTPS, CORS, Rate limiting, Logs estruturados

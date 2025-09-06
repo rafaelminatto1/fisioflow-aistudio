@@ -172,6 +172,7 @@
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
   }
+<<<<<<< HEAD
   
   /* Smooth scrolling */
   html {
@@ -400,3 +401,6 @@
 
 /* JetBrains Mono font for code */
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
+=======
+}
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3

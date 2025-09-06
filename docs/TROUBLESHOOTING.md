@@ -17,6 +17,7 @@ Guia completo para resolução de problemas no sistema FisioFlow com Neon DB.
 ### Erro: "Connection refused" ou "timeout"
 
 **Diagnóstico:**
+
 ```bash
 # Testar conectividade básica
 node scripts/validate-db.js
@@ -27,11 +28,13 @@ curl -X GET "https://console.neon.tech/api/v2/projects/{PROJECT_ID}/endpoints" \
 ```
 
 **Soluções:**
+
 1. **Verificar credenciais:**
+
    ```bash
    # Validar DATABASE_URL
    echo $DATABASE_URL
-   
+
    # Testar conexão direta
    psql $DATABASE_URL -c "SELECT version();"
    ```
@@ -42,10 +45,11 @@ curl -X GET "https://console.neon.tech/api/v2/projects/{PROJECT_ID}/endpoints" \
    - Confirmar região do endpoint
 
 3. **Problemas de rede:**
+
    ```bash
    # Testar DNS
    nslookup ep-xxx.us-east-1.aws.neon.tech
-   
+
    # Testar conectividade
    telnet ep-xxx.us-east-1.aws.neon.tech 5432
    ```
@@ -53,6 +57,7 @@ curl -X GET "https://console.neon.tech/api/v2/projects/{PROJECT_ID}/endpoints" \
 ### Erro: "SSL connection required"
 
 **Solução:**
+
 ```env
 # Adicionar parâmetros SSL na DATABASE_URL
 DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"
@@ -61,27 +66,31 @@ DATABASE_URL="postgresql://user:pass@host/db?sslmode=require"
 ### Erro: "Too many connections"
 
 **Diagnóstico:**
+
 ```bash
 # Verificar conexões ativas
 node -e "console.log(require('./lib/neon-config').getConnectionStats())"
 ```
 
 **Soluções:**
+
 1. **Ajustar pool de conexões:**
+
    ```typescript
    // lib/neon-config.ts
    const config = {
      connectionLimit: 10, // Reduzir se necessário
      idleTimeout: 30000,
-     maxLifetime: 1800000
-   }
+     maxLifetime: 1800000,
+   };
    ```
 
 2. **Forçar limpeza de conexões:**
+
    ```bash
    # Reiniciar aplicação
    pm2 restart fisioflow
-   
+
    # Ou matar processos órfãos
    pkill -f "node.*fisioflow"
    ```
@@ -91,6 +100,7 @@ node -e "console.log(require('./lib/neon-config').getConnectionStats())"
 ### Erro: "Migration failed" ou "Schema drift"
 
 **Diagnóstico:**
+
 ```bash
 # Verificar status das migrações
 npx prisma migrate status
@@ -101,20 +111,23 @@ npx prisma format
 ```
 
 **Soluções:**
+
 1. **Reset completo (CUIDADO - apaga dados):**
+
    ```bash
    # Backup antes do reset
    node scripts/backup.js full --priority=high
-   
+
    # Reset das migrações
    npx prisma migrate reset --force
    ```
 
 2. **Aplicar migrações manualmente:**
+
    ```bash
    # Push schema sem migração
    npx prisma db push --force-reset
-   
+
    # Marcar migrações como aplicadas
    npx prisma migrate resolve --applied "20240115000000_init"
    ```
@@ -131,6 +144,7 @@ npx prisma format
 ### Erro: "Foreign key constraint violation"
 
 **Solução:**
+
 ```sql
 -- Desabilitar temporariamente constraints
 SET session_replication_role = replica;
@@ -147,6 +161,7 @@ SET session_replication_role = DEFAULT;
 ### Performance Lenta
 
 **Diagnóstico:**
+
 ```bash
 # Analisar queries lentas
 node scripts/neon-autoscaling.js --analyze-only
@@ -156,30 +171,33 @@ curl http://localhost:3000/api/neon/metrics
 ```
 
 **Soluções:**
+
 1. **Otimizar queries:**
+
    ```sql
    -- Identificar queries lentas
-   SELECT query, mean_exec_time, calls 
-   FROM pg_stat_statements 
-   ORDER BY mean_exec_time DESC 
+   SELECT query, mean_exec_time, calls
+   FROM pg_stat_statements
+   ORDER BY mean_exec_time DESC
    LIMIT 10;
-   
+
    -- Verificar índices faltantes
-   SELECT schemaname, tablename, attname, n_distinct, correlation 
-   FROM pg_stats 
+   SELECT schemaname, tablename, attname, n_distinct, correlation
+   FROM pg_stats
    WHERE schemaname = 'public';
    ```
 
 2. **Ajustar auto-scaling:**
+
    ```javascript
    // scripts/neon-autoscaling.js
    const config = {
      scaleUpThreshold: {
-       cpu: 70,        // Reduzir threshold
+       cpu: 70, // Reduzir threshold
        connections: 80,
-       responseTime: 500
-     }
-   }
+       responseTime: 500,
+     },
+   };
    ```
 
 3. **Escalar manualmente:**
@@ -194,6 +212,7 @@ curl http://localhost:3000/api/neon/metrics
 ### Auto-scaling Não Funciona
 
 **Diagnóstico:**
+
 ```bash
 # Verificar logs do auto-scaler
 tail -f logs/autoscaling.log
@@ -203,7 +222,9 @@ node scripts/neon-autoscaling.js --test-mode
 ```
 
 **Soluções:**
+
 1. **Verificar permissões da API:**
+
    ```bash
    # Testar API key
    curl -H "Authorization: Bearer {API_KEY}" \
@@ -211,10 +232,11 @@ node scripts/neon-autoscaling.js --test-mode
    ```
 
 2. **Reiniciar serviço:**
+
    ```bash
    # Parar auto-scaler
    pkill -f "neon-autoscaling"
-   
+
    # Reiniciar com logs
    node scripts/neon-autoscaling.js --verbose
    ```
@@ -224,6 +246,7 @@ node scripts/neon-autoscaling.js --test-mode
 ### Backup Falha
 
 **Diagnóstico:**
+
 ```bash
 # Testar backup local
 node scripts/backup.js full --local-only --verbose
@@ -236,29 +259,33 @@ aws s3 ls s3://fisioflow-backups/
 ```
 
 **Soluções:**
+
 1. **Problemas de espaço:**
+
    ```bash
    # Limpar backups antigos
    node scripts/backup.js cleanup --days=30
-   
+
    # Usar compressão máxima
    node scripts/backup.js full --compression=9
    ```
 
 2. **Problemas AWS S3:**
+
    ```bash
    # Verificar credenciais
    aws sts get-caller-identity
-   
+
    # Testar upload
    echo "test" | aws s3 cp - s3://fisioflow-backups/test.txt
    ```
 
 3. **Problemas de criptografia:**
+
    ```bash
    # Verificar chave de criptografia
    echo $BACKUP_ENCRYPTION_KEY | wc -c  # Deve ser 32 caracteres
-   
+
    # Testar sem criptografia
    node scripts/backup.js full --no-encryption
    ```
@@ -266,6 +293,7 @@ aws s3 ls s3://fisioflow-backups/
 ### Recuperação Falha
 
 **Diagnóstico:**
+
 ```bash
 # Listar backups disponíveis
 node scripts/recovery.js list
@@ -275,7 +303,9 @@ node scripts/backup.js validate --file=backup.sql.gz.enc
 ```
 
 **Soluções:**
+
 1. **Backup corrompido:**
+
    ```bash
    # Tentar backup anterior
    node scripts/recovery.js list --show-all
@@ -283,10 +313,11 @@ node scripts/backup.js validate --file=backup.sql.gz.enc
    ```
 
 2. **Problemas de permissão:**
+
    ```bash
    # Verificar permissões do banco
    psql $DATABASE_URL -c "\du"
-   
+
    # Usar usuário admin
    node scripts/recovery.js auto --admin-user
    ```
@@ -296,6 +327,7 @@ node scripts/backup.js validate --file=backup.sql.gz.enc
 ### Alertas Não Funcionam
 
 **Diagnóstico:**
+
 ```bash
 # Testar webhook
 curl -X POST $WEBHOOK_URL -d '{"test": true}'
@@ -307,7 +339,9 @@ curl -X POST $SLACK_WEBHOOK_URL \
 ```
 
 **Soluções:**
+
 1. **Verificar configuração:**
+
    ```env
    # Verificar URLs
    SLACK_WEBHOOK_URL=https://hooks.slack.com/services/...
@@ -323,6 +357,7 @@ curl -X POST $SLACK_WEBHOOK_URL \
 ### Dashboard Não Carrega
 
 **Diagnóstico:**
+
 ```bash
 # Verificar API de métricas
 curl http://localhost:3000/api/neon/metrics
@@ -332,11 +367,13 @@ tail -f logs/app.log
 ```
 
 **Soluções:**
+
 1. **Reiniciar serviços:**
+
    ```bash
    # Reiniciar aplicação
    npm run dev
-   
+
    # Ou com PM2
    pm2 restart fisioflow
    ```
@@ -353,6 +390,7 @@ tail -f logs/app.log
 ### CI/CD Pipeline Falha
 
 **Diagnóstico:**
+
 ```bash
 # Executar testes localmente
 npm run test
@@ -364,16 +402,19 @@ npm run build
 ```
 
 **Soluções:**
+
 1. **Problemas de teste:**
+
    ```bash
    # Executar testes específicos
    npm test -- --testNamePattern="database"
-   
+
    # Pular testes temporariamente
    npm test -- --passWithNoTests
    ```
 
 2. **Problemas de build:**
+
    ```bash
    # Limpar cache
    rm -rf .next node_modules
@@ -382,10 +423,11 @@ npm run build
    ```
 
 3. **Problemas de deploy:**
+
    ```bash
    # Deploy manual
    npm run deploy:manual
-   
+
    # Rollback
    git revert HEAD
    git push origin main
@@ -394,6 +436,7 @@ npm run build
 ### Rollback Automático Falha
 
 **Solução Manual:**
+
 ```bash
 # 1. Parar aplicação
 pm2 stop fisioflow
@@ -486,4 +529,4 @@ Busque suporte imediatamente se:
 
 ---
 
-*Mantenha este guia sempre atualizado e acessível à equipe técnica.*
+_Mantenha este guia sempre atualizado e acessível à equipe técnica._

@@ -27,9 +27,9 @@ const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.errors({ stack: true }),
   winston.format.json(),
-  winston.format.printf((info) => {
+  winston.format.printf(info => {
     const { timestamp, level, message, ...meta } = info;
-    
+
     const logEntry = {
       timestamp,
       level,
@@ -37,7 +37,7 @@ const logFormat = winston.format.combine(
       service: 'fisioflow-api',
       environment: process.env.NODE_ENV || 'development',
       version: process.env.npm_package_version || '1.0.0',
-      ...meta
+      ...meta,
     };
 
     return JSON.stringify(logEntry);
@@ -48,9 +48,11 @@ const logFormat = winston.format.combine(
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'HH:mm:ss' }),
   winston.format.colorize({ all: true }),
-  winston.format.printf((info) => {
+  winston.format.printf(info => {
     const { timestamp, level, message, ...meta } = info;
-    const metaStr = Object.keys(meta).length ? JSON.stringify(meta, null, 2) : '';
+    const metaStr = Object.keys(meta).length
+      ? JSON.stringify(meta, null, 2)
+      : '';
     return `${timestamp} [${level}]: ${message} ${metaStr}`;
   })
 );
@@ -63,7 +65,7 @@ if (process.env.NODE_ENV !== 'production') {
   transports.push(
     new winston.transports.Console({
       format: consoleFormat,
-      level: process.env.LOG_LEVEL || 'debug'
+      level: process.env.LOG_LEVEL || 'debug',
     })
   );
 }
@@ -95,14 +97,16 @@ if (process.env.NODE_ENV === 'production') {
   transports.push(
     new winston.transports.Console({
       format: logFormat,
-      level: process.env.LOG_LEVEL || 'info'
+      level: process.env.LOG_LEVEL || 'info',
     })
   );
 }
 
 // Criar logger principal
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  level:
+    process.env.LOG_LEVEL ||
+    (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
   levels: logLevels,
   format: logFormat,
   transports,
@@ -132,7 +136,12 @@ interface DatabaseLogContext extends LogContext {
 }
 
 interface SecurityLogContext extends LogContext {
-  event: 'login' | 'logout' | 'failed_login' | 'unauthorized_access' | 'permission_denied';
+  event:
+    | 'login'
+    | 'logout'
+    | 'failed_login'
+    | 'unauthorized_access'
+    | 'permission_denied';
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
@@ -156,11 +165,13 @@ class StructuredLogger {
   error(message: string, error?: Error, context?: LogContext) {
     this.logger.error(message, {
       ...context,
-      error: error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-      } : undefined,
+      error: error
+        ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+          }
+        : undefined,
     });
   }
 
@@ -186,7 +197,10 @@ class StructuredLogger {
 
   // Logs de segurança
   security(message: string, context: SecurityLogContext) {
-    const level = context.severity === 'critical' || context.severity === 'high' ? 'error' : 'warn';
+    const level =
+      context.severity === 'critical' || context.severity === 'high'
+        ? 'error'
+        : 'warn';
     this.logger.log(level, message, {
       ...context,
       type: 'security',
@@ -194,7 +208,10 @@ class StructuredLogger {
   }
 
   // Logs de performance
-  performance(message: string, context: LogContext & { duration: number; operation: string }) {
+  performance(
+    message: string,
+    context: LogContext & { duration: number; operation: string }
+  ) {
     this.logger.info(message, {
       ...context,
       type: 'performance',
@@ -202,7 +219,10 @@ class StructuredLogger {
   }
 
   // Logs de auditoria
-  audit(message: string, context: LogContext & { action: string; resource: string }) {
+  audit(
+    message: string,
+    context: LogContext & { action: string; resource: string }
+  ) {
     this.logger.info(message, {
       ...context,
       type: 'audit',
@@ -217,11 +237,13 @@ const structuredLogger = new StructuredLogger(logger);
 export function createHttpLogger() {
   return (req: any, res: any, next: any) => {
     const start = Date.now();
-    const requestId = req.headers['x-request-id'] || `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    
+    const requestId =
+      req.headers['x-request-id'] ||
+      `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
     // Adicionar requestId ao request
     req.requestId = requestId;
-    
+
     // Log da requisição
     structuredLogger.http('HTTP Request', {
       requestId,
@@ -234,9 +256,9 @@ export function createHttpLogger() {
 
     // Override do res.end para capturar resposta
     const originalEnd = res.end;
-    res.end = function(chunk: any, encoding: any) {
+    res.end = function (chunk: any, encoding: any) {
       const duration = Date.now() - start;
-      
+
       structuredLogger.http('HTTP Response', {
         requestId,
         method: req.method,
@@ -256,13 +278,16 @@ export function createHttpLogger() {
 // Função para criar child logger com contexto
 export function createChildLogger(context: LogContext) {
   return {
-    info: (message: string, additionalContext?: LogContext) => 
+    info: (message: string, additionalContext?: LogContext) =>
       structuredLogger.info(message, { ...context, ...additionalContext }),
-    warn: (message: string, additionalContext?: LogContext) => 
+    warn: (message: string, additionalContext?: LogContext) =>
       structuredLogger.warn(message, { ...context, ...additionalContext }),
-    error: (message: string, error?: Error, additionalContext?: LogContext) => 
-      structuredLogger.error(message, error, { ...context, ...additionalContext }),
-    debug: (message: string, additionalContext?: LogContext) => 
+    error: (message: string, error?: Error, additionalContext?: LogContext) =>
+      structuredLogger.error(message, error, {
+        ...context,
+        ...additionalContext,
+      }),
+    debug: (message: string, additionalContext?: LogContext) =>
       structuredLogger.debug(message, { ...context, ...additionalContext }),
   };
 }

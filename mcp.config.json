@@ -1,29 +1,40 @@
 {
   "version": "1.0.0",
   "name": "FisioFlow MCP Configuration",
-  "description": "Model Context Protocol configuration for FisioFlow AI providers",
+  "description": "Model Context Protocol configuration for FisioFlow AI providers with Railway and Neon DB integration",
   "providers": {
     "railway": {
       "name": "Railway Platform",
       "type": "infrastructure",
       "enabled": true,
       "apiKey": "${RAILWAY_API_KEY}",
-      "baseUrl": "https://backboard.railway.app/graphql",
+      "baseUrl": "https://backboard.railway.com/graphql/v2",
       "projectId": "${RAILWAY_PROJECT_ID}",
       "services": {
         "deploy": {
           "enabled": true,
           "autoRedeploy": false,
           "buildCommand": "npm run build",
-          "startCommand": "npm start"
+          "startCommand": "npm start",
+          "healthCheckPath": "/api/health",
+          "healthCheckTimeout": 120,
+          "healthCheckInterval": 30,
+          "healthCheckRetries": 5
         },
         "monitoring": {
           "enabled": true,
-          "metrics": ["cpu", "memory", "network", "disk"],
+          "metrics": ["cpu", "memory", "network", "disk", "response_time", "error_rate"],
           "alerts": {
             "cpu": 80,
             "memory": 85,
-            "errorRate": 5
+            "errorRate": 5,
+            "responseTime": 2000
+          },
+          "logs": {
+            "enabled": true,
+            "retention": "7d",
+            "structured": true,
+            "level": "info"
           }
         },
         "environment": {
@@ -33,72 +44,110 @@
               "NODE_ENV": "production",
               "DATABASE_URL": "${DATABASE_URL}",
               "NEXTAUTH_SECRET": "${NEXTAUTH_SECRET}",
-              "NEXTAUTH_URL": "${NEXTAUTH_URL}"
+              "NEXTAUTH_URL": "${NEXTAUTH_URL}",
+              "RAILWAY_STRUCTURED_LOGGING": "true",
+              "RAILWAY_METRICS_ENABLED": "true"
+            },
+            "resources": {
+              "cpu": 1000,
+              "memory": 1024,
+              "autoScaling": {
+                "minReplicas": 1,
+                "maxReplicas": 3,
+                "targetCPU": 70,
+                "targetMemory": 80
+              }
             }
           },
           "staging": {
             "domain": "${RAILWAY_STAGING_DOMAIN}",
             "variables": {
               "NODE_ENV": "staging",
-              "DATABASE_URL": "${STAGING_DATABASE_URL}"
+              "DATABASE_URL": "${STAGING_DATABASE_URL}",
+              "RAILWAY_STRUCTURED_LOGGING": "true"
+            },
+            "resources": {
+              "cpu": 500,
+              "memory": 512,
+              "autoScaling": {
+                "minReplicas": 1,
+                "maxReplicas": 2,
+                "targetCPU": 80,
+                "targetMemory": 85
+              }
             }
+          }
+        },
+        "deployment": {
+          "strategy": "rolling",
+          "rollback": {
+            "enabled": true,
+            "automatic": false,
+            "threshold": 5
+          },
+          "notifications": {
+            "slack": "${SLACK_WEBHOOK_URL}",
+            "email": "${DEPLOYMENT_EMAIL}",
+            "discord": "${DISCORD_WEBHOOK_URL}"
           }
         }
       },
       "rateLimits": {
         "requestsPerMinute": 100,
-        "deploysPerHour": 10
+        "deploysPerHour": 10,
+        "apiCallsPerMinute": 200
       },
       "timeout": 60000,
-      "retries": 3
+      "retries": 3,
+      "webhooks": {
+        "deploy": "${RAILWAY_DEPLOY_WEBHOOK}",
+        "status": "${RAILWAY_STATUS_WEBHOOK}"
+      }
     },
-    "neondb": {
+    "neon": {
       "name": "Neon Database",
       "type": "database",
       "enabled": true,
       "apiKey": "${NEON_API_KEY}",
-      "baseUrl": "https://console.neon.tech/api/v2",
       "projectId": "${NEON_PROJECT_ID}",
-      "database": {
-        "host": "${NEON_DB_HOST}",
-        "port": 5432,
-        "name": "${NEON_DB_NAME}",
-        "user": "${NEON_DB_USER}",
-        "password": "${NEON_DB_PASSWORD}",
+      "databaseUrl": "${DATABASE_URL}",
+      "pooling": {
+        "enabled": true,
+        "maxConnections": 20,
+        "minConnections": 2,
+        "connectionTimeout": 30000,
+        "idleTimeout": 600000,
+        "statementTimeout": 30000,
+        "queryTimeout": 30000
+      },
+      "extensions": ["pg_trgm", "pg_stat_statements"],
+      "optimizations": {
         "ssl": true,
-        "pooling": {
-          "enabled": true,
-          "maxConnections": 20,
-          "idleTimeout": 30000
-        }
+        "connectionPooling": true,
+        "readReplicas": false,
+        "autoScaling": true
       },
-      "operations": {
-        "backup": {
-          "enabled": true,
-          "schedule": "0 2 * * *",
-          "retention": "30d"
-        },
-        "monitoring": {
-          "enabled": true,
-          "metrics": ["connections", "queries", "performance", "storage"],
-          "alerts": {
-            "connectionLimit": 18,
-            "slowQueries": 5000,
-            "storageUsage": 80
-          }
-        },
-        "maintenance": {
-          "autoVacuum": true,
-          "analyzeStats": true,
-          "reindexing": "weekly"
-        }
+      "backup": {
+        "enabled": true,
+        "retention": "7d",
+        "schedule": "daily"
       },
-      "rateLimits": {
-        "requestsPerMinute": 1000,
-        "connectionsPerMinute": 50
+      "monitoring": {
+        "enabled": true,
+        "metrics": ["connections", "queries", "performance"],
+        "alerts": ["high_connections", "slow_queries"]
       },
-      "timeout": 30000,
-      "retries": 3
+      "maintenance": {
+        "autoVacuum": true,
+        "autoAnalyze": true,
+        "maintenanceWindow": "02:00-04:00"
+      },
+      "scaling": {
+        "autoScale": true,
+        "minComputeUnits": 0.25,
+        "maxComputeUnits": 1.0,
+        "suspendAfter": "5m"
+      }
     },
     "openai": {
       "name": "OpenAI",
@@ -122,6 +171,12 @@
           "topP": 1.0,
           "frequencyPenalty": 0.0,
           "presencePenalty": 0.0
+        },
+        "gpt-4-turbo": {
+          "name": "GPT-4 Turbo",
+          "maxTokens": 128000,
+          "temperature": 0.7,
+          "topP": 1.0
         }
       },
       "rateLimits": {
@@ -184,6 +239,12 @@
           "temperature": 0.4,
           "topP": 1.0,
           "topK": 32
+        },
+        "gemini-1.5-pro": {
+          "name": "Gemini 1.5 Pro",
+          "maxTokens": 1048576,
+          "temperature": 0.7,
+          "topP": 1.0
         }
       },
       "rateLimits": {
@@ -192,6 +253,32 @@
       },
       "timeout": 30000,
       "retries": 3
+    },
+    "github": {
+      "name": "GitHub",
+      "type": "version_control",
+      "enabled": true,
+      "apiKey": "${GITHUB_TOKEN}",
+      "baseUrl": "https://api.github.com",
+      "repository": "${GITHUB_REPOSITORY}",
+      "branch": "main",
+      "webhooks": {
+        "deploy": "${GITHUB_DEPLOY_WEBHOOK}",
+        "status": "${GITHUB_STATUS_WEBHOOK}"
+      },
+      "actions": {
+        "enabled": true,
+        "workflows": ["railway-deploy.yml", "neon-deploy.yml"],
+        "autoDeploy": true
+      }
+    },
+    "vercel": {
+      "name": "Vercel",
+      "type": "deployment",
+      "enabled": false,
+      "apiKey": "${VERCEL_API_KEY}",
+      "projectId": "${VERCEL_PROJECT_ID}",
+      "teamId": "${VERCEL_TEAM_ID}"
     }
   },
   "routing": {
@@ -205,23 +292,22 @@
       "research_query": ["openai", "anthropic", "google"],
       "document_analysis": ["anthropic", "google", "openai"],
       "general_question": ["google", "openai", "anthropic"],
-      "deploy_management": ["railway"],
+      "deploy_management": ["railway", "github"],
       "infrastructure_monitoring": ["railway"],
-      "database_operations": ["neondb"],
-      "database_monitoring": ["neondb"],
-      "backup_restore": ["neondb"],
-      "environment_config": ["railway", "neondb"]
+      "database_operations": [],
+      "database_monitoring": [],
+      "backup_restore": [],
+      "environment_config": ["railway"],
+      "performance_optimization": ["railway"],
+      "security_audit": ["railway"],
+      "cost_optimization": ["railway"]
     },
     "infrastructureRouting": {
       "railway": {
         "deploy": ["production", "staging"],
-        "monitoring": ["metrics", "logs", "alerts"],
-        "environment": ["variables", "domains", "services"]
-      },
-      "neondb": {
-        "operations": ["backup", "restore", "maintenance"],
-        "monitoring": ["performance", "connections", "storage"],
-        "management": ["users", "databases", "schemas"]
+        "monitoring": ["metrics", "logs", "alerts", "health"],
+        "environment": ["variables", "domains", "services", "resources"],
+        "maintenance": ["updates", "rollbacks", "scaling"]
       }
     }
   },
@@ -240,19 +326,18 @@
       "database_operations": 600,
       "database_monitoring": 120,
       "backup_restore": 1800,
-      "environment_config": 3600
+      "environment_config": 3600,
+      "performance_optimization": 1800,
+      "security_audit": 7200,
+      "cost_optimization": 3600
     },
     "maxSize": 1000,
     "infrastructureCache": {
       "railway": {
         "deployStatus": 30,
         "metrics": 60,
-        "logs": 300
-      },
-      "neondb": {
-        "connectionStatus": 60,
-        "queryMetrics": 120,
-        "backupStatus": 600
+        "logs": 300,
+        "health": 60
       }
     }
   },
@@ -263,14 +348,31 @@
       "enabled": true,
       "collectUsage": true,
       "collectLatency": true,
-      "collectErrors": true
+      "collectErrors": true,
+      "collectPerformance": true
+    },
+    "alerts": {
+      "enabled": true,
+      "channels": ["email", "slack", "discord"],
+      "thresholds": {
+        "errorRate": 5,
+        "responseTime": 2000,
+        "cpuUsage": 80,
+        "memoryUsage": 85
+      }
     }
   },
   "security": {
     "validateApiKeys": true,
     "encryptCache": false,
     "rateLimitByUser": true,
-    "maxRequestsPerUser": 100
+    "maxRequestsPerUser": 100,
+    "auditLog": true,
+    "encryption": {
+      "enabled": true,
+      "algorithm": "AES-256-GCM",
+      "keyRotation": "monthly"
+    }
   },
   "authentication": {
     "railway": {
@@ -280,11 +382,10 @@
       "tokenExpiry": 3600,
       "autoRefresh": true
     },
-    "neondb": {
-      "type": "api_key",
-      "apiKey": "${NEON_API_KEY}",
-      "connectionString": "${DATABASE_URL}",
-      "sslMode": "require"
+    "github": {
+      "type": "bearer",
+      "token": "${GITHUB_TOKEN}",
+      "scopes": ["repo", "workflow", "admin:org"]
     }
   },
   "infrastructure": {
@@ -295,7 +396,7 @@
       "retries": 3,
       "endpoints": {
         "railway": "https://backboard.railway.app/health",
-        "neondb": "${NEON_DB_HOST}:5432"
+        "github": "https://api.github.com/zen"
       }
     },
     "failover": {
@@ -309,13 +410,34 @@
     },
     "logging": {
       "level": "info",
-      "destinations": ["console", "file"],
+      "destinations": ["console", "file", "cloudwatch"],
       "format": "json",
       "rotation": {
         "enabled": true,
         "maxSize": "100MB",
         "maxFiles": 10
       }
+    },
+    "backup": {
+      "enabled": true,
+      "schedule": "0 2 * * *",
+      "retention": "30d",
+      "encryption": true,
+      "compression": true
+    }
+  },
+  "deployment": {
+    "environments": ["development", "staging", "production"],
+    "strategy": "blue-green",
+    "rollback": {
+      "enabled": true,
+      "automatic": false,
+      "threshold": 5
+    },
+    "notifications": {
+      "slack": "${SLACK_WEBHOOK_URL}",
+      "discord": "${DISCORD_WEBHOOK_URL}",
+      "email": "${DEPLOYMENT_EMAIL}"
     }
   }
 }

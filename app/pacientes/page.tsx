@@ -1,7 +1,13 @@
 // app/pacientes/page.tsx
+<<<<<<< HEAD
 import cachedPrisma from '../../lib/prisma';
 import PatientList from '@/components/pacientes/PatientList';
 import PageHeader from '@/components/ui/PageHeader';
+=======
+import { cachedPrisma } from '../../lib/prisma';
+import PatientList from '../../components/pacientes/PatientList';
+import PageHeader from '../../components/ui/PageHeader';
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
 type PacientesPageProps = {
   searchParams: {
@@ -12,10 +18,12 @@ type PacientesPageProps = {
 };
 
 // Esta é uma página Server Component que busca os dados iniciais.
-export default async function PacientesPage({ searchParams }: PacientesPageProps) {
+export default async function PacientesPage({
+  searchParams,
+}: PacientesPageProps) {
   const take = 20;
   const { q: searchTerm = '', status = 'All', cursor } = searchParams;
-  
+
   const where: any = {
     OR: [
       { name: { contains: searchTerm, mode: 'insensitive' } },
@@ -26,11 +34,10 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
   if (status && status !== 'All') {
     where.status = status;
   }
-  
-  const initialPatients = await cachedPrisma.client.patient.findMany({
+
+  const findManyOptions: any = {
     take,
     skip: cursor ? 1 : 0,
-    cursor: cursor ? { id: cursor } : undefined,
     where,
     select: {
       id: true,
@@ -44,8 +51,14 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
       // lastAppointment: true // Adicionar este campo no schema e na query se necessário
     },
     orderBy: { createdAt: 'desc' },
-  });
+  };
   
+  if (cursor) {
+    findManyOptions.cursor = { id: cursor };
+  }
+  
+  const initialPatients = await cachedPrisma.patient.findMany(findManyOptions);
+
   // Transform to PatientSummary format
   const transformedPatients = initialPatients.map((patient: any) => ({
     id: patient.id,
@@ -58,19 +71,25 @@ export default async function PacientesPage({ searchParams }: PacientesPageProps
     medicalAlerts: patient.medicalAlerts || undefined,
     cpf: patient.cpf,
   }));
-  
-  const nextCursor = initialPatients.length === take ? initialPatients[initialPatients.length - 1].id : null;
-  
-  const initialData = {
-      items: transformedPatients,
-      nextCursor,
+
+  let nextCursor = null;
+  if (initialPatients.length === take && initialPatients.length > 0) {
+    const lastPatient = initialPatients[initialPatients.length - 1];
+    if (lastPatient && lastPatient.id) {
+      nextCursor = lastPatient.id;
+    }
   }
+
+  const initialData = {
+    items: transformedPatients,
+    nextCursor,
+  };
 
   return (
     <>
       <PageHeader
-        title="Gestão de Pacientes"
-        description="Adicione, visualize e gerencie as informações dos seus pacientes."
+        title='Gestão de Pacientes'
+        description='Adicione, visualize e gerencie as informações dos seus pacientes.'
       />
       {/* O componente cliente gerencia a interatividade */}
       <PatientList initialData={initialData} />

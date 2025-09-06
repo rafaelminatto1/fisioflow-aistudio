@@ -60,9 +60,17 @@ export interface ClinicInsights {
     avgSessionsPerPatient: number;
   };
   patterns: {
-    mostCommonConditions: Array<{ condition: string; count: number; avgRecoveryTime: number }>;
+    mostCommonConditions: Array<{
+      condition: string;
+      count: number;
+      avgRecoveryTime: number;
+    }>;
     busyDays: Array<{ day: string; appointmentCount: number }>;
-    seasonalTrends: Array<{ month: string; newPatients: number; completions: number }>;
+    seasonalTrends: Array<{
+      month: string;
+      newPatients: number;
+      completions: number;
+    }>;
   };
   performance: {
     therapistEfficiency: Array<{
@@ -107,7 +115,9 @@ export class AIInsightsService {
     this.model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
   }
 
-  async generatePatientInsights(patientId: string): Promise<PatientInsight | null> {
+  async generatePatientInsights(
+    patientId: string
+  ): Promise<PatientInsight | null> {
     return withCache(
       `patient_insights_${patientId}`,
       async () => {
@@ -140,7 +150,9 @@ export class AIInsightsService {
     );
   }
 
-  async generateTreatmentRecommendations(patientId: string): Promise<TreatmentRecommendation[]> {
+  async generateTreatmentRecommendations(
+    patientId: string
+  ): Promise<TreatmentRecommendation[]> {
     return withCache(
       `treatment_recommendations_${patientId}`,
       async () => {
@@ -148,19 +160,26 @@ export class AIInsightsService {
           const patientData = await this.gatherPatientData(patientId);
           if (!patientData) return [];
 
-          const recommendations = await this.generateRecommendationsWithAI(patientData);
+          const recommendations =
+            await this.generateRecommendationsWithAI(patientData);
 
-          BusinessMetrics.recordBusinessEvent('ai_treatment_recommendations_generated', {
-            patientId,
-            recommendationCount: recommendations.length,
-          });
+          BusinessMetrics.recordBusinessEvent(
+            'ai_treatment_recommendations_generated',
+            {
+              patientId,
+              recommendationCount: recommendations.length,
+            }
+          );
 
           return recommendations;
         } catch (error: any) {
-          structuredLogger.error('Failed to generate treatment recommendations', {
-            patientId,
-            error: error.message,
-          });
+          structuredLogger.error(
+            'Failed to generate treatment recommendations',
+            {
+              patientId,
+              error: error.message,
+            }
+          );
           return [];
         }
       },
@@ -168,7 +187,9 @@ export class AIInsightsService {
     );
   }
 
-  async generateClinicInsights(therapistId: string): Promise<ClinicInsights | null> {
+  async generateClinicInsights(
+    therapistId: string
+  ): Promise<ClinicInsights | null> {
     return withCache(
       `clinic_insights_${therapistId}`,
       async () => {
@@ -195,7 +216,7 @@ export class AIInsightsService {
   }
 
   private async gatherPatientData(patientId: string) {
-    const patient = await cachedPrisma.client.patient.findUnique({
+    const patient = await cachedPrisma.patient.findUnique({
       where: { id: patientId },
       include: {
         appointments: {
@@ -203,23 +224,22 @@ export class AIInsightsService {
           take: 20,
           include: {
             therapist: {
-              select: { name: true }
-            }
-          }
+              select: { name: true },
+            },
+            soapNotes: {
+              orderBy: { createdAt: 'desc' },
+            },
+          },
         },
         painPoints: {
           orderBy: { createdAt: 'desc' },
-          take: 10
+          take: 10,
         },
         metricResults: {
           orderBy: { measuredAt: 'desc' },
-          take: 20
+          take: 20,
         },
-        soapNotes: {
-          orderBy: { createdAt: 'desc' },
-          take: 10
-        }
-      }
+      },
     });
 
     return patient;
@@ -227,50 +247,50 @@ export class AIInsightsService {
 
   private async gatherClinicData(therapistId: string) {
     const [patients, appointments, painPoints] = await Promise.all([
-      cachedPrisma.client.patient.findMany({
+      cachedPrisma.patient.findMany({
         where: {
           appointments: {
             some: {
-              therapistId
-            }
-          }
+              therapistId,
+            },
+          },
         },
         include: {
           appointments: {
             where: { therapistId },
-            orderBy: { startTime: 'desc' }
+            orderBy: { startTime: 'desc' },
           },
           painPoints: true,
-          metricResults: true
-        }
+          metricResults: true,
+        },
       }),
-      cachedPrisma.client.appointment.findMany({
+      cachedPrisma.appointment.findMany({
         where: {
           therapistId,
           startTime: {
-            gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000) // Last 90 days
-          }
+            gte: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000), // Last 90 days
+          },
         },
         include: {
           patient: {
-            select: { name: true, status: true }
-          }
-        }
+            select: { name: true, status: true },
+          },
+        },
       }),
-      cachedPrisma.client.painPoint.findMany({
+      cachedPrisma.painPoint.findMany({
         where: {
           patient: {
             appointments: {
-              some: { therapistId }
-            }
-          }
+              some: { therapistId },
+            },
+          },
         },
         include: {
           patient: {
-            select: { name: true }
-          }
-        }
-      })
+            select: { name: true },
+          },
+        },
+      }),
     ]);
 
     return { patients, appointments, painPoints };
@@ -279,41 +299,47 @@ export class AIInsightsService {
   private async analyzePatientData(patient: any): Promise<PatientInsight> {
     return trackExternalAPICall('google_ai', 'patient_analysis', async () => {
       const prompt = this.buildPatientAnalysisPrompt(patient);
-      
+
       const result = await this.model.generateContent(prompt);
       const response = result.response;
       const analysisText = response.text();
 
       // Parse AI response and structure data
       const analysis = this.parsePatientAnalysis(analysisText, patient);
-      
+
       return {
         patientId: patient.id,
         patientName: patient.name,
         riskLevel: analysis.riskLevel,
         insights: analysis.insights,
         predictions: analysis.predictions,
-        generatedAt: new Date()
+        generatedAt: new Date(),
       };
     });
   }
 
-  private async generateRecommendationsWithAI(patient: any): Promise<TreatmentRecommendation[]> {
-    return trackExternalAPICall('google_ai', 'treatment_recommendations', async () => {
-      const prompt = this.buildRecommendationPrompt(patient);
-      
-      const result = await this.model.generateContent(prompt);
-      const response = result.response;
-      const recommendationsText = response.text();
+  private async generateRecommendationsWithAI(
+    patient: any
+  ): Promise<TreatmentRecommendation[]> {
+    return trackExternalAPICall(
+      'google_ai',
+      'treatment_recommendations',
+      async () => {
+        const prompt = this.buildRecommendationPrompt(patient);
 
-      return this.parseRecommendations(recommendationsText, patient.id);
-    });
+        const result = await this.model.generateContent(prompt);
+        const response = result.response;
+        const recommendationsText = response.text();
+
+        return this.parseRecommendations(recommendationsText, patient.id);
+      }
+    );
   }
 
   private async analyzeClinicData(clinicData: any): Promise<ClinicInsights> {
     return trackExternalAPICall('google_ai', 'clinic_analysis', async () => {
       const prompt = this.buildClinicAnalysisPrompt(clinicData);
-      
+
       const result = await this.model.generateContent(prompt);
       const response = result.response;
       const analysisText = response.text();
@@ -337,19 +363,28 @@ Data de nascimento: ${patient.dateOfBirth}
 Histórico médico: ${patient.medicalHistory || 'Não informado'}
 
 CONSULTAS RECENTES (${recentAppointments.length}):
-${recentAppointments.map((apt: any) => 
-  `- ${apt.startTime}: ${apt.type} (Status: ${apt.status}) - Terapeuta: ${apt.therapist?.name}`
-).join('\n')}
+${recentAppointments
+  .map(
+    (apt: any) =>
+      `- ${apt.startTime}: ${apt.type} (Status: ${apt.status}) - Terapeuta: ${apt.therapist?.name}`
+  )
+  .join('\n')}
 
 PONTOS DE DOR RECENTES (${recentPainPoints.length}):
-${recentPainPoints.map((pain: any) => 
-  `- ${pain.bodyPart}: ${pain.type} (Intensidade: ${pain.intensity}/10) - ${pain.description}`
-).join('\n')}
+${recentPainPoints
+  .map(
+    (pain: any) =>
+      `- ${pain.bodyPart}: ${pain.type} (Intensidade: ${pain.intensity}/10) - ${pain.description}`
+  )
+  .join('\n')}
 
 MÉTRICAS RECENTES (${recentMetrics.length}):
-${recentMetrics.map((metric: any) => 
-  `- ${metric.metricName}: ${metric.value} ${metric.unit} (${metric.measuredAt})`
-).join('\n')}
+${recentMetrics
+  .map(
+    (metric: any) =>
+      `- ${metric.metricName}: ${metric.value} ${metric.unit} (${metric.measuredAt})`
+  )
+  .join('\n')}
 
 Por favor, forneça uma análise estruturada incluindo:
 
@@ -374,13 +409,18 @@ CONDIÇÃO: ${patient.medicalHistory || 'A definir'}
 STATUS: ${patient.status}
 
 DADOS CLÍNICOS:
-${patient.appointments.slice(0, 5).map((apt: any) => 
-  `- Consulta ${apt.type}: ${apt.status} (Notas: ${apt.notes || 'Sem notas'})`
-).join('\n')}
+${patient.appointments
+  .slice(0, 5)
+  .map(
+    (apt: any) =>
+      `- Consulta ${apt.type}: ${apt.status} (Notas: ${apt.notes || 'Sem notas'})`
+  )
+  .join('\n')}
 
-${patient.painPoints.slice(0, 3).map((pain: any) => 
-  `- Dor em ${pain.bodyPart}: ${pain.intensity}/10`
-).join('\n')}
+${patient.painPoints
+  .slice(0, 3)
+  .map((pain: any) => `- Dor em ${pain.bodyPart}: ${pain.intensity}/10`)
+  .join('\n')}
 
 Gere 3-5 recomendações específicas com:
 - Categoria (exercise/frequency/duration/technique/referral)
@@ -397,7 +437,7 @@ Foque em abordagens baseadas em evidências científicas.
 
   private buildClinicAnalysisPrompt(clinicData: any): string {
     const { patients, appointments } = clinicData;
-    
+
     return `
 Analise os dados da clínica de fisioterapia e forneça insights estratégicos:
 
@@ -425,7 +465,9 @@ Seja estratégico e orientado por dados.
 
   private getAppointmentPatterns(appointments: any[]): string {
     const byDay = appointments.reduce((acc, apt) => {
-      const day = new Date(apt.startTime).toLocaleDateString('pt-BR', { weekday: 'long' });
+      const day = new Date(apt.startTime).toLocaleDateString('pt-BR', {
+        weekday: 'long',
+      });
       acc[day] = (acc[day] || 0) + 1;
       return acc;
     }, {});
@@ -437,15 +479,16 @@ Seja estratégico e orientado por dados.
 
   private getConditionAnalysis(patients: any[]): string {
     const conditions: Record<string, number> = {};
-    
+
     patients.forEach(patient => {
       if (patient.medicalHistory) {
-        conditions[patient.medicalHistory] = (conditions[patient.medicalHistory] || 0) + 1;
+        conditions[patient.medicalHistory] =
+          (conditions[patient.medicalHistory] || 0) + 1;
       }
     });
 
     return Object.entries(conditions)
-      .sort(([,a], [,b]) => b - a)
+      .sort(([, a], [, b]) => b - a)
       .slice(0, 5)
       .map(([condition, count]) => `${condition}: ${count} pacientes`)
       .join('\n');
@@ -455,43 +498,54 @@ Seja estratégico e orientado por dados.
     // Simple parsing logic - in production, use more sophisticated NLP
     const riskLevel = this.extractRiskLevel(analysisText);
     const progress = this.extractProgress(analysisText);
-    
+
     return {
       riskLevel,
       insights: {
         recovery: {
           progress,
-          trend: progress > 70 ? 'improving' : progress > 40 ? 'stable' : 'declining',
-          analysis: analysisText.slice(0, 200) + '...'
+          trend:
+            progress > 70
+              ? 'improving'
+              : progress > 40
+                ? 'stable'
+                : 'declining',
+          analysis: analysisText.slice(0, 200) + '...',
         },
         attendance: {
           rate: this.calculateAttendanceRate(patient.appointments),
           pattern: 'consistent',
-          analysis: 'Análise baseada nos dados de comparecimento'
+          analysis: 'Análise baseada nos dados de comparecimento',
         },
         pain: {
           trend: this.analyzePainTrend(patient.painPoints),
           avgIntensity: this.calculateAvgPainIntensity(patient.painPoints),
-          analysis: 'Análise da evolução da dor baseada nos registros'
+          analysis: 'Análise da evolução da dor baseada nos registros',
         },
         engagement: {
           level: 'medium' as const,
           factors: ['Comparecimento regular', 'Relatórios de dor consistentes'],
-          recommendations: ['Aumentar frequência de exercícios', 'Melhorar comunicação']
-        }
+          recommendations: [
+            'Aumentar frequência de exercícios',
+            'Melhorar comunicação',
+          ],
+        },
       },
       predictions: {
         dischargeProbability: Math.min(progress + 20, 100),
         riskFactors: this.identifyRiskFactors(analysisText),
-        recommendedActions: this.extractRecommendedActions(analysisText)
-      }
+        recommendedActions: this.extractRecommendedActions(analysisText),
+      },
     };
   }
 
-  private parseRecommendations(text: string, patientId: string): TreatmentRecommendation[] {
+  private parseRecommendations(
+    text: string,
+    patientId: string
+  ): TreatmentRecommendation[] {
     // Simple parsing - implement more sophisticated parsing
     const recommendations: TreatmentRecommendation[] = [];
-    
+
     // Mock recommendations based on analysis
     recommendations.push({
       patientId,
@@ -503,55 +557,63 @@ Seja estratégico e orientado por dados.
       implementationSteps: [
         'Avaliar capacidade atual',
         'Definir programa progressivo',
-        'Monitorar evolução semanalmente'
+        'Monitorar evolução semanalmente',
       ],
-      confidence: 85
+      confidence: 85,
     });
 
     return recommendations;
   }
 
-  private parseClinicAnalysis(analysisText: string, clinicData: any): ClinicInsights {
+  private parseClinicAnalysis(
+    analysisText: string,
+    clinicData: any
+  ): ClinicInsights {
     const { patients, appointments } = clinicData;
-    
+
     return {
       overview: {
         totalPatients: patients.length,
-        activePatients: patients.filter((p: any) => p.status === 'Active').length,
+        activePatients: patients.filter((p: any) => p.status === 'Active')
+          .length,
         completionRate: 75, // Calculate from data
-        avgSessionsPerPatient: appointments.length / patients.length
+        avgSessionsPerPatient: appointments.length / patients.length,
       },
       patterns: {
         mostCommonConditions: [],
         busyDays: [],
-        seasonalTrends: []
+        seasonalTrends: [],
       },
       performance: {
         therapistEfficiency: [],
-        treatmentSuccess: []
+        treatmentSuccess: [],
       },
       alerts: [
         {
           type: 'capacity_warning' as const,
           severity: 'medium' as const,
           message: 'Capacidade próxima do limite nos horários de pico',
-          actionRequired: 'Considerar expandir horários de atendimento'
-        }
+          actionRequired: 'Considerar expandir horários de atendimento',
+        },
       ],
       recommendations: {
         operational: ['Otimizar agendamentos para melhor distribuição'],
         clinical: ['Implementar protocolos padronizados'],
-        business: ['Analisar oportunidades de expansão']
-      }
+        business: ['Analisar oportunidades de expansão'],
+      },
     };
   }
 
   // Helper methods
-  private extractRiskLevel(text: string): 'low' | 'medium' | 'high' | 'critical' {
+  private extractRiskLevel(
+    text: string
+  ): 'low' | 'medium' | 'high' | 'critical' {
     const lowerText = text.toLowerCase();
-    if (lowerText.includes('critical') || lowerText.includes('crítico')) return 'critical';
+    if (lowerText.includes('critical') || lowerText.includes('crítico'))
+      return 'critical';
     if (lowerText.includes('high') || lowerText.includes('alto')) return 'high';
-    if (lowerText.includes('medium') || lowerText.includes('médio')) return 'medium';
+    if (lowerText.includes('medium') || lowerText.includes('médio'))
+      return 'medium';
     return 'low';
   }
 
@@ -561,16 +623,24 @@ Seja estratégico e orientado por dados.
   }
 
   private calculateAttendanceRate(appointments: any[]): number {
-    const completed = appointments.filter(apt => apt.status === 'Concluído').length;
-    return appointments.length > 0 ? Math.round((completed / appointments.length) * 100) : 0;
+    const completed = appointments.filter(
+      apt => apt.status === 'Concluído'
+    ).length;
+    return appointments.length > 0
+      ? Math.round((completed / appointments.length) * 100)
+      : 0;
   }
 
-  private analyzePainTrend(painPoints: any[]): 'improving' | 'stable' | 'worsening' {
+  private analyzePainTrend(
+    painPoints: any[]
+  ): 'improving' | 'stable' | 'worsening' {
     if (painPoints.length < 2) return 'stable';
-    
-    const recent = painPoints.slice(0, 3).reduce((sum, p) => sum + p.intensity, 0) / 3;
-    const older = painPoints.slice(3, 6).reduce((sum, p) => sum + p.intensity, 0) / 3;
-    
+
+    const recent =
+      painPoints.slice(0, 3).reduce((sum, p) => sum + p.intensity, 0) / 3;
+    const older =
+      painPoints.slice(3, 6).reduce((sum, p) => sum + p.intensity, 0) / 3;
+
     if (recent < older - 1) return 'improving';
     if (recent > older + 1) return 'worsening';
     return 'stable';
@@ -578,12 +648,15 @@ Seja estratégico e orientado por dados.
 
   private calculateAvgPainIntensity(painPoints: any[]): number {
     if (painPoints.length === 0) return 0;
-    return Math.round(painPoints.reduce((sum, p) => sum + p.intensity, 0) / painPoints.length);
+    return Math.round(
+      painPoints.reduce((sum, p) => sum + p.intensity, 0) / painPoints.length
+    );
   }
 
   private identifyRiskFactors(text: string): string[] {
     const factors = [];
-    if (text.toLowerCase().includes('irregular')) factors.push('Comparecimento irregular');
+    if (text.toLowerCase().includes('irregular'))
+      factors.push('Comparecimento irregular');
     if (text.toLowerCase().includes('pain')) factors.push('Dor persistente');
     return factors;
   }
@@ -592,14 +665,17 @@ Seja estratégico e orientado por dados.
     return [
       'Acompanhar evolução semanalmente',
       'Ajustar plano de tratamento conforme necessário',
-      'Manter comunicação regular com paciente'
+      'Manter comunicação regular com paciente',
     ];
   }
 
-  private async storePatientInsights(patientId: string, insights: PatientInsight): Promise<void> {
+  private async storePatientInsights(
+    patientId: string,
+    insights: PatientInsight
+  ): Promise<void> {
     try {
       // Store in database for historical tracking
-      await cachedPrisma.client.$executeRaw`
+      await cachedPrisma.$executeRaw`
         INSERT INTO "PatientInsights" ("patientId", "riskLevel", "insights", "generatedAt")
         VALUES (${patientId}, ${insights.riskLevel}, ${JSON.stringify(insights.insights)}::jsonb, ${insights.generatedAt})
         ON CONFLICT ("patientId") 
@@ -609,20 +685,31 @@ Seja estratégico e orientado por dados.
           "generatedAt" = EXCLUDED."generatedAt";
       `;
     } catch (error) {
-      structuredLogger.error('Failed to store patient insights', { patientId, error });
+      structuredLogger.error('Failed to store patient insights', {
+        patientId,
+        error,
+      });
     }
   }
 
   // Health check for AI service
-  async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; error?: string }> {
+  async healthCheck(): Promise<{
+    status: 'healthy' | 'unhealthy';
+    error?: string;
+  }> {
     try {
       if (!process.env.GOOGLE_AI_API_KEY) {
-        return { status: 'unhealthy', error: 'Google AI API key not configured' };
+        return {
+          status: 'unhealthy',
+          error: 'Google AI API key not configured',
+        };
       }
 
       // Simple test request
-      const result = await this.model.generateContent('Hello, this is a health check test.');
-      
+      const result = await this.model.generateContent(
+        'Hello, this is a health check test.'
+      );
+
       if (result && result.response) {
         return { status: 'healthy' };
       } else {

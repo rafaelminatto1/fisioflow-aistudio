@@ -2,7 +2,13 @@
 
 import fs from 'fs';
 import path from 'path';
-import { PremiumProvider, AIQuery, AIResponse, QueryType, ResponseSource } from './types/ai-economica.types';
+import {
+  PremiumProvider,
+  AIQuery,
+  AIResponse,
+  QueryType,
+  ResponseSource,
+} from './types/ai-economica.types';
 import { AI_PROVIDERS_CONFIG } from './aiProviders';
 import { logger } from './logger';
 
@@ -135,14 +141,18 @@ class MCPService {
   private resolveEnvironmentVariables(): void {
     if (!this.config) return;
 
-    for (const [providerKey, provider] of Object.entries(this.config.providers)) {
+    for (const [providerKey, provider] of Object.entries(
+      this.config.providers
+    )) {
       if (provider.apiKey.startsWith('${') && provider.apiKey.endsWith('}')) {
         const envVar = provider.apiKey.slice(2, -1);
         const envValue = process.env[envVar];
         if (envValue) {
           provider.apiKey = envValue;
         } else {
-          logger.warn(`Environment variable ${envVar} not found for provider ${providerKey}`);
+          logger.warn(
+            `Environment variable ${envVar} not found for provider ${providerKey}`
+          );
           provider.enabled = false;
         }
       }
@@ -152,8 +162,14 @@ class MCPService {
   private initializeProviders(): void {
     if (!this.config) return;
 
-    for (const [providerKey, provider] of Object.entries(this.config.providers)) {
-      if (provider.enabled && provider.apiKey && !provider.apiKey.includes('your-')) {
+    for (const [providerKey, provider] of Object.entries(
+      this.config.providers
+    )) {
+      if (
+        provider.enabled &&
+        provider.apiKey &&
+        !provider.apiKey.includes('your-')
+      ) {
         try {
           this.initializeProvider(providerKey, provider);
           logger.info(`Initialized MCP provider: ${provider.name}`);
@@ -164,7 +180,10 @@ class MCPService {
     }
   }
 
-  private initializeProvider(providerKey: string, config: MCPProviderConfig): void {
+  private initializeProvider(
+    providerKey: string,
+    config: MCPProviderConfig
+  ): void {
     switch (config.type) {
       case 'openai':
         // Initialize OpenAI client
@@ -188,7 +207,7 @@ class MCPService {
 
     const startTime = Date.now();
     const provider = this.selectProvider(query.type);
-    
+
     if (!provider) {
       logger.error('No suitable provider found for query');
       return null;
@@ -197,7 +216,7 @@ class MCPService {
     try {
       const mcpRequest = this.buildMCPRequest(query, provider);
       const mcpResponse = await this.sendMCPRequest(provider, mcpRequest);
-      
+
       const aiResponse: AIResponse = {
         id: this.generateId(),
         queryId: query.id,
@@ -213,8 +232,8 @@ class MCPService {
         createdAt: new Date().toISOString(),
         metadata: {
           reliability: 0.9,
-          relevance: 0.85
-        }
+          relevance: 0.85,
+        },
       };
 
       this.updateUsageMetrics(provider, mcpResponse.usage.totalTokens);
@@ -254,14 +273,14 @@ class MCPService {
 
   private isProviderAvailable(providerKey: string): boolean {
     if (!this.config) return false;
-    
+
     const provider = this.config.providers[providerKey];
     if (!provider || !provider.enabled) return false;
 
     // Check rate limits
     const currentCount = this.requestCounts.get(providerKey) || 0;
     const rateLimitPerMinute = provider.rateLimits.requestsPerMinute;
-    
+
     // Reset counts every minute
     const now = Date.now();
     if (now - this.lastResetTime > 60000) {
@@ -275,43 +294,47 @@ class MCPService {
   private buildMCPRequest(query: AIQuery, providerKey: string): MCPRequest {
     const provider = this.config!.providers[providerKey];
     const defaultModel = Object.keys(provider.models)[0];
-    
+
     return {
       provider: providerKey,
       model: defaultModel,
       messages: [
         {
           role: 'system',
-          content: this.buildSystemPrompt(query)
+          content: this.buildSystemPrompt(query),
         },
         {
           role: 'user',
-          content: query.text
-        }
+          content: query.text,
+        },
       ],
       parameters: {
         temperature: provider.models[defaultModel].temperature,
         maxTokens: provider.models[defaultModel].maxTokens,
-        topP: provider.models[defaultModel].topP
-      }
+        topP: provider.models[defaultModel].topP,
+      },
     };
   }
 
   private buildSystemPrompt(query: AIQuery): string {
     let prompt = 'Você é um assistente especializado em fisioterapia. ';
-    
+
     switch (query.type) {
       case QueryType.PROTOCOL_SUGGESTION:
-        prompt += 'Forneça sugestões de protocolos de tratamento baseadas em evidências científicas.';
+        prompt +=
+          'Forneça sugestões de protocolos de tratamento baseadas em evidências científicas.';
         break;
       case QueryType.DIAGNOSIS_HELP:
-        prompt += 'Ajude com análise de sintomas e possíveis diagnósticos diferenciais.';
+        prompt +=
+          'Ajude com análise de sintomas e possíveis diagnósticos diferenciais.';
         break;
       case QueryType.EXERCISE_RECOMMENDATION:
-        prompt += 'Recomende exercícios terapêuticos apropriados para a condição apresentada.';
+        prompt +=
+          'Recomende exercícios terapêuticos apropriados para a condição apresentada.';
         break;
       case QueryType.CASE_ANALYSIS:
-        prompt += 'Analise o caso clínico apresentado e forneça insights profissionais.';
+        prompt +=
+          'Analise o caso clínico apresentado e forneça insights profissionais.';
         break;
       default:
         prompt += 'Responda de forma profissional e baseada em evidências.';
@@ -324,7 +347,10 @@ class MCPService {
     return prompt;
   }
 
-  private async sendMCPRequest(providerKey: string, request: MCPRequest): Promise<MCPResponse> {
+  private async sendMCPRequest(
+    providerKey: string,
+    request: MCPRequest
+  ): Promise<MCPResponse> {
     // This would be implemented with actual API calls to each provider
     // For now, return a mock response
     return {
@@ -335,17 +361,17 @@ class MCPService {
       usage: {
         promptTokens: 100,
         completionTokens: 200,
-        totalTokens: 300
+        totalTokens: 300,
       },
       latency: 1500,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 
   private updateUsageMetrics(providerKey: string, tokensUsed: number): void {
     const currentCount = this.requestCounts.get(providerKey) || 0;
     this.requestCounts.set(providerKey, currentCount + 1);
-    
+
     // Update provider usage in AI_PROVIDERS_CONFIG
     const providerEnum = this.mapProviderToEnum(providerKey);
     if (providerEnum && AI_PROVIDERS_CONFIG[providerEnum]) {
@@ -372,10 +398,13 @@ class MCPService {
 
   public getProviderStatus(): Record<string, boolean> {
     if (!this.config) return {};
-    
+
     const status: Record<string, boolean> = {};
-    for (const [providerKey, provider] of Object.entries(this.config.providers)) {
-      status[providerKey] = provider.enabled && this.isProviderAvailable(providerKey);
+    for (const [providerKey, provider] of Object.entries(
+      this.config.providers
+    )) {
+      status[providerKey] =
+        provider.enabled && this.isProviderAvailable(providerKey);
     }
     return status;
   }

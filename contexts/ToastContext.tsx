@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useContext, ReactNode } from 'react';
 import { ToastMessage, ToastContextType } from '../src/types';
 
@@ -11,13 +10,18 @@ interface FullToastContextType {
 
 const ToastContext = createContext<FullToastContextType | undefined>(undefined);
 
-export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const ToastProvider: React.FC<{ children: ReactNode }> = ({
+  children,
+}) => {
   const [toasts, setToasts] = useState<ToastMessage[]>([]);
 
-  const showToast = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+  const showToast = (
+    message: string,
+    type: 'success' | 'error' | 'info' = 'info'
+  ) => {
     const id = Date.now();
     setToasts(prevToasts => [...prevToasts, { id, message, type }]);
-    
+
     // The auto-dismiss logic is primarily handled in the Toast component for animation,
     // but this acts as a fallback.
     setTimeout(() => {
@@ -28,10 +32,12 @@ export const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const removeToast = (id: number) => {
     setToasts(prevToasts => prevToasts.filter(toast => toast.id !== id));
   };
-  
+
   const value: FullToastContextType = { toasts, showToast, removeToast };
 
-  return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;
+  return (
+    <ToastContext.Provider value={value}>{children}</ToastContext.Provider>
+  );
 };
 
 export const useToast = (): ToastContextType => {
@@ -45,5 +51,5 @@ export const useToast = (): ToastContextType => {
 
 // We expose the raw context for direct consumption by the ToastContainer
 export const useInternalToast = (): FullToastContextType | undefined => {
-    return useContext(ToastContext);
-}
+  return useContext(ToastContext);
+};

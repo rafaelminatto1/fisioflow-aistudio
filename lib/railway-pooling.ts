@@ -113,12 +113,12 @@ class RailwayConnectionPool {
     // Event listeners para métricas
     this.pool.on('connect', () => {
       this.metrics.totalConnections++;
-      console.log('[Pool] Nova conexão estabelecida');
+      
     });
 
     this.pool.on('remove', () => {
       this.metrics.totalConnections--;
-      console.log('[Pool] Conexão removida');
+      
     });
 
     this.pool.on('error', (err) => {
@@ -175,7 +175,7 @@ class RailwayConnectionPool {
       this.updateMetrics();
       
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Pool Metrics]', this.getMetrics());
+        console.log('Railway Metrics:', this.metrics);
       }
     }, RAILWAY_CONFIG.metricsInterval);
   }
@@ -259,8 +259,7 @@ class RailwayConnectionPool {
 
   // Método para graceful shutdown
   async gracefulShutdown(): Promise<void> {
-    console.log('[Pool] Iniciando graceful shutdown...');
-    
+
     if (this.metricsInterval) {
       clearInterval(this.metricsInterval);
     }
@@ -268,13 +267,10 @@ class RailwayConnectionPool {
     try {
       // Fechar Prisma
       await this.prisma.$disconnect();
-      console.log('[Pool] Prisma desconectado');
-      
+
       // Fechar pool
       await this.pool.end();
-      console.log('[Pool] Pool de conexões fechado');
-      
-      console.log('[Pool] Graceful shutdown concluído');
+
     } catch (error) {
       console.error('[Pool] Erro durante shutdown:', error);
     }

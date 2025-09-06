@@ -2,14 +2,15 @@
 
 ## Visão Geral
 
-Este documento descreve o sistema completo de cache multi-camadas implementado no FisioFlow, fornecendo performance otimizada, escalabilidade e monitoramento avançado para a aplicação.
+Este documento descreve o sistema completo de cache multi-camadas implementado no FisioFlow,
+fornecendo performance otimizada, escalabilidade e monitoramento avançado para a aplicação.
 
 ## 📋 Arquitetura Implementada
 
 ### Componentes Principais
 
 1. **Cache Multi-Camadas (L1 + L2)**
-2. **Redis Clustering com Failover** 
+2. **Redis Clustering com Failover**
 3. **Cache de Queries Prisma Inteligente**
 4. **Cache de Sessão Distribuído**
 5. **Sistema de Invalidação Inteligente**
@@ -23,7 +24,7 @@ Este documento descreve o sistema completo de cache multi-camadas implementado n
 ```
 lib/
 ├── cache.ts                    # Sistema principal de cache multi-camadas
-├── cache-invalidation.ts       # Sistema de invalidação inteligente  
+├── cache-invalidation.ts       # Sistema de invalidação inteligente
 ├── cache-metrics.ts           # Métricas e monitoramento avançado
 ├── session-cache.ts           # Cache de sessão distribuído
 ├── redis.ts                   # Redis clustering e failover
@@ -82,10 +83,10 @@ import { cache, patientCache, appointmentCache } from './lib/cache';
 
 // Uso básico
 await cache.set('key', data, {
-  ttl: 300,                    // 5 minutos
-  layer: 'both',               // L1 + L2
+  ttl: 300, // 5 minutos
+  layer: 'both', // L1 + L2
   tags: ['patients', 'user:123'],
-  compress: true
+  compress: true,
 });
 
 const result = await cache.get('key');
@@ -95,12 +96,12 @@ const result = await cache.get('key');
 
 ```typescript
 // Cache específico para diferentes tipos de dados
-patientCache      // 50MB - Cache de pacientes
-appointmentCache  // 30MB - Cache de agendamentos  
-reportCache       // 100MB - Cache de relatórios
-analyticsCache    // 200MB - Cache de analytics
-sessionCache      // 20MB - Cache de sessões
-queryCache        // 150MB - Cache de queries DB
+patientCache; // 50MB - Cache de pacientes
+appointmentCache; // 30MB - Cache de agendamentos
+reportCache; // 100MB - Cache de relatórios
+analyticsCache; // 200MB - Cache de analytics
+sessionCache; // 20MB - Cache de sessões
+queryCache; // 150MB - Cache de queries DB
 ```
 
 ### Funcionalidades Avançadas
@@ -141,7 +142,7 @@ await CacheInvalidation.refreshAnalytics();
 ### Invalidação Cascata
 
 - **Patient update** → invalida appointments, reports, analytics
-- **Appointment creation** → invalida daily schedule, analytics  
+- **Appointment creation** → invalida daily schedule, analytics
 - **User logout** → invalida todas as sessões do usuário
 
 ---
@@ -155,7 +156,7 @@ import { cachedPrisma, PrismaCache } from './lib/prisma';
 
 // Uso automático com cache
 const patients = await cachedPrisma.client.patient.findMany({
-  where: { active: true }
+  where: { active: true },
 }); // Automaticamente cacheado
 
 // Invalidação específica
@@ -167,11 +168,11 @@ await PrismaCache.invalidatePatient('patient-123');
 
 ```typescript
 const modelTTLs = {
-  User: 1800,        // 30 min - dados mudam pouco
-  Patient: 900,      // 15 min - dados mudam moderadamente  
-  Appointment: 300,  // 5 min - dados mudam frequentemente
-  Report: 3600,      // 1 hora - dados são estáticos
-  Analytics: 600,    // 10 min - analytics precisam ser atuais
+  User: 1800, // 30 min - dados mudam pouco
+  Patient: 900, // 15 min - dados mudam moderadamente
+  Appointment: 300, // 5 min - dados mudam frequentemente
+  Report: 3600, // 1 hora - dados são estáticos
+  Analytics: 600, // 10 min - analytics precisam ser atuais
 };
 ```
 
@@ -195,15 +196,15 @@ import { sessionManager } from './lib/session-cache';
 // Criar sessão
 const sessionId = await sessionManager.createSession({
   userId: 'user123',
-  email: 'user@email.com', 
+  email: 'user@email.com',
   role: 'admin',
-  lastActivity: Date.now()
+  lastActivity: Date.now(),
 });
 
 // Gerenciar sessões
-await sessionManager.touchSession(sessionId);           // Renovar
-await sessionManager.destroySession(sessionId);         // Destruir
-await sessionManager.destroyUserSessions('user123');    // Destruir todas
+await sessionManager.touchSession(sessionId); // Renovar
+await sessionManager.destroySession(sessionId); // Destruir
+await sessionManager.destroyUserSessions('user123'); // Destruir todas
 ```
 
 ### Funcionalidades
@@ -229,9 +230,9 @@ if (clusterNodes.length > 1) {
     rootNodes: clusterNodes.map(node => ({ url: node })),
     defaults: {
       socket: {
-        reconnectStrategy: (retries) => Math.min(retries * 200, 1000)
-      }
-    }
+        reconnectStrategy: retries => Math.min(retries * 200, 1000),
+      },
+    },
   });
 }
 ```
@@ -259,8 +260,8 @@ const ROUTE_CACHE_CONFIG = {
   routeTTL: {
     '/api/health': 60,
     '/api/reports': 1800,
-    '/api/analytics': 600
-  }
+    '/api/analytics': 600,
+  },
 };
 ```
 
@@ -286,22 +287,22 @@ Acesse: `/admin/cache` (requer autenticação)
 ```typescript
 interface CacheMetrics {
   overall: {
-    hitRate: number;           // Taxa de acerto global
-    totalOperations: number;   // Total de operações
-    avgResponseTime: number;   // Tempo médio de resposta
-    errorRate: number;         // Taxa de erro
+    hitRate: number; // Taxa de acerto global
+    totalOperations: number; // Total de operações
+    avgResponseTime: number; // Tempo médio de resposta
+    errorRate: number; // Taxa de erro
   };
   managers: {
     [name: string]: {
-      hitRate: number;         // Taxa de acerto específica
-      operations: number;      // Operações do cache
-      memoryHits: number;      // Hits na memória (L1)
-      redisHits: number;       // Hits no Redis (L2)  
-      totalSize: number;       // Tamanho do cache
-      errors: number;          // Número de erros
+      hitRate: number; // Taxa de acerto específica
+      operations: number; // Operações do cache
+      memoryHits: number; // Hits na memória (L1)
+      redisHits: number; // Hits no Redis (L2)
+      totalSize: number; // Tamanho do cache
+      errors: number; // Número de erros
     };
   };
-  healthScore: number;         // Score de saúde (0-100)
+  healthScore: number; // Score de saúde (0-100)
 }
 ```
 
@@ -315,22 +316,22 @@ const alertRules = [
     condition: 'below',
     threshold: 50,
     severity: 'medium',
-    description: 'Cache hit rate baixo'
+    description: 'Cache hit rate baixo',
   },
   {
-    metric: 'overall.avgResponseTime', 
+    metric: 'overall.avgResponseTime',
     condition: 'above',
     threshold: 100,
     severity: 'high',
-    description: 'Tempo de resposta alto'
-  }
+    description: 'Tempo de resposta alto',
+  },
 ];
 ```
 
 ### Performance Score
 
 - **90-100**: Excelente performance 🟢
-- **70-89**: Boa performance 🟡  
+- **70-89**: Boa performance 🟡
 - **50-69**: Performance degradada 🟠
 - **0-49**: Performance crítica 🔴
 
@@ -346,9 +347,9 @@ module.exports = {
   // Cache de imagens otimizado
   images: {
     minimumCacheTTL: 31536000, // 1 ano
-    formats: ['image/webp', 'image/avif']
+    formats: ['image/webp', 'image/avif'],
   },
-  
+
   // Headers de cache por rota
   async headers() {
     return [
@@ -356,32 +357,32 @@ module.exports = {
         source: '/api/reports/:path*',
         headers: [
           {
-            key: 'Cache-Control', 
-            value: 'private, max-age=1800, stale-while-revalidate=3600'
-          }
-        ]
-      }
+            key: 'Cache-Control',
+            value: 'private, max-age=1800, stale-while-revalidate=3600',
+          },
+        ],
+      },
     ];
   },
-  
+
   // Build optimizations
   webpack: (config, { dev }) => {
     if (!dev) {
       config.cache = { type: 'filesystem' };
     }
     return config;
-  }
+  },
 };
 ```
 
 ### Database Connection Pooling
 
 ```typescript
-// Prisma connection pooling otimizado  
+// Prisma connection pooling otimizado
 export const prismaWithPool = new PrismaClient({
   datasources: {
-    db: { url: process.env.DATABASE_URL }
-  }
+    db: { url: process.env.DATABASE_URL },
+  },
 });
 ```
 
@@ -395,7 +396,7 @@ export const prismaWithPool = new PrismaClient({
 # Teste de 50 requisições concorrentes
 ✅ Load test: 50/50 successful
    Average time: 22.45ms per request
-   Total time: 1.123s for 50 concurrent requests  
+   Total time: 1.123s for 50 concurrent requests
    Requests per second: 44.51
 
 # Cache hit rates observadas
@@ -421,10 +422,10 @@ export const prismaWithPool = new PrismaClient({
 ```bash
 # Desenvolvimento
 npm run dev                    # Servidor de desenvolvimento
-npm run build                 # Build de produção  
+npm run build                 # Build de produção
 npm run type-check             # Verificação de tipos
 
-# Cache Management  
+# Cache Management
 node simple-cache-test.js      # Teste básico do sistema
 bash test-performance.sh       # Teste de performance
 
@@ -439,7 +440,7 @@ curl http://localhost:3000/admin/cache     # Dashboard (requer auth)
 # Verificar métricas de cache
 curl http://localhost:3000/api/cache/metrics
 
-# Verificar saúde do sistema  
+# Verificar saúde do sistema
 curl http://localhost:3000/api/health
 
 # Invalidar cache específico
@@ -459,6 +460,7 @@ curl -X POST http://localhost:3000/api/cache/invalidate \
 **Sintomas**: Hit rate < 50%  
 **Causas**: TTL muito baixo, invalidação excessiva  
 **Solução**:
+
 ```typescript
 // Aumentar TTL para dados estáveis
 await cache.set(key, data, { ttl: 1800 }); // 30 min
@@ -472,7 +474,8 @@ await cacheInvalidator.removeRule('overly-aggressive-rule');
 **Sintomas**: Tempo de resposta > 100ms  
 **Causas**: Cache miss, Redis lento  
 **Solução**:
-```typescript  
+
+```typescript
 // Verificar conectividade Redis
 const redisStats = await cache.getRedisStats();
 console.log(redisStats);
@@ -487,6 +490,7 @@ console.log(metrics);
 **Sintomas**: OutOfMemory, cache eviction excessiva  
 **Causas**: Cache L1 muito grande  
 **Solução**:
+
 ```typescript
 // Ajustar limites de memória
 const patientCache = new CacheManager('patients', 25 * 1024 * 1024); // 25MB
@@ -516,7 +520,7 @@ console.log(await cacheMetrics.getPerformanceReport(24)); // Últimas 24h
 ### LGPD Compliance
 
 - **Right to be forgotten**: Invalidação completa por usuário
-- **Data minimization**: Cache apenas dados necessários  
+- **Data minimization**: Cache apenas dados necessários
 - **Retention limits**: TTL máximo configurável
 - **Audit trails**: Logs de acesso e modificação
 
@@ -527,7 +531,7 @@ console.log(await cacheMetrics.getPerformanceReport(24)); // Últimas 24h
 ### Próximas Funcionalidades
 
 1. **Cache de GraphQL** com automatic query analysis
-2. **Edge Caching** com CloudFlare integration  
+2. **Edge Caching** com CloudFlare integration
 3. **ML-based TTL prediction** baseado em padrões de uso
 4. **Real-time cache warming** baseado em analytics
 5. **Multi-region cache replication** para baixa latência global
@@ -562,7 +566,7 @@ console.log(await cacheMetrics.getPerformanceReport(24)); // Últimas 24h
 ### Tecnologias Utilizadas
 
 - **Next.js 14**: Framework React com otimizações de cache
-- **Redis 7**: Cache distribuído e clustering  
+- **Redis 7**: Cache distribuído e clustering
 - **Prisma 5**: ORM com cache integration
 - **TypeScript**: Type safety e desenvolvimento robusto
 - **Tailwind CSS**: UI styling para dashboard
@@ -585,4 +589,4 @@ console.log(await cacheMetrics.getPerformanceReport(24)); // Últimas 24h
 
 **🎉 Sistema implementado com sucesso seguindo as especificações do minatto3.md!**
 
-*Última atualização: 25 de Agosto de 2025*
+_Última atualização: 25 de Agosto de 2025_

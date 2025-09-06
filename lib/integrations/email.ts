@@ -48,7 +48,10 @@ export class EmailIntegration {
     }
   }
 
-  private async makeRequest(endpoint: string, data: any): Promise<EmailResponse> {
+  private async makeRequest(
+    endpoint: string,
+    data: any
+  ): Promise<EmailResponse> {
     if (!this.apiKey) {
       return { success: false, error: 'Email API key not configured' };
     }
@@ -58,7 +61,7 @@ export class EmailIntegration {
         const response = await fetch(`${this.baseUrl}/${endpoint}`, {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
+            Authorization: `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(data),
@@ -93,7 +96,6 @@ export class EmailIntegration {
           messageId: result.id,
           statusCode: response.status,
         };
-
       } catch (error: any) {
         structuredLogger.error('Email request failed', {
           endpoint,
@@ -128,11 +130,15 @@ export class EmailIntegration {
     if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has no email address'
+        error: 'Patient has no email address',
       };
     }
 
-    const appointmentDate = format(new Date(appointment.startTime), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    const appointmentDate = format(
+      new Date(appointment.startTime),
+      "dd 'de' MMMM 'de' yyyy",
+      { locale: ptBR }
+    );
     const appointmentTime = format(new Date(appointment.startTime), 'HH:mm');
 
     const html = `
@@ -239,11 +245,15 @@ Equipe FisioFlow
     if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has no email address'
+        error: 'Patient has no email address',
       };
     }
 
-    const appointmentDate = format(new Date(appointment.startTime), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    const appointmentDate = format(
+      new Date(appointment.startTime),
+      "dd 'de' MMMM 'de' yyyy",
+      { locale: ptBR }
+    );
     const appointmentTime = format(new Date(appointment.startTime), 'HH:mm');
 
     const html = `
@@ -340,11 +350,13 @@ Equipe FisioFlow
     if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has no email address'
+        error: 'Patient has no email address',
       };
     }
 
-    const currentDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: ptBR });
+    const currentDate = format(new Date(), "dd 'de' MMMM 'de' yyyy", {
+      locale: ptBR,
+    });
 
     const html = `
 <!DOCTYPE html>
@@ -388,23 +400,32 @@ Equipe FisioFlow
                 <p>${reportData.nextSteps}</p>
             </div>
             
-            ${reportData.exercises && reportData.exercises.length > 0 ? `
+            ${
+              reportData.exercises && reportData.exercises.length > 0
+                ? `
             <div class="exercises">
                 <h3><span class="emoji">💪</span> Exercícios Recomendados</h3>
                 <ul>
                     ${reportData.exercises.map(exercise => `<li>${exercise}</li>`).join('')}
                 </ul>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
             
-            ${reportData.recommendations && reportData.recommendations.length > 0 ? `
+            ${
+              reportData.recommendations &&
+              reportData.recommendations.length > 0
+                ? `
             <div style="background: #e3f2fd; padding: 15px; border-radius: 6px; margin: 15px 0;">
                 <h3><span class="emoji">💡</span> Recomendações Gerais</h3>
                 <ul>
                     ${reportData.recommendations.map(rec => `<li>${rec}</li>`).join('')}
                 </ul>
             </div>
-            ` : ''}
+            `
+                : ''
+            }
             
             <div style="background: #e8f5e8; padding: 15px; border-radius: 6px; margin: 20px 0; text-align: center;">
                 <p><strong>Continue seguindo as orientações para obter os melhores resultados!</strong> <span class="emoji">💪</span></p>
@@ -441,7 +462,7 @@ Equipe FisioFlow
     if (!patient.email) {
       return {
         success: false,
-        error: 'Patient has no email address'
+        error: 'Patient has no email address',
       };
     }
 
@@ -519,7 +540,8 @@ Equipe FisioFlow
 
     const result = await this.sendEmail({
       to: patient.email,
-      subject: '🎉 Bem-vindo à FisioFlow - Sua jornada de recuperação começa aqui!',
+      subject:
+        '🎉 Bem-vindo à FisioFlow - Sua jornada de recuperação começa aqui!',
       html,
     });
 
@@ -540,15 +562,15 @@ Equipe FisioFlow
     personalizations?: Record<string, Record<string, any>>
   ): Promise<EmailResponse[]> {
     const results: EmailResponse[] = [];
-    
+
     // Send in batches to avoid rate limiting
     const batchSize = 50;
     for (let i = 0; i < recipients.length; i += batchSize) {
       const batch = recipients.slice(i, i + batchSize);
-      
-      const batchPromises = batch.map(async (recipient) => {
+
+      const batchPromises = batch.map(async recipient => {
         let personalizedHtml = htmlTemplate;
-        
+
         // Apply personalizations if provided
         if (personalizations && personalizations[recipient]) {
           const data = personalizations[recipient];
@@ -557,36 +579,36 @@ Equipe FisioFlow
             personalizedHtml = personalizedHtml.replace(placeholder, data[key]);
           });
         }
-        
+
         return this.sendEmail({
           to: recipient,
           subject,
           html: personalizedHtml,
         });
       });
-      
+
       const batchResults = await Promise.all(batchPromises);
       results.push(...batchResults);
-      
+
       // Small delay between batches
       if (i + batchSize < recipients.length) {
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
-    
+
     const successCount = results.filter(r => r.success).length;
     structuredLogger.info('Bulk email campaign completed', {
       totalRecipients: recipients.length,
       successCount,
       failureCount: recipients.length - successCount,
     });
-    
+
     BusinessMetrics.recordBusinessEvent('bulk_email_campaign', {
       totalRecipients: recipients.length,
       successCount,
       channel: 'email',
     });
-    
+
     return results;
   }
 
@@ -603,7 +625,10 @@ Equipe FisioFlow
   }
 
   // Health check for Email integration
-  async healthCheck(): Promise<{ status: 'healthy' | 'unhealthy'; error?: string }> {
+  async healthCheck(): Promise<{
+    status: 'healthy' | 'unhealthy';
+    error?: string;
+  }> {
     try {
       if (!this.apiKey) {
         return { status: 'unhealthy', error: 'Email API key not configured' };
@@ -612,14 +637,17 @@ Equipe FisioFlow
       // Simple health check - verify API connection
       const response = await fetch(`${this.baseUrl}/domains`, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          Authorization: `Bearer ${this.apiKey}`,
         },
       });
 
       if (response.ok) {
         return { status: 'healthy' };
       } else {
-        return { status: 'unhealthy', error: `API returned ${response.status}` };
+        return {
+          status: 'unhealthy',
+          error: `API returned ${response.status}`,
+        };
       }
     } catch (error: any) {
       return { status: 'unhealthy', error: error.message };

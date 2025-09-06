@@ -1,26 +1,26 @@
-"use client"
+'use client';
 
-import { SWRConfig } from "swr"
-import { ReactNode } from "react"
+import { SWRConfig } from 'swr';
+import { ReactNode } from 'react';
 
 // Fetcher function for SWR
 const fetcher = async (url: string) => {
   const res = await fetch(url, {
-    credentials: "include",
+    credentials: 'include',
     headers: {
-      "Content-Type": "application/json",
+      'Content-Type': 'application/json',
     },
-  })
-  
+  });
+
   if (!res.ok) {
-    throw new Error("Failed to fetch")
+    throw new Error('Failed to fetch');
   }
-  
-  return res.json()
-}
+
+  return res.json();
+};
 
 interface SWRProviderProps {
-  children: ReactNode
+  children: ReactNode;
 }
 
 export function SWRProvider({ children }: SWRProviderProps) {
@@ -42,18 +42,18 @@ export function SWRProvider({ children }: SWRProviderProps) {
         // Optimistic updates
         revalidateIfStale: true,
         // Performance optimizations
-        shouldRetryOnError: (error) => {
+        shouldRetryOnError: error => {
           // Don't retry on 4xx errors (client errors)
           if (error?.status >= 400 && error?.status < 500) {
-            return false
+            return false;
           }
-          return true
+          return true;
         },
         // Custom cache provider for better performance
         provider: () => {
           // Use Map for better performance than default cache
-          const map = new Map()
-          return map
+          const map = new Map();
+          return map;
         },
         // Fallback data for offline scenarios
         fallbackData: undefined,
@@ -63,5 +63,5 @@ export function SWRProvider({ children }: SWRProviderProps) {
     >
       {children}
     </SWRConfig>
-  )
+  );
 }

@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 {
   "node": {},
   "edge": {},
   "encryptionKey": "2mkXhAoaMG//PFFzpg2Aok9jEkRcy7E0h9W7Nw9Bfv0="
 }
+=======
+{"node":{"a55586fbfe04bbf4f808e7a32374b196cfe19e10":{"workers":{"app/pacientes/[id]/page":"15884"},"layer":{"app/pacientes/[id]/page":"action-browser"}}},"edge":{},"encryptionKey":"DOypm0qPh+jhPcX8yxeaMu0C60bTOlN55wDCHEjfzPg="}
+>>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3

@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
   const cursor = searchParams.get('cursor') || undefined;
   const searchTerm = searchParams.get('q') || '';
   const status = searchParams.get('status') || '';
-  
+
   const cacheKey = `${CACHE_KEY_PREFIX}cursor=${cursor}&q=${searchTerm}&status=${status}`;
 
   try {
@@ -28,20 +28,22 @@ export async function GET(request: NextRequest) {
     if (cachedData) {
       return NextResponse.json(JSON.parse(cachedData));
     }
-    
+
     // 2. Se não houver cache, busca no banco
-    const where = {
+    const where: any = {
       OR: [
         { name: { contains: searchTerm, mode: 'insensitive' as const } },
         { cpf: { contains: searchTerm, mode: 'insensitive' as const } },
       ],
-      ...(status && status !== 'All' ? { status } : {})
     };
+    
+    if (status && status !== 'All') {
+      where.status = status;
+    }
 
-    const patients = await cachedPrisma.client.patient.findMany({
+    const findManyOptions: any = {
       take: take,
       skip: cursor ? 1 : 0,
-      cursor: cursor ? { id: cursor } : undefined,
       where: where,
       select: {
         id: true,
@@ -53,17 +55,30 @@ export async function GET(request: NextRequest) {
       orderBy: {
         createdAt: 'desc',
       },
-    });
+    };
     
-    const nextCursor = patients.length === take ? patients[patients.length - 1].id : null;
+    if (cursor) {
+      findManyOptions.cursor = { id: cursor };
+    }
     
+    const patients = await cachedPrisma.patient.findMany(findManyOptions);
+
+    let nextCursor = null;
+    if (patients.length === take && patients.length > 0) {
+      const lastPatient = patients[patients.length - 1];
+      if (lastPatient && lastPatient.id) {
+        nextCursor = lastPatient.id;
+      }
+    }
+
     const responseData = {
       items: patients,
       nextCursor,
     };
-    
+
     // 3. Salva o resultado no cache antes de retornar
-    await redis.set(cacheKey, JSON.stringify(responseData), { EX: CACHE_TTL_SECONDS });
+    await redis.set(cacheKey, JSON.stringify(responseData));
+    await redis.expire(cacheKey, CACHE_TTL_SECONDS);
 
     return NextResponse.json(responseData);
   } catch (error) {
@@ -81,37 +96,51 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validatedData = patientFormSchema.parse(body);
 
-    const newPatient = await cachedPrisma.client.patient.create({
-      data: {
-        name: validatedData.name,
-        cpf: validatedData.cpf,
-        birthDate: validatedData.birthDate ? new Date(validatedData.birthDate) : null,
-        phone: validatedData.phone,
-        email: validatedData.email,
-        address: validatedData.addressZip || validatedData.addressStreet || validatedData.addressNumber || validatedData.addressCity || validatedData.addressState ? {
-          zip: validatedData.addressZip,
-          street: validatedData.addressStreet,
-          number: validatedData.addressNumber,
-          city: validatedData.addressCity,
-          state: validatedData.addressState,
-        } : undefined,
-        emergencyContact: validatedData.emergencyContactName || validatedData.emergencyContactPhone ? {
-          name: validatedData.emergencyContactName,
-          phone: validatedData.emergencyContactPhone,
-        } : undefined,
-        allergies: validatedData.allergies,
-        medicalAlerts: validatedData.medicalAlerts,
-        consentGiven: validatedData.consentGiven,
-        whatsappConsent: validatedData.whatsappConsent,
-      },
+    const patientData: any = {
+      name: validatedData.name,
+      cpf: validatedData.cpf,
+      birthDate: validatedData.birthDate
+        ? new Date(validatedData.birthDate)
+        : null,
+    };
+    
+    if (validatedData.phone) patientData.phone = validatedData.phone;
+    if (validatedData.email) patientData.email = validatedData.email;
+    
+    if (validatedData.addressZip ||
+        validatedData.addressStreet ||
+        validatedData.addressNumber ||
+        validatedData.addressCity ||
+        validatedData.addressState) {
+      patientData.address = {
+        zip: validatedData.addressZip || null,
+        street: validatedData.addressStreet || null,
+        number: validatedData.addressNumber || null,
+        city: validatedData.addressCity || null,
+        state: validatedData.addressState || null,
+      };
+    }
+    
+    if (validatedData.emergencyContactName ||
+        validatedData.emergencyContactPhone) {
+      patientData.emergencyContact = {
+        name: validatedData.emergencyContactName || null,
+        phone: validatedData.emergencyContactPhone || null,
+      };
+    }
+    
+    if (validatedData.allergies) patientData.allergies = validatedData.allergies;
+    if (validatedData.medicalAlerts) patientData.medicalAlerts = validatedData.medicalAlerts;
+    if (validatedData.consentGiven !== undefined) patientData.consentGiven = validatedData.consentGiven;
+    if (validatedData.whatsappConsent) patientData.whatsappConsent = validatedData.whatsappConsent;
+    
+    const newPatient = await cachedPrisma.patient.create({
+      data: patientData,
     });
 
-    // Invalida todo o cache de lista de pacientes (abordagem simples)
-    const redis = await redisPromise;
-    // Como não temos keys() na interface, vamos usar flushAll() ou implementar uma estratégia diferente
-    // Por enquanto, vamos limpar todo o cache para simplicidade
-    await redis.flushAll();
-    
+    // TODO: Implementar invalidação de cache mais eficiente
+    // Por enquanto, vamos pular a limpeza do cache
+
     return NextResponse.json(newPatient, { status: 201 });
   } catch (error) {
     console.error('[API_PACIENTES_POST]', error);

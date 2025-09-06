@@ -10,19 +10,19 @@ export const metadata: Metadata = {
 
 export default async function SecurityPage() {
   const session = await auth();
-  
+
   // Require authentication
   if (!session) {
     redirect('/auth/signin');
   }
-  
+
   // Require admin role
   if (session.user.role !== 'Admin') {
     redirect('/dashboard');
   }
 
   return (
-    <div className="container mx-auto py-6">
+    <div className='container mx-auto py-6'>
       <RLSSecurityDashboard />
     </div>
   );

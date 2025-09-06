@@ -4,7 +4,8 @@
 
 # FisioFlow - Sistema de Gestão para Fisioterapia
 
-Sistema completo de gestão para clínicas de fisioterapia com integração Neon DB, monitoramento avançado e automação completa.
+Sistema completo de gestão para clínicas de fisioterapia com integração Neon DB, monitoramento
+avançado e automação completa.
 
 View your app in AI Studio: https://ai.studio/apps/drive/125p-5m7NUy7ahRRmYC8H6aKd6uZ_ryb3
 
@@ -21,7 +22,7 @@ View your app in AI Studio: https://ai.studio/apps/drive/125p-5m7NUy7ahRRmYC8H6a
 
 ## 📋 Pré-requisitos
 
-- Node.js 18+ 
+- Node.js 18+
 - Conta Neon DB
 - Chaves de API para provedores de IA (opcional)
 
@@ -143,6 +144,7 @@ node scripts/recovery.js point-in-time "2024-01-15T10:30:00Z"
 Acesse: `http://localhost:3000/admin/monitoring`
 
 **Métricas Disponíveis:**
+
 - Performance do banco de dados
 - Uso de CPU e memória
 - Conexões ativas
@@ -177,6 +179,7 @@ npx prisma db pull
 ```
 
 **Soluções:**
+
 - Verificar se as credenciais estão corretas
 - Confirmar se o IP está na whitelist do Neon
 - Verificar se o endpoint está ativo
@@ -242,6 +245,7 @@ node scripts/recovery.js auto --fast
 ### Row Level Security (RLS)
 
 O sistema implementa RLS para:
+
 - Isolamento de dados por usuário
 - Controle de acesso granular
 - Auditoria de operações
@@ -278,6 +282,7 @@ This application supports MCP for enhanced AI provider management:
 ### Testing MCP Configuration
 
 Run the configuration test:
+
 ```bash
 node test-mcp-integration.js
 ```
@@ -285,6 +290,7 @@ node test-mcp-integration.js
 ## 📞 Suporte
 
 Para suporte técnico:
+
 - 📧 Email: suporte@fisioflow.com
 - 📱 WhatsApp: +55 11 99999-9999
 - 🌐 Documentação: https://docs.fisioflow.com

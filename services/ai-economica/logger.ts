@@ -32,7 +32,7 @@ class Logger {
       level,
       message,
       timestamp: new Date().toISOString(),
-      data
+      data,
     };
 
     // Add to internal logs
@@ -43,7 +43,7 @@ class Logger {
 
     // Console output
     const logMessage = `[${logEntry.timestamp}] [${level.toUpperCase()}] ${message}`;
-    
+
     switch (level) {
       case 'debug':
         console.debug(logMessage, data || '');
@@ -77,12 +77,14 @@ class Logger {
   }
 
   public getLogs(level?: LogLevel, limit?: number): LogEntry[] {
-    let filteredLogs = level ? this.logs.filter(log => log.level === level) : this.logs;
-    
+    let filteredLogs = level
+      ? this.logs.filter(log => log.level === level)
+      : this.logs;
+
     if (limit) {
       filteredLogs = filteredLogs.slice(-limit);
     }
-    
+
     return filteredLogs;
   }
 
