@@ -28,14 +28,10 @@ const customJestConfig = {
 
   // Test patterns
   testMatch: [
-<<<<<<< HEAD
-    '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}'
-=======
     '<rootDir>/tests/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/components/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/lib/**/*.test.{js,jsx,ts,tsx}',
     '<rootDir>/app/**/*.test.{js,jsx,ts,tsx}',
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
   ],
 
   // Coverage configuration

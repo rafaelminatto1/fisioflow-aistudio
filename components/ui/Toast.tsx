@@ -24,42 +24,6 @@ export const ToastViewport = React.forwardRef<
 ));
 ToastViewport.displayName = ToastPrimitives.Viewport.displayName;
 
-<<<<<<< HEAD
-        return () => clearTimeout(timer);
-    }, [toast.id, onRemove]);
-    
-    const handleRemove = () => {
-        setIsExiting(true);
-        setTimeout(() => onRemove(toast.id), 300);
-    }
-
-    return (
-        <div className={`
-            flex items-start p-4 w-full max-w-sm bg-white shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 overflow-hidden
-            transition-all duration-300 ease-in-out
-            ${isExiting ? 'animate-toast-exit' : 'animate-toast-enter'}
-        `}>
-            <div className="flex-shrink-0">{ToastIcons[toast.type]}</div>
-            <div className="ml-3 w-0 flex-1 pt-0.5">
-                <p className="text-sm font-medium text-slate-900">{toast.message}</p>
-            </div>
-            <div className="ml-4 flex-shrink-0 flex">
-                <button onClick={handleRemove} className="bg-white rounded-md inline-flex text-slate-400 hover:text-slate-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    <span className="sr-only">Close</span>
-                    <X className="h-5 w-5" />
-                </button>
-            </div>
-        </div>
-    );
-};
-
-const ToastContainer: React.FC = () => {
-  const context = useInternalToast();
-
-  if (!context) return null;
-
-  const { toasts, removeToast } = context;
-=======
 export const toastVariants = cva(
   'group pointer-events-auto relative flex w-full items-center justify-between space-x-4 overflow-hidden rounded-md border p-6 pr-8 shadow-lg transition-all data-[swipe=cancel]:translate-x-0 data-[swipe=end]:translate-x-[var(--radix-toast-swipe-end-x)] data-[swipe=move]:translate-x-[var(--radix-toast-swipe-move-x)] data-[swipe=move]:transition-none data-[state=open]:animate-in data-[state=closed]:animate-out data-[swipe=end]:animate-out data-[state=closed]:fade-out-80 data-[state=closed]:slide-out-to-right-full data-[state=open]:slide-in-from-top-full data-[state=open]:sm:slide-in-from-bottom-full',
   {
@@ -74,7 +38,6 @@ export const toastVariants = cva(
     },
   }
 );
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
 export const Toast = React.forwardRef<
   React.ElementRef<typeof ToastPrimitives.Root>,
@@ -162,4 +125,3 @@ export function ToastContainer() {
 
 // Export as default for backward compatibility
 export default ToastContainer;
-export { ToastMessageComponent };

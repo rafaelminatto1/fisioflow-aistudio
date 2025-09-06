@@ -1,8 +1,5 @@
-<<<<<<< HEAD
+'use client';
 
-import React, { createContext, useState, useContext, useEffect, ReactNode } from 'react';
-import { User } from '../src/types';
-=======
 import React, {
   createContext,
   useState,
@@ -11,7 +8,6 @@ import React, {
   ReactNode,
 } from 'react';
 import { User } from '../types';
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 import * as authService from '../services/authService';
 
 interface AuthContextType {

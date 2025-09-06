@@ -31,14 +31,6 @@ export const authOptions: NextAuthConfig = {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
-<<<<<<< HEAD
-      async authorize(credentials: any) {
-        console.log("[AUTH] Tentativa de login:", { email: credentials?.email })
-        
-        if (!credentials?.email || !credentials?.password) {
-          console.log("[AUTH] Credenciais faltando")
-          return null
-=======
       async authorize(credentials, req) {
         if (
           !credentials?.email ||
@@ -47,7 +39,6 @@ export const authOptions: NextAuthConfig = {
           typeof credentials.email !== 'string'
         ) {
           throw new Error('Credenciais inválidas.');
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         }
 
         const ip =
@@ -56,49 +47,12 @@ export const authOptions: NextAuthConfig = {
           'unknown';
         const rateLimitKey = `${RATE_LIMIT_PREFIX}${credentials.email}`;
 
-<<<<<<< HEAD
-          console.log("[AUTH] Usuário encontrado:", { 
-            found: !!user, 
-            hasPassword: !!user?.passwordHash,
-            email: user?.email 
-          })
-
-          if (!user || !user.passwordHash) {
-            console.log("[AUTH] Usuário não encontrado ou sem senha")
-            return null
-          }
-
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.passwordHash
-          )
-
-          console.log("[AUTH] Validação de senha:", { valid: isPasswordValid })
-
-          if (!isPasswordValid) {
-            console.log("[AUTH] Senha inválida")
-            return null
-          }
-
-          console.log("[AUTH] Login bem-sucedido para:", user.email)
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            role: user.role,
-            avatarUrl: user.avatarUrl || undefined
-          }
-        } catch (error) {
-          console.error("[AUTH] Erro durante autenticação:", error)
-          return null
-=======
         const attempts = await redis.get(rateLimitKey);
         if (attempts && Number(attempts) >= MAX_ATTEMPTS) {
           // Rate limit exceeded - log removed as auditLog model doesn't exist
           throw new Error(
             'Muitas tentativas de login. Tente novamente em 15 minutos.'
           );
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         }
 
         const user = await prisma.user.findUnique({
@@ -164,56 +118,8 @@ export const authOptions: NextAuthConfig = {
     signIn: '/login',
   },
   secret: process.env.NEXTAUTH_SECRET,
-<<<<<<< HEAD
-  trustHost: true,
-  useSecureCookies: false,
-  debug: true,
-  url: process.env.NEXTAUTH_URL || "http://localhost:3000",
-  skipCSRFCheck: process.env.NODE_ENV === "development",
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: false
-      }
-    },
-    callbackUrl: {
-      name: `next-auth.callback-url`,
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: false
-      }
-    },
-    csrfToken: {
-      name: `next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: false
-      }
-    }
-   },
-  logger: {
-    error(code, metadata) {
-      console.error("[NextAuth Error]", code, metadata)
-    },
-    warn(code) {
-      console.warn("[NextAuth Warning]", code)
-    },
-    debug(code, metadata) {
-      console.log("[NextAuth Debug]", code, metadata)
-    }
-  }
-}
-=======
   debug: process.env.NODE_ENV === 'development',
 };
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
 const { auth, handlers, signIn, signOut } = NextAuth(authOptions);
 

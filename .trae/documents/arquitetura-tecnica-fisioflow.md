@@ -5,17 +5,6 @@
 
 ```mermaid
 graph TD
-<<<<<<< HEAD
-    A[Cliente Web/Mobile] --> B[Load Balancer]
-    B --> C[Next.js Frontend]
-    C --> D[API Gateway]
-    D --> E[Microserviços]
-    E --> F[Neon PostgreSQL]
-    E --> G[Redis Cache]
-    E --> H[File Storage]
-    
-    subgraph "Frontend Layer"
-=======
     A[Cliente Browser] --> B[Cloudflare CDN]
     B --> C[Vercel Edge Network]
     C --> D[Next.js 14 Application]
@@ -192,18 +181,12 @@ graph TD
     subgraph "Application Layer"
         A
         B
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         C
         I[PWA Service Worker]
         J[React Native App]
     end
-<<<<<<< HEAD
     
-    subgraph "API Layer"
-=======
-
     subgraph "Business Logic"
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         D
         K[Authentication Service]
         L[Patient Service]
@@ -397,25 +380,6 @@ graph TD
 erDiagram
     USER ||--o{ PATIENT : manages
     USER ||--o{ APPOINTMENT : schedules
-<<<<<<< HEAD
-    USER ||--o{ CLINIC : belongs_to
-    
-    PATIENT ||--o{ APPOINTMENT : has
-    PATIENT ||--o{ MEDICAL_RECORD : has
-    PATIENT ||--o{ TREATMENT_PLAN : follows
-    PATIENT ||--o{ PAYMENT : makes
-    
-    APPOINTMENT ||--o{ SOAP_NOTE : generates
-    APPOINTMENT ||--o{ EXERCISE_SESSION : includes
-    APPOINTMENT ||--|| TELECONSULTA : can_be
-    
-    TREATMENT_PLAN ||--o{ EXERCISE : contains
-    TREATMENT_PLAN ||--o{ GOAL : has
-    
-    CLINIC ||--o{ EQUIPMENT : owns
-    CLINIC ||--o{ SUBSCRIPTION : has
-    
-=======
     PATIENT ||--o{ APPOINTMENT : attends
     PATIENT ||--o{ PAIN_POINT : reports
     PATIENT ||--o{ METRIC_RESULT : tracks
@@ -423,7 +387,7 @@ erDiagram
     USER ||--o{ COMMUNICATION_LOG : creates
     PATIENT ||--o{ COMMUNICATION_LOG : receives
 
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
+
     USER {
         uuid id PK
         string email UK
@@ -469,40 +433,16 @@ erDiagram
         json attachments
         timestamp created_at
     }
-<<<<<<< HEAD
     
-    TREATMENT_PLAN {
-=======
-
     PAIN_POINT {
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         uuid id PK
         uuid patient_id FK
-        string diagnosis
-        text objectives
-        integer sessions_planned
-        date start_date
-        date end_date
-        string status
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    EXERCISE {
-        uuid id PK
-        string name
+        string location
+        integer intensity
         text description
-        string video_url
-        string category
-        integer difficulty
-        json parameters
-        timestamp created_at
+        timestamp reported_at
     }
-<<<<<<< HEAD
     
-    TELECONSULTA {
-=======
-
     METRIC_RESULT {
         uuid id PK
         uuid patient_id FK
@@ -513,51 +453,22 @@ erDiagram
     }
 
     SOAP_NOTE {
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         uuid id PK
         uuid appointment_id FK
-        string room_id
-        string recording_url
-        json participants
-        timestamp started_at
-        timestamp ended_at
+        text subjective
+        text objective
+        text assessment
+        text plan
+        timestamp created_at
     }
-<<<<<<< HEAD
     
-    PAYMENT {
-=======
-
     COMMUNICATION_LOG {
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
         uuid id PK
         uuid patient_id FK
-        uuid appointment_id FK
-        decimal amount
-        string method
-        string status
-        string transaction_id
-        timestamp created_at
-    }
-    
-    CLINIC {
-        uuid id PK
-        string name
-        string cnpj UK
-        string address
-        json settings
-        timestamp created_at
-        timestamp updated_at
-    }
-    
-    SUBSCRIPTION {
-        uuid id PK
-        uuid clinic_id FK
-        string plan
-        decimal price
-        date start_date
-        date end_date
-        string status
-        timestamp created_at
+        string type
+        text message
+        string channel
+        timestamp sent_at
     }
 ```
 
@@ -732,27 +643,10 @@ model Teleconsulta {
   @@map("teleconsultas")
 }
 
-<<<<<<< HEAD
-model AiChat {
-  id        String    @id @default(cuid())
-  userId    String
-  messages  Json
-  context   String?
-  
-  // Relacionamentos
-  user      User      @relation(fields: [userId], references: [id])
-  
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  
-  @@map("ai_chats")
-}
-=======
 -- Políticas de acesso
 CREATE POLICY "Users can view their own data" ON patients
     FOR SELECT USING (auth.uid()::text = id::text OR
                      EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role IN ('Admin', 'Fisioterapeuta')));
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
 model Payment {
   id            String    @id @default(cuid())
@@ -885,36 +779,8 @@ enum SubscriptionStatus {
 
 ## 7. Implementação de Funcionalidades Premium
 
-### 7.1 Teleconsulta com WebRTC
+### 7.1 Middleware de Segurança
 ```typescript
-<<<<<<< HEAD
-// hooks/useTeleconsulta.ts
-export const useTeleconsulta = () => {
-  const [localStream, setLocalStream] = useState<MediaStream | null>(null)
-  const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null)
-  const [peerConnection, setPeerConnection] = useState<RTCPeerConnection | null>(null)
-  
-  const startCall = async (roomId: string) => {
-    const stream = await navigator.mediaDevices.getUserMedia({
-      video: true,
-      audio: true
-    })
-    setLocalStream(stream)
-    
-    const pc = new RTCPeerConnection({
-      iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-    })
-    
-    stream.getTracks().forEach(track => {
-      pc.addTrack(track, stream)
-    })
-    
-    setPeerConnection(pc)
-  }
-  
-  return { localStream, remoteStream, startCall }
-}
-=======
 // middleware.ts
 import { withAuth } from 'next-auth/middleware';
 import { NextResponse } from 'next/server';
@@ -972,237 +838,10 @@ export const config = {
     '/api/appointments/:path*',
   ],
 };
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 ```
 
-### 7.2 IA Assistente Avançada
+### 7.2 Implementação de Autenticação
 ```typescript
-<<<<<<< HEAD
-// services/aiService.ts
-export class AIService {
-  async diagnosisAssist(symptoms: string[], patientHistory: any) {
-    const response = await fetch('/api/ai/diagnosis-assist', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ symptoms, patientHistory })
-    })
-    return response.json()
-  }
-  
-  async generateTreatmentPlan(diagnosis: string, patientProfile: any) {
-    const response = await fetch('/api/ai/treatment-plan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ diagnosis, patientProfile })
-    })
-    return response.json()
-  }
-  
-  async analyzeMovement(videoFile: File) {
-    const formData = new FormData()
-    formData.append('video', videoFile)
-    
-    const response = await fetch('/api/ai/analyze-movement', {
-      method: 'POST',
-      body: formData
-    })
-    return response.json()
-  }
-}
-```
-
-### 7.3 Sistema de Notificações
-```typescript
-// services/notificationService.ts
-export class NotificationService {
-  async sendWhatsAppReminder(patientPhone: string, appointmentData: any) {
-    return fetch('/api/notifications/whatsapp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        to: patientPhone,
-        template: 'appointment_reminder',
-        data: appointmentData
-      })
-    })
-  }
-  
-  async sendPushNotification(userId: string, message: string) {
-    return fetch('/api/notifications/push', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, message })
-    })
-  }
-}
-```
-
-## 8. Performance e Otimização
-
-### 8.1 Estratégias de Cache
-```typescript
-// utils/cache.ts
-export class CacheManager {
-  private redis = new Redis(process.env.REDIS_URL!)
-  
-  async get<T>(key: string): Promise<T | null> {
-    const cached = await this.redis.get(key)
-    return cached ? JSON.parse(cached) : null
-  }
-  
-  async set(key: string, value: any, ttl = 3600) {
-    await this.redis.setex(key, ttl, JSON.stringify(value))
-  }
-  
-  async invalidate(pattern: string) {
-    const keys = await this.redis.keys(pattern)
-    if (keys.length > 0) {
-      await this.redis.del(...keys)
-    }
-  }
-}
-```
-
-### 8.2 Otimização de Queries
-```typescript
-// utils/database.ts
-export const optimizedQueries = {
-  getPatientWithAppointments: (patientId: string) => {
-    return prisma.patient.findUnique({
-      where: { id: patientId },
-      include: {
-        appointments: {
-          orderBy: { scheduledAt: 'desc' },
-          take: 10,
-          include: {
-            soapNotes: true
-          }
-        },
-        treatmentPlans: {
-          where: { status: 'ACTIVE' },
-          include: {
-            exercises: {
-              include: {
-                exercise: true
-              }
-            }
-          }
-        }
-      }
-    })
-  }
-}
-```
-
-## 9. Segurança e Compliance
-
-### 9.1 Middleware de Segurança
-```typescript
-// middleware/security.ts
-export const securityMiddleware = {
-  rateLimit: rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100 // limit each IP to 100 requests per windowMs
-  }),
-  
-  validateJWT: (req: Request, res: Response, next: NextFunction) => {
-    const token = req.headers.authorization?.split(' ')[1]
-    if (!token) {
-      return res.status(401).json({ error: 'Token required' })
-    }
-    
-    try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET!)
-      req.user = decoded
-      next()
-    } catch (error) {
-      return res.status(401).json({ error: 'Invalid token' })
-    }
-  },
-  
-  auditLog: (action: string) => {
-    return (req: Request, res: Response, next: NextFunction) => {
-      // Log da ação para auditoria
-      console.log(`[AUDIT] ${action} by user ${req.user?.id} at ${new Date()}`)
-      next()
-    }
-  }
-}
-```
-
-### 9.2 Criptografia de Dados Sensíveis
-```typescript
-// utils/encryption.ts
-import crypto from 'crypto'
-
-export class EncryptionService {
-  private algorithm = 'aes-256-gcm'
-  private key = Buffer.from(process.env.ENCRYPTION_KEY!, 'hex')
-  
-  encrypt(text: string): string {
-    const iv = crypto.randomBytes(16)
-    const cipher = crypto.createCipher(this.algorithm, this.key)
-    cipher.setAAD(Buffer.from('fisioflow', 'utf8'))
-    
-    let encrypted = cipher.update(text, 'utf8', 'hex')
-    encrypted += cipher.final('hex')
-    
-    const authTag = cipher.getAuthTag()
-    return iv.toString('hex') + ':' + authTag.toString('hex') + ':' + encrypted
-  }
-  
-  decrypt(encryptedData: string): string {
-    const parts = encryptedData.split(':')
-    const iv = Buffer.from(parts[0], 'hex')
-    const authTag = Buffer.from(parts[1], 'hex')
-    const encrypted = parts[2]
-    
-    const decipher = crypto.createDecipher(this.algorithm, this.key)
-    decipher.setAAD(Buffer.from('fisioflow', 'utf8'))
-    decipher.setAuthTag(authTag)
-    
-    let decrypted = decipher.update(encrypted, 'hex', 'utf8')
-    decrypted += decipher.final('utf8')
-    
-    return decrypted
-  }
-}
-```
-
-## 10. Monitoramento e Observabilidade
-
-### 10.1 Métricas Customizadas
-```typescript
-// utils/metrics.ts
-export class MetricsCollector {
-  private metrics = new Map<string, number>()
-  
-  increment(metric: string, value = 1) {
-    const current = this.metrics.get(metric) || 0
-    this.metrics.set(metric, current + value)
-  }
-  
-  gauge(metric: string, value: number) {
-    this.metrics.set(metric, value)
-  }
-  
-  async flush() {
-    // Enviar métricas para serviço de monitoramento
-    const data = Object.fromEntries(this.metrics)
-    await fetch(process.env.METRICS_ENDPOINT!, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    })
-    this.metrics.clear()
-  }
-}
-```
-
----
-
-**Esta arquitetura técnica fornece a base sólida para implementar todas as funcionalidades do plano executivo, garantindo escalabilidade, segurança e performance.**
-=======
 // app/api/auth/[...nextauth]/route.ts
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
@@ -1282,4 +921,3 @@ export { handler as GET, handler as POST };
 
 Esta arquitetura técnica fornece uma base sólida e escalável para o sistema FisioFlow, com foco em
 performance, segurança e manutenibilidade.
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3

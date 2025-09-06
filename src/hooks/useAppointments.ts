@@ -1,22 +1,9 @@
 // hooks/useAppointments.ts
 import { useState, useEffect, useCallback, useMemo } from 'react';
-<<<<<<< HEAD:src/hooks/useAppointments.ts
 import { Appointment, EnrichedAppointment, Patient, Therapist, AppointmentTypeColors } from '@/types';
-import * as appointmentService from '@/services/appointmentService';
+import * appointmentService from '@/services/appointmentService';
 import { useData } from '@/contexts/DataContext';
 import { eventService } from '@/services/eventService';
-=======
-import {
-  Appointment,
-  EnrichedAppointment,
-  Patient,
-  Therapist,
-  AppointmentTypeColors,
-} from '../types';
-import * as appointmentService from '../services/appointmentService';
-import { useData } from '../contexts/DataContext';
-import { eventService } from '../services/eventService';
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3:hooks/useAppointments.ts
 
 interface UseAppointmentsResult {
   appointments: EnrichedAppointment[];

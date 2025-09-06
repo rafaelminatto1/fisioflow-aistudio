@@ -37,11 +37,10 @@ import {
   BookMarked,
 } from 'lucide-react';
 import { useSession, signOut } from 'next-auth/react';
-// import { useNotifications } from '../hooks/useNotifications';
+import { useNotifications } from '../hooks/useNotifications';
 import { ThemeToggle, FloatingThemeToggle } from './ui/theme-toggle';
 import { cn } from '@/lib/utils';
 
-<<<<<<< HEAD:src/components/Sidebar.tsx
 const NavLinkComponent = ({ to, icon: Icon, label, isCollapsed, badgeCount }: { to: string, icon: React.ElementType, label: string, isCollapsed: boolean, badgeCount?: number }) => {
     const pathname = usePathname();
     const isActive = pathname === to;
@@ -155,75 +154,12 @@ const NavGroup: React.FC<{ title: string; isCollapsed: boolean; children: React.
         </div>
     );
 };
-=======
-const NavLinkComponent = ({
-  to,
-  icon: Icon,
-  label,
-  isCollapsed,
-  badgeCount,
-}: {
-  to: string;
-  icon: React.ElementType;
-  label: string;
-  isCollapsed: boolean;
-  badgeCount?: number;
-}) => {
-  const pathname = usePathname();
-  const isActive = pathname === to;
-
-  return (
-    <Link
-      href={to}
-      className={`flex items-center p-2.5 rounded-lg transition-colors duration-200 ${
-        isActive
-          ? 'bg-sky-500/10 text-sky-400 font-semibold'
-          : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-      } ${isCollapsed ? 'justify-center' : ''}`}
-      title={isCollapsed ? label : undefined}
-    >
-      <div className='relative flex items-center w-full'>
-        <Icon className={`w-5 h-5 shrink-0 ${isCollapsed ? '' : 'mr-3'}`} />
-        {!isCollapsed && (
-          <span className='truncate flex-1 text-sm'>{label}</span>
-        )}
-
-        {!isCollapsed && badgeCount && badgeCount > 0 ? (
-          <span className='ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white'>
-            {badgeCount > 9 ? '9+' : badgeCount}
-          </span>
-        ) : null}
-
-        {isCollapsed && badgeCount && badgeCount > 0 ? (
-          <span className='absolute -top-1 -right-1 h-2.5 w-2.5 rounded-full bg-red-500 ring-2 ring-slate-900'></span>
-        ) : null}
-      </div>
-    </Link>
-  );
-};
-
-const NavGroup: React.FC<{
-  title: string;
-  isCollapsed: boolean;
-  children: React.ReactNode;
-}> = ({ title, isCollapsed, children }) => (
-  <div>
-    {!isCollapsed && (
-      <h3 className='px-3 pt-4 pb-2 text-xs font-semibold uppercase text-slate-500 tracking-wider'>
-        {title}
-      </h3>
-    )}
-    <div className='space-y-1'>{children}</div>
-  </div>
-);
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3:components/Sidebar.tsx
 
 const Sidebar: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
-  // const { unreadCount } = useNotifications(session?.user?.id);
-  const unreadCount = 0; // Temporary fix
+  const { unreadCount } = useNotifications(session?.user?.id);
 
   const handleLogout = async () => {
     await signOut({ callbackUrl: '/login' });
@@ -276,230 +212,182 @@ const Sidebar: React.FC = () => {
   ];
 
   return (
-<<<<<<< HEAD:src/components/Sidebar.tsx
-    <>
-      <div className={cn(
-        "transition-all duration-500 ease-out bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800",
-        "border-r border-slate-700/50 flex flex-col shadow-2xl backdrop-blur-sm",
-        isCollapsed ? 'w-20' : 'w-64'
-      )}>
-      <div className="relative flex items-center p-4 border-b border-slate-700/50 h-16 shrink-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
-        {/* Logo and brand */}
+      <>
         <div className={cn(
-          "flex items-center transition-all duration-500 ease-out",
-          isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"
+          "transition-all duration-500 ease-in-out bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800",
+          "border-r border-slate-700/50 flex flex-col relative overflow-hidden",
+          "shadow-2xl shadow-slate-900/50",
+          isCollapsed ? "w-20" : "w-72"
         )}>
-          <div className="relative">
-            <Stethoscope className="w-8 h-8 text-sky-400 drop-shadow-lg" />
-            <Stethoscope className="absolute inset-0 w-8 h-8 text-sky-400/30 blur-sm animate-pulse" />
-          </div>
-          <span className="text-xl font-bold text-slate-50 ml-2">
-            Fisio<span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 to-sky-300">Flow</span>
-          </span>
-        </div>
-        
-        {/* Theme toggle and collapse button */}
-        <div className="ml-auto flex items-center gap-1">
-          {!isCollapsed && (
-            <ThemeToggle variant="compact" />
-          )}
+          {/* Background pattern overlay */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(56,189,248,0.03),transparent_50%)] pointer-events-none" />
           
-          <button 
-            onClick={() => setIsCollapsed(!isCollapsed)} 
-            className={cn(
-              "p-2 rounded-lg text-slate-400 transition-all duration-300 ease-out",
-              "hover:bg-slate-700/50 hover:text-sky-400 hover:scale-110",
-              "focus:outline-none focus:ring-2 focus:ring-sky-500/50",
-              "group relative overflow-hidden"
-            )}
-            title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
-          >
-            <div className="relative z-10">
-              {isCollapsed ? (
-                <ChevronRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-0.5" />
-              ) : (
-                <ChevronLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-0.5" />
+          {/* Header with logo and collapse button */}
+          <div className={cn(
+            "flex items-center border-b border-slate-700/30 h-16 shrink-0 relative",
+            "bg-gradient-to-r from-slate-900/80 to-slate-800/80 backdrop-blur-sm",
+            isCollapsed ? "px-3 justify-center" : "px-6 justify-between"
+          )}>
+            {/* Logo section */}
+            <div className={cn(
+              "flex items-center transition-all duration-500 ease-out",
+              isCollapsed ? "opacity-0 scale-75" : "opacity-100 scale-100"
+            )}>
+              <div className="relative">
+                <Stethoscope className="w-8 h-8 text-sky-400 drop-shadow-lg" />
+                {/* Logo glow effect */}
+                <Stethoscope className="absolute inset-0 w-8 h-8 text-sky-400/30 blur-sm animate-pulse" />
+              </div>
+              {!isCollapsed && (
+                <span className={cn(
+                  "text-xl font-bold ml-3 transition-all duration-500 ease-out",
+                  "bg-gradient-to-r from-slate-50 to-slate-200 bg-clip-text text-transparent"
+                )}>
+                  Fisio<span className="bg-gradient-to-r from-sky-400 to-sky-500 bg-clip-text text-transparent">Flow</span>
+                </span>
               )}
             </div>
-            {/* Button hover effect */}
-            <div className="absolute inset-0 bg-gradient-to-r from-sky-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-          </button>
-        </div>
-        
-        {/* Header glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-sky-500/5 to-transparent opacity-50" />
-      </div>
-      
-      <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent hover:scrollbar-thumb-slate-600">
-        <div className="relative">
-          <NavGroup title="Principal" isCollapsed={isCollapsed}>
-              {mainNav.map(item => <NavLinkComponent key={item.to} {...item} isCollapsed={isCollapsed} />)}
-          </NavGroup>
-          {/* Subtle separator */}
-          <div className="mx-3 my-4 h-px bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
-        </div>
-        <div className="relative">
-          <NavGroup title="Ferramentas IA" isCollapsed={isCollapsed}>
-              {aiToolsNav.map(item => <NavLinkComponent key={item.to} {...item} isCollapsed={isCollapsed} />)}
-          </NavGroup>
-          {/* Subtle separator */}
-          <div className="mx-3 my-4 h-px bg-gradient-to-r from-transparent via-slate-700/50 to-transparent" />
-        </div>
-        <div className="relative">
-          <NavGroup title="Gestão" isCollapsed={isCollapsed}>
-              {managementNav.map(item => <NavLinkComponent key={item.to} {...item} isCollapsed={isCollapsed} />)}
-          </NavGroup>
-        </div>
-      </nav>
 
-      {session?.user && (
-        <div className="relative p-4 border-t border-slate-700/50 mt-auto bg-gradient-to-t from-slate-800/30 to-transparent">
-          <div className={cn(
-            "flex items-center transition-all duration-300 ease-out",
-            "hover:bg-slate-800/30 rounded-xl p-2 -m-2 group"
-          )}>
-            {/* Avatar with status indicator */}
-            <div className="relative">
-              <div className={cn(
-                "w-10 h-10 bg-gradient-to-br from-sky-500 to-sky-600 rounded-full",
-                "flex items-center justify-center text-white font-semibold",
-                "shadow-lg ring-2 ring-sky-500/20 transition-all duration-300",
-                "group-hover:ring-sky-400/40 group-hover:shadow-sky-500/25"
-              )}>
-                {session.user.name?.charAt(0) || 'U'}
-              </div>
-              {/* Online status indicator */}
-              <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-slate-900 animate-pulse" />
-            </div>
-            
+            {/* Theme toggle button */}
             {!isCollapsed && (
-              <>
-                {/* User info */}
-                <div className="flex-1 min-w-0 ml-3">
-                  <p className={cn(
-                    "text-sm font-medium text-slate-50 truncate transition-colors duration-200",
-                    "group-hover:text-white"
+              <ThemeToggle variant="compact" />
+            )}
+
+            {/* Collapse button */}
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className={cn(
+                "p-2 rounded-xl transition-all duration-300 ease-out relative group",
+                "text-slate-400 hover:text-sky-400 hover:bg-slate-800/50",
+                "hover:scale-110 hover:shadow-lg hover:shadow-sky-500/20",
+                "focus:outline-none focus:ring-2 focus:ring-sky-500/50",
+                isCollapsed ? "mx-auto" : "ml-2"
+              )}
+              title={isCollapsed ? "Expandir sidebar" : "Recolher sidebar"}
+            >
+              <div className="relative">
+                {isCollapsed ? (
+                  <ChevronRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-0.5" />
+                ) : (
+                  <ChevronLeft className="w-5 h-5 transition-transform duration-300 group-hover:-translate-x-0.5" />
+                )}
+                {/* Button glow effect */}
+                <div className="absolute inset-0 bg-sky-400/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
+              </div>
+            </button>
+          </div>
+
+          {/* Navigation */}
+          <nav className={cn(
+            "flex-1 py-6 overflow-y-auto overflow-x-hidden scrollbar-thin scrollbar-track-slate-800 scrollbar-thumb-slate-600",
+            "hover:scrollbar-thumb-slate-500 transition-colors duration-300",
+            isCollapsed ? "px-2" : "px-4"
+          )}>
+            <NavGroup title="Principal" isCollapsed={isCollapsed}>
+              {mainNav.map((item) => (
+                <NavLinkComponent
+                  key={item.to}
+                  {...item}
+                  isCollapsed={isCollapsed}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Ferramentas IA" isCollapsed={isCollapsed}>
+              {aiToolsNav.map((item) => (
+                <NavLinkComponent
+                  key={item.to}
+                  {...item}
+                  isCollapsed={isCollapsed}
+                />
+              ))}
+            </NavGroup>
+            
+            <NavGroup title="Gestão" isCollapsed={isCollapsed}>
+              {managementNav.map((item) => (
+                <NavLinkComponent
+                  key={item.to}
+                  {...item}
+                  isCollapsed={isCollapsed}
+                />
+              ))}
+            </NavGroup>
+          </nav>
+
+          {/* User section */}
+          {session?.user && (
+            <div className={cn(
+              "border-t border-slate-700/30 shrink-0 relative",
+              "bg-gradient-to-r from-slate-900/80 to-slate-800/80 backdrop-blur-sm",
+              isCollapsed ? "p-3" : "p-4"
+            )}>
+              <div className={cn(
+                "group flex items-center w-full rounded-xl transition-all duration-300 ease-out",
+                "text-slate-300 hover:bg-slate-800/50 hover:text-white",
+                "hover:shadow-lg hover:shadow-slate-900/50 relative overflow-hidden",
+                isCollapsed ? "p-2 justify-center" : "p-3"
+              )}>
+                {/* User avatar with enhanced styling */}
+                <div className="relative">
+                  <div className={cn(
+                    "bg-gradient-to-br from-sky-500 to-sky-600 rounded-full",
+                    "flex items-center justify-center text-white font-semibold",
+                    "shadow-lg ring-2 ring-slate-700 group-hover:ring-sky-500/50",
+                    "group-hover:scale-105 transition-all duration-300 ease-out",
+                    isCollapsed ? "w-8 h-8" : "w-10 h-10"
                   )}>
-                    {session.user.name}
-                  </p>
-                  <p className={cn(
-                    "text-xs text-slate-400 truncate transition-colors duration-200",
-                    "group-hover:text-slate-300"
-                  )}>
-                    {session.user.email}
-                  </p>
+                    {session.user.name?.charAt(0) || 'U'}
+                  </div>
+                  {/* Avatar glow effect */}
+                  <div className="absolute inset-0 rounded-full bg-sky-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-sm" />
                 </div>
                 
-                {/* Logout button */}
-                <button
-                  onClick={handleLogout}
-                  className={cn(
-                    "p-2 text-slate-400 rounded-lg transition-all duration-200 ease-out",
-                    "hover:text-red-400 hover:bg-red-500/10 hover:scale-110",
-                    "focus:outline-none focus:ring-2 focus:ring-red-500/50",
-                    "group/logout relative overflow-hidden"
-                  )}
-                  title="Sair"
-                >
-                  <LogOut className="w-4 h-4 relative z-10 transition-transform duration-200 group-hover/logout:rotate-12" />
-                  {/* Button hover effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-red-500/20 to-transparent opacity-0 group-hover/logout:opacity-100 transition-opacity duration-200" />
-                </button>
-              </>
-            )}
-          </div>
-          
-          {/* Footer glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-t from-sky-500/5 via-transparent to-transparent opacity-50 pointer-events-none" />
-=======
-    <div
-      className={`transition-all duration-300 ease-in-out bg-slate-900 border-r border-slate-800 flex flex-col ${isCollapsed ? 'w-20' : 'w-64'}`}
-    >
-      <div className='flex items-center p-4 border-b border-slate-800 h-16 shrink-0'>
-        {!isCollapsed && <Stethoscope className='w-8 h-8 text-sky-400' />}
-        {!isCollapsed && (
-          <span className='text-xl font-bold text-slate-50 ml-2'>
-            Fisio<span className='text-sky-400'>Flow</span>
-          </span>
-        )}
-        <button
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className={`p-1.5 rounded-full text-slate-400 hover:bg-slate-800 ${isCollapsed ? 'ml-auto' : 'ml-auto'}`}
-        >
-          {isCollapsed ? (
-            <ChevronRight className='w-5 h-5' />
-          ) : (
-            <ChevronLeft className='w-5 h-5' />
-          )}
-        </button>
-      </div>
-
-      <nav className='flex-1 px-3 py-4 space-y-1 overflow-y-auto'>
-        <NavGroup title='Principal' isCollapsed={isCollapsed}>
-          {mainNav.map(item => (
-            <NavLinkComponent
-              key={item.to}
-              {...item}
-              isCollapsed={isCollapsed}
-            />
-          ))}
-        </NavGroup>
-        <NavGroup title='Ferramentas IA' isCollapsed={isCollapsed}>
-          {aiToolsNav.map(item => (
-            <NavLinkComponent
-              key={item.to}
-              {...item}
-              isCollapsed={isCollapsed}
-            />
-          ))}
-        </NavGroup>
-        <NavGroup title='Gestão' isCollapsed={isCollapsed}>
-          {managementNav.map(item => (
-            <NavLinkComponent
-              key={item.to}
-              {...item}
-              isCollapsed={isCollapsed}
-            />
-          ))}
-        </NavGroup>
-      </nav>
-
-      {user && (
-        <div className='p-3 border-t border-slate-800 shrink-0'>
-          <div className='flex items-center w-full p-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white transition-colors duration-200'>
-            <Image
-              src={user.avatarUrl}
-              alt={user.name}
-              width={36}
-              height={36}
-              className='w-9 h-9 rounded-full shrink-0'
-            />
-            {!isCollapsed && (
-              <div className='ml-3 text-left flex-1 overflow-hidden'>
-                <p className='text-sm font-semibold text-slate-100 truncate'>
-                  {user.name}
-                </p>
-                <p className='text-xs text-slate-400 truncate'>{user.role}</p>
+                {!isCollapsed && (
+                  <>
+                    <div className="ml-3 text-left flex-1 overflow-hidden">
+                      <p className={cn(
+                        "text-sm font-semibold transition-all duration-300 ease-out",
+                        "text-slate-100 group-hover:text-white truncate"
+                      )}>
+                        {session.user.name}
+                      </p>
+                      <p className={cn(
+                        "text-xs transition-all duration-300 ease-out",
+                        "text-slate-400 group-hover:text-slate-300 truncate"
+                      )}>
+                        {session.user.email}
+                      </p>
+                    </div>
+                    
+                    {/* Logout button */}
+                    <button
+                      onClick={handleLogout}
+                      title="Sair"
+                      className={cn(
+                        "ml-2 p-2 rounded-lg transition-all duration-300 ease-out",
+                        "text-slate-500 hover:text-red-400 hover:bg-red-500/10",
+                        "hover:scale-110 hover:shadow-lg hover:shadow-red-500/20",
+                        "focus:outline-none focus:ring-2 focus:ring-red-500/50"
+                      )}
+                    >
+                      <LogOut className="w-4 h-4" />
+                    </button>
+                  </>
+                )}
+                
+                {/* Hover effect overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-sky-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-xl" />
               </div>
-            )}
-            {!isCollapsed && (
-              <button
-                onClick={handleLogout}
-                title='Sair'
-                className='ml-2 p-2 rounded-md text-slate-500 hover:text-white'
-              >
-                <LogOut className='w-5 h-5' />
-              </button>
-            )}
-          </div>
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3:components/Sidebar.tsx
+              
+              {/* Footer glow effect */}
+              <div className="absolute inset-0 bg-gradient-to-t from-sky-500/5 via-transparent to-transparent opacity-50 pointer-events-none" />
+            </div>
+          )}
         </div>
-      )}
-      </div>
-      
-      {/* Floating theme toggle when sidebar is collapsed */}
-      {isCollapsed && <FloatingThemeToggle />}
-    </>
+        
+        {/* Floating theme toggle when sidebar is collapsed */}
+        {isCollapsed && <FloatingThemeToggle />}
+      </>
   );
 };
 

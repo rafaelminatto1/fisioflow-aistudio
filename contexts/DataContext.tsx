@@ -1,7 +1,5 @@
-<<<<<<< HEAD
-import React, { createContext, useState, useContext, useEffect, ReactNode, useCallback } from 'react';
-import { Patient, Therapist, Appointment } from '../src/types';
-=======
+'use client';
+
 import React, {
   createContext,
   useState,
@@ -11,7 +9,6 @@ import React, {
   useCallback,
 } from 'react';
 import { Patient, Therapist, Appointment } from '../types';
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 import * as therapistService from '../services/therapistService';
 import * as appointmentService from '../services/appointmentService';
 import * as patientService from '../services/patientService';

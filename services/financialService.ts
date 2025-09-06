@@ -1,9 +1,4 @@
 // services/financialService.ts
-<<<<<<< HEAD
-import { FinancialTransaction, TransactionType, ExpenseCategory, AppointmentStatus, Appointment, AppointmentType, FinancialSummary, Transaction } from '../src/types';
-import { mockExpenses, mockAppointments, mockPurchasedVouchers, mockPatients } from '../data/mockData';
-import { TimePeriod } from '../src/hooks/useFinancialData';
-=======
 import {
   FinancialTransaction,
   TransactionType,
@@ -21,7 +16,6 @@ import {
   mockPatients,
 } from '../data/mockData';
 import { TimePeriod } from '../hooks/useFinancialData';
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
 const EXPENSES_KEY = 'fisioflow_expenses';
 

@@ -11,21 +11,6 @@ datasource db {
 }
 
 model User {
-<<<<<<< HEAD
-  id                String             @id @default(cuid())
-  name              String
-  email             String             @unique
-  passwordHash      String?            @map("password_hash")
-  role              Role
-  avatarUrl         String?            @map("avatar_url")
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  appointments      Appointment[]
-  communicationLogs CommunicationLog[]
-  analyticsEvents   AnalyticsEvent[]
-  sessionMetrics    SessionMetric[]
-  customMetrics     CustomMetric[]
-=======
   id                     String                  @id @default(cuid())
   name                   String
   email                  String                  @unique
@@ -36,38 +21,17 @@ model User {
   updatedAt              DateTime                @updatedAt @map("updated_at")
   appointments           Appointment[]
   communicationLogs      CommunicationLog[]
+  analyticsEvents        AnalyticsEvent[]
+  sessionMetrics         SessionMetric[]
+  customMetrics          CustomMetric[]
   financialTransactions  FinancialTransaction[]
   professionalPayouts    ProfessionalPayout[]
   inventoryLogs          InventoryLog[]
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
   @@map("users")
 }
 
 model Patient {
-<<<<<<< HEAD
-  id                String             @id @default(cuid())
-  name              String
-  cpf               String             @unique
-  email             String?
-  phone             String?
-  birthDate         DateTime?          @map("birth_date")
-  address           Json?
-  emergencyContact  Json?              @map("emergency_contact")
-  status            PatientStatus      @default(Active)
-  lastVisit         DateTime?          @map("last_visit")
-  allergies         String?
-  medicalAlerts     String?            @map("medical_alerts")
-  consentGiven      Boolean            @default(false) @map("consent_given")
-  whatsappConsent   WhatsAppConsent    @default(opt_out) @map("whatsapp_consent")
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  appointments      Appointment[]
-  communicationLogs CommunicationLog[]
-  metricResults     MetricResult[]
-  painPoints        PainPoint[]
-  payments          Payment[]
-=======
   id                     String                  @id @default(cuid())
   name                   String
   cpf                    String                  @unique
@@ -88,9 +52,9 @@ model Patient {
   communicationLogs      CommunicationLog[]
   metricResults          MetricResult[]
   painPoints             PainPoint[]
+  payments               Payment[]
   assessmentResults      AssessmentResult[]
   financialTransactions  FinancialTransaction[]
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 
   @@map("patients")
 }
@@ -345,7 +309,6 @@ enum WhatsAppConsent {
   opt_out
 }
 
-<<<<<<< HEAD
 enum PaymentMethod {
   cash
   credit_card
@@ -379,7 +342,7 @@ enum DailyAggregationType {
   SESSIONS
   PAGE_VIEWS
   CUSTOM
-=======
+}
 // Clinical Content Library Models
 
 model Pathology {
@@ -619,5 +582,4 @@ enum AutomationType {
   INACTIVITY_REMINDER
   APPOINTMENT_REMINDER
   FOLLOW_UP
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 }

@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-import { Patient, PatientAttachment, PatientSummary, CommunicationLog, PainPoint } from '../src/types';
-=======
 import {
   Patient,
   PatientAttachment,
@@ -8,7 +5,6 @@ import {
   CommunicationLog,
   PainPoint,
 } from '../types';
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 import api from '../lib/api';
 import { eventService } from './eventService';
 
@@ -117,30 +113,6 @@ export const addCommunicationLog = async (
   return response.data;
 };
 
-<<<<<<< HEAD
-export const savePainPoints = async (patientId: string, painPoints: PainPoint[]): Promise<Patient> => {
-    const response = await api.put(`/api/patients/${patientId}/pain-points`, { painPoints });
-    eventService.emit('patients:changed');
-    return response.data;
-};
-
-// Default export
-export const patientService = {
-    getRecentPatients,
-    getAllPatients,
-    searchPatients,
-    quickAddPatient,
-    getPatients,
-    getPatientById,
-    addPatient,
-    updatePatient,
-    addAttachment,
-    addCommunicationLog,
-    savePainPoints
-};
-
-export default patientService;
-=======
 export const savePainPoints = async (
   patientId: string,
   painPoints: PainPoint[]
@@ -151,4 +123,20 @@ export const savePainPoints = async (
   eventService.emit('patients:changed');
   return response.data;
 };
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
+
+// Default export
+export const patientService = {
+  getRecentPatients,
+  getAllPatients,
+  searchPatients,
+  quickAddPatient,
+  getPatients,
+  getPatientById,
+  addPatient,
+  updatePatient,
+  addAttachment,
+  addCommunicationLog,
+  savePainPoints
+};
+
+export default patientService;

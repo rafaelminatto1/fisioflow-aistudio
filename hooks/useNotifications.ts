@@ -1,13 +1,14 @@
 // hooks/useNotifications.ts
 import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 import { Notification } from '../types';
 import * as notificationService from '../services/notificationService';
-import { useAuth } from '../contexts/AuthContext';
 
 export const useNotifications = (userId?: string) => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const { data: session } = useSession();
+  const user = session?.user;
 
   const fetchNotifications = useCallback(async () => {
     if (!userId) {

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Task, TaskStatus, TaskPriority } from '../../../types';
-import * as taskService from '../../../services/taskService';
+import { Task, TaskStatus, TaskPriority } from '@/types';
+import * as taskService from '@/services/taskService';
 import {
   ClipboardList,
   ChevronsUp,
   ChevronUp,
   ChevronsDown,
 } from 'lucide-react';
-import Skeleton from '../../ui/Skeleton';
+import Skeleton from '@/components/ui/Skeleton';
 
 const PendingTasks: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);

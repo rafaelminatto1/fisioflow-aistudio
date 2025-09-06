@@ -1,6 +1,6 @@
 // hooks/useMaterialCategories.ts
 import { useState, useEffect } from 'react';
-import { MaterialCategory } from '../../../types';
+import { MaterialCategory } from '@/types';
 import { mockMaterialCategories } from '@/data/mockClinicalMaterials';
 
 const useMaterialCategories = () => {

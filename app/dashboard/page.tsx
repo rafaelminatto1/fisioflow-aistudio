@@ -3,9 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-<<<<<<< HEAD
-import { Users, Calendar, TrendingUp, BarChart } from 'lucide-react';
-=======
 import {
   Stethoscope,
   Users,
@@ -14,7 +11,6 @@ import {
   BarChart,
   LogOut,
 } from 'lucide-react';
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
 import { signOut } from 'next-auth/react';
 import Sidebar from '../../components/Sidebar';
 
@@ -62,7 +58,6 @@ export default function DashboardPage() {
   };
 
   return (
-<<<<<<< HEAD
     <div className="min-h-screen bg-slate-50 flex">
       {/* Sidebar */}
       <Sidebar />
@@ -73,41 +68,6 @@ export default function DashboardPage() {
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-900">Dashboard</h2>
           <p className="mt-2 text-gray-600">
-=======
-    <div className='min-h-screen bg-slate-50'>
-      {/* Header */}
-      <header className='bg-white shadow-sm border-b'>
-        <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
-          <div className='flex h-16 justify-between items-center'>
-            <div className='flex items-center'>
-              <Stethoscope className='h-8 w-8 text-sky-500' />
-              <h1 className='ml-2 text-2xl font-bold text-gray-900'>
-                Fisio<span className='text-sky-500'>Flow</span>
-              </h1>
-            </div>
-            <div className='flex items-center space-x-4'>
-              <span className='text-sm text-gray-700'>
-                Olá, {session.user?.name || 'Usuário'} (
-                {session.user?.role || 'Usuário'})
-              </span>
-              <button
-                onClick={handleLogout}
-                className='flex items-center text-sm text-gray-500 hover:text-gray-700'
-              >
-                <LogOut className='h-4 w-4 mr-1' />
-                Sair
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='mb-8'>
-          <h2 className='text-3xl font-bold text-gray-900'>Dashboard</h2>
-          <p className='mt-2 text-gray-600'>
->>>>>>> 0a044a4fefabf8a04dc73a6184972379c66221b3
             Visão geral da sua clínica de fisioterapia
           </p>
         </div>

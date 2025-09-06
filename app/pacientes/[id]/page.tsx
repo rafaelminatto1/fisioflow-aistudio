@@ -1,8 +1,8 @@
 // app/pacientes/[id]/page.tsx
-import { cachedPrisma } from '../../../lib/prisma';
+import { cachedPrisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import PageHeader from '@/components/ui/PageHeader';
-import PatientDetailClient from '../../../src/components/pacientes/PatientDetailClient';
+import PatientDetailClient from '@/src/components/pacientes/PatientDetailClient';
 
 type PatientDetailPageProps = {
   params: {
