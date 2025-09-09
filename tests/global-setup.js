@@ -8,31 +8,36 @@ module.exports = async () => {
   // Set test environment variables
   process.env.NODE_ENV = 'test';
   process.env.LOG_LEVEL = 'error';
+  // Define a default test database URL if not provided
+  if (!process.env.TEST_DATABASE_URL) {
+    process.env.TEST_DATABASE_URL = 'postgresql://test:test@localhost:5432/fisioflow_test';
+  }
+  process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+
 
   // Ensure test database is available
-  if (process.env.TEST_DATABASE_URL) {
-    try {
-      console.log('📊 Setting up test database...');
+  try {
+    console.log('📊 Setting up and resetting test database...');
 
-      // Run Prisma migrations for test database
-      execSync('npx prisma migrate deploy', {
-        env: {
-          ...process.env,
-          DATABASE_URL: process.env.TEST_DATABASE_URL,
-        },
+    // Reset the database and run seeds to ensure a clean state for every test run
+    execSync('npx prisma migrate reset --force --skip-seed', {
+      env: process.env,
+      stdio: 'inherit',
+      cwd: path.resolve(__dirname, '..'),
+    });
+
+    // Seed the database
+    execSync('npm run prisma:seed', {
+        env: process.env,
         stdio: 'inherit',
         cwd: path.resolve(__dirname, '..'),
-      });
+    });
 
-      console.log('✅ Test database setup complete');
-    } catch (error) {
-      console.warn('⚠️ Test database setup failed:', error.message);
-      console.warn('Tests will run with mocked database');
-    }
-  } else {
-    console.log('📝 No test database configured, using mocks');
+    console.log('✅ Test database setup complete');
+  } catch (error) {
+    console.error('⚠️ Test database setup failed:', error.message);
+    process.exit(1); // Exit if we cannot set up the test DB
   }
 
-  // Additional global setup can be added here
   console.log('✅ Test environment setup complete');
 };

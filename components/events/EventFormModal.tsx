@@ -2,22 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { X, Save } from 'lucide-react';
 import { Event, EventType, EventStatus } from '../../types';
 
+// The props now use the full Event type from `types.ts`
 interface EventFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (
-    event: Omit<Event, 'id' | 'registrations' | 'providers'> & { id?: string }
+    event: Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'registrations' | 'providers'> & { id?: string }
   ) => Promise<void>;
-  eventToEdit?: Event;
+  event?: Event | null;
 }
 
-const getInitialFormData = (): Omit<
-  Event,
-  'id' | 'registrations' | 'providers'
-> => ({
+// The initial state now includes all fields from the full Event type
+const getInitialFormData = (): Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'registrations' | 'providers'> => ({
   name: '',
   description: '',
-  eventType: EventType.Corrida,
+  eventType: EventType.corrida,
   startDate: new Date(),
   endDate: new Date(),
   location: '',
@@ -25,29 +24,37 @@ const getInitialFormData = (): Omit<
   capacity: 100,
   isFree: true,
   price: 0,
-  status: EventStatus.Draft,
-  organizerId: '', // This will be set on save
+  status: EventStatus.draft,
+  organizerId: '', // This will be set on save by the parent page
   requiresRegistration: true,
   allowsProviders: false,
+  whatsappGroup: '',
+  defaultMessage: '',
   providerRate: 0,
   bannerUrl: '',
+  images: null,
 });
 
 const EventFormModal: React.FC<EventFormModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  eventToEdit,
+  event: eventToEdit, // Renamed for clarity inside the component
 }) => {
   const [formData, setFormData] = useState(getInitialFormData());
 
   useEffect(() => {
     if (eventToEdit) {
+      // When editing, populate form with all event data
       setFormData({
+        ...getInitialFormData(), // Start with defaults for any missing fields
         ...eventToEdit,
         price: eventToEdit.price || 0,
         providerRate: eventToEdit.providerRate || 0,
         address: eventToEdit.address || '',
+        whatsappGroup: eventToEdit.whatsappGroup || '',
+        defaultMessage: eventToEdit.defaultMessage || '',
+        bannerUrl: eventToEdit.bannerUrl || '',
       });
     } else {
       setFormData(getInitialFormData());
@@ -76,16 +83,19 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
   };
 
   const handleSaveClick = async () => {
-    const eventData: any = { ...formData };
+    // The data passed to onSave should not include fields managed by the DB
+    const { createdAt, updatedAt, ...saveData } = formData as any;
     if (eventToEdit?.id) {
-      eventData.id = eventToEdit.id;
+      (saveData as any).id = eventToEdit.id;
     }
-    await onSave(eventData);
+    await onSave(saveData);
   };
 
-  const formatDateForInput = (date: Date) => {
+  const formatDateForInput = (date: Date | string) => {
     if (!date) return '';
     const d = new Date(date);
+    // Handles invalid date strings gracefully
+    if (isNaN(d.getTime())) return '';
     return d.toISOString().slice(0, 16); // "YYYY-MM-DDTHH:mm"
   };
 
@@ -121,7 +131,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
           />
           <textarea
             name='description'
-            value={formData.description}
+            value={formData.description || ''}
             onChange={handleChange}
             placeholder='Descrição detalhada do evento...'
             rows={3}
@@ -145,7 +155,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
             <input
               type='text'
               name='location'
-              value={formData.location}
+              value={formData.location || ''}
               onChange={handleChange}
               placeholder='Local do Evento (Ex: Parque Ibirapuera)'
               className='w-full p-2 border rounded-lg'
@@ -199,14 +209,14 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
             <input
               type='number'
               name='capacity'
-              value={formData.capacity}
+              value={formData.capacity || ''}
               onChange={handleChange}
               placeholder='Capacidade'
               className='w-full p-2 border rounded-lg'
             />
           </div>
 
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1'>
             <input
               type='text'
               name='bannerUrl'
@@ -217,8 +227,30 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
             />
           </div>
 
+          {/* Communication */}
+          <div className='space-y-3 pt-4 border-t'>
+             <h3 className='text-md font-semibold text-slate-700'>Comunicação</h3>
+             <input
+              type='text'
+              name='whatsappGroup'
+              value={formData.whatsappGroup || ''}
+              onChange={handleChange}
+              placeholder='Link do grupo do WhatsApp (Opcional)'
+              className='w-full p-2 border rounded-lg text-sm'
+            />
+            <textarea
+              name='defaultMessage'
+              value={formData.defaultMessage || ''}
+              onChange={handleChange}
+              placeholder='Mensagem padrão para inscritos (Opcional)'
+              rows={3}
+              className='w-full p-2 border rounded-lg text-sm'
+            />
+          </div>
+
           {/* Financial & Providers */}
           <div className='space-y-3 pt-4 border-t'>
+            <h3 className='text-md font-semibold text-slate-700'>Inscrições e Prestadores</h3>
             <label className='flex items-center'>
               <input
                 type='checkbox'
@@ -244,7 +276,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
                 <input
                   type='number'
                   name='price'
-                  value={formData.price}
+                  value={formData.price || ''}
                   onChange={handleChange}
                   placeholder='Preço (R$)'
                   className='flex-1 p-2 border rounded-lg'
@@ -266,7 +298,7 @@ const EventFormModal: React.FC<EventFormModalProps> = ({
                 <input
                   type='number'
                   name='providerRate'
-                  value={formData.providerRate}
+                  value={formData.providerRate || ''}
                   onChange={handleChange}
                   placeholder='Valor por hora (R$)'
                   className='flex-1 p-2 border rounded-lg'

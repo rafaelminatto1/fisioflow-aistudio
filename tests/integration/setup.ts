@@ -47,14 +47,26 @@ export function createAuthenticatedRequest(
 // Cleanup após testes
 export async function cleanupDatabase() {
   try {
-    // Limpar dados de teste (cuidado em produção!)
     if (process.env.NODE_ENV === 'test') {
-      await prisma.$executeRaw`TRUNCATE TABLE "User" RESTART IDENTITY CASCADE`;
-      await prisma.$executeRaw`TRUNCATE TABLE "Paciente" RESTART IDENTITY CASCADE`;
-      await prisma.$executeRaw`TRUNCATE TABLE "Consulta" RESTART IDENTITY CASCADE`;
+      // The tables are defined in snake_case in the @@map attributes in schema.prisma
+      const tableNames = [
+        'events',
+        'event_registrations',
+        'event_providers',
+        'event_resources',
+        'event_certificates',
+        'event_communications',
+        'appointments',
+        'patients',
+        'users',
+      ];
+      for (const tableName of tableNames) {
+        await prisma.$executeRawUnsafe(`TRUNCATE TABLE "${tableName}" RESTART IDENTITY CASCADE;`);
+      }
+      console.log('✅ Test database cleaned successfully.');
     }
   } catch (error) {
-    console.warn('Erro ao limpar banco de dados de teste:', error);
+    console.warn('⚠️ Error cleaning up test database:', error);
   } finally {
     await prisma.$disconnect();
   }

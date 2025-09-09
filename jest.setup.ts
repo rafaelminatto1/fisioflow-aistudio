@@ -1,5 +1,8 @@
 // Jest setup file
 
+// This file is loaded via `setupFilesAfterEnv` in jest.config.js
+// It runs after the test environment has been set up.
+
 // Extend Jest matchers
 expect.extend({
   toBeWithinRange(received, floor, ceiling) {
@@ -47,9 +50,6 @@ afterAll(() => {
 
 // Global test timeout
 jest.setTimeout(30000);
-
-// Global fetch mock
-global.fetch = jest.fn();
 
 // Global error handler for unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {

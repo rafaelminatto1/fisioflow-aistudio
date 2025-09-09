@@ -1,33 +1,41 @@
 // services/eventService.ts
+import { PrismaClient } from '@prisma/client';
 import {
   Event,
   EventRegistration,
-  RegistrationStatus,
   EventProvider,
-  ProviderStatus,
+  EventResource,
+  EventCertificate,
+  EventCommunication,
+  EventRegistrationStatus,
+  EventProviderStatus,
+  CheckInMethod,
 } from '../types';
-import { mockEvents, mockEventRegistrations } from '../data/mockData';
 
-type Listener = (...args: any[]) => void;
-
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+// This helps converting Prisma's Decimal to number for the frontend
+const toJSON = (data: any): any => {
+    return JSON.parse(JSON.stringify(data, (key, value) =>
+        typeof value === 'bigint'
+            ? value.toString()
+            : value
+    ));
+}
 
 class EventService {
-  private events: Record<string, Listener[]> = {};
+  private prisma = new PrismaClient();
 
-  // Using mutable copies to simulate a database
-  private eventsData: Event[] = [...mockEvents];
-  private registrationsData: EventRegistration[] = [...mockEventRegistrations];
+  // The event emitter can be kept for frontend-side reactivity,
+  // though in a larger app this might be replaced by a proper state management library
+  private events: Record<string, ((...args: any[]) => void)[]> = {};
 
-  // --- Event Emitter Methods ---
-  on(eventName: string, listener: Listener) {
+  on(eventName: string, listener: (...args: any[]) => void) {
     if (!this.events[eventName]) {
       this.events[eventName] = [];
     }
     this.events[eventName].push(listener);
   }
 
-  off(eventName: string, listener: Listener) {
+  off(eventName: string, listener: (...args: any[]) => void) {
     if (!this.events[eventName]) return;
     this.events[eventName] = this.events[eventName].filter(l => l !== listener);
   }
@@ -40,142 +48,163 @@ class EventService {
   // --- Data Access Methods ---
 
   async getEvents(): Promise<Event[]> {
-    await delay(300);
-    return [...this.eventsData].sort(
-      (a, b) => b.startDate.getTime() - a.startDate.getTime()
-    );
+    const events = await this.prisma.event.findMany({
+      orderBy: {
+        startDate: 'desc',
+      },
+      include: {
+        _count: {
+          select: { registrations: true, providers: true },
+        },
+      },
+    });
+    return toJSON(events);
   }
 
-  async getEventById(id: string): Promise<Event | undefined> {
-    await delay(200);
-    // Deep copy to avoid direct mutation issues with registrations/providers array
-    const event = this.eventsData.find(e => e.id === id);
-    return event ? JSON.parse(JSON.stringify(event)) : undefined;
+  async getEventById(id: string): Promise<Event | null> {
+    const event = await this.prisma.event.findUnique({
+      where: { id },
+      include: {
+        registrations: true,
+        providers: true,
+        resources: true,
+        communications: true,
+      },
+    });
+    return toJSON(event);
   }
 
-  async getRegistrationsByEventId(
-    eventId: string
-  ): Promise<EventRegistration[]> {
-    await delay(200);
-    return this.registrationsData.filter(r => r.eventId === eventId);
+  async getRegistrationsByEventId(eventId: string): Promise<EventRegistration[]> {
+    const registrations = await this.prisma.eventRegistration.findMany({
+        where: { eventId },
+        orderBy: { registrationDate: 'asc' }
+    });
+    return toJSON(registrations);
   }
 
   async saveEvent(
-    eventData: Omit<Event, 'id' | 'registrations' | 'providers'> & {
-      id?: string;
-    },
-    organizerId: string
+    eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'registrations' | 'providers'> & { id?: string }
   ): Promise<Event> {
-    await delay(400);
-    if (eventData.id) {
-      const index = this.eventsData.findIndex(e => e.id === eventData.id);
-      if (index > -1) {
-        const updatedEvent = { ...this.eventsData[index], ...eventData };
-        this.eventsData[index] = updatedEvent;
-        this.emit('events:changed');
-        return updatedEvent;
-      }
-      throw new Error('Event not found');
-    } else {
-      const newEvent: Event = {
-        ...eventData,
-        id: `event_${Date.now()}`,
-        registrations: [],
-        providers: [],
-        organizerId,
-      };
-      this.eventsData.unshift(newEvent);
+    const { id, ...data } = eventData;
+    if (id) {
+      const updatedEvent = await this.prisma.event.update({
+        where: { id },
+        data,
+      });
       this.emit('events:changed');
-      return newEvent;
+      return toJSON(updatedEvent);
+    } else {
+      const newEvent = await this.prisma.event.create({
+        data,
+      });
+      this.emit('events:changed');
+      return toJSON(newEvent);
     }
+  }
+
+  async registerParticipant(
+    registrationData: Omit<EventRegistration, 'id' | 'registrationDate' | 'status'>
+  ): Promise<EventRegistration> {
+    const newRegistration = await this.prisma.eventRegistration.create({
+        data: {
+            ...registrationData,
+            status: EventRegistrationStatus.confirmed // Or pending if payment is required
+        }
+    });
+    this.emit('registrations:changed', newRegistration.eventId);
+    return toJSON(newRegistration);
+  }
+
+  async applyAsProvider(
+    providerData: Omit<EventProvider, 'id' | 'applicationDate' | 'status'>
+  ): Promise<EventProvider> {
+    const newProvider = await this.prisma.eventProvider.create({
+        data: {
+            ...providerData,
+            status: EventProviderStatus.applied
+        }
+    });
+    this.emit('providers:changed', newProvider.eventId);
+    return toJSON(newProvider);
   }
 
   async checkInParticipant(
     registrationId: string,
-    method: 'qr' | 'manual',
-    checkedInBy: string
+    method: CheckInMethod,
+    checkedInById: string,
+    checkInLocation: string
   ): Promise<EventRegistration> {
-    await delay(500);
-    const regIndex = this.registrationsData.findIndex(
-      r => r.id === registrationId
-    );
-    if (regIndex === -1) {
-      throw new Error('Inscrição não encontrada.');
+    const registration = await this.prisma.eventRegistration.findUnique({ where: { id: registrationId }});
+    if (!registration) {
+        throw new Error('Inscrição não encontrada.');
+    }
+    if (registration.status === 'attended') {
+        throw new Error('Participante já fez check-in.');
     }
 
-    const registration = this.registrationsData[regIndex];
-    if (registration.status === RegistrationStatus.Attended) {
-      throw new Error('Participante já fez check-in.');
-    }
+    const updatedRegistration = await this.prisma.eventRegistration.update({
+      where: { id: registrationId },
+      data: {
+        status: EventRegistrationStatus.attended,
+        checkedInAt: new Date(),
+        checkInMethod: method,
+        checkedInById,
+        checkInLocation
+      },
+    });
 
-    const updatedRegistration: EventRegistration = {
-      ...registration,
-      status: RegistrationStatus.Attended,
-      checkedInAt: new Date(),
-      checkedInBy: checkedInBy,
-    };
-    this.registrationsData[regIndex] = updatedRegistration;
-
-    // Also update the event's registration array for consistency
-    const eventIndex = this.eventsData.findIndex(
-      e => e.id === registration.eventId
-    );
-    if (eventIndex > -1) {
-      const eventRegIndex = this.eventsData[eventIndex].registrations.findIndex(
-        r => r.id === registrationId
-      );
-      if (eventRegIndex > -1) {
-        this.eventsData[eventIndex].registrations[eventRegIndex] =
-          updatedRegistration;
-      } else {
-        this.eventsData[eventIndex].registrations.push(updatedRegistration);
-      }
-    }
-
-    this.emit('events:changed');
-    return updatedRegistration;
+    this.emit('registrations:changed', updatedRegistration.eventId);
+    return toJSON(updatedRegistration);
   }
 
-  async confirmProvider(providerId: string): Promise<EventProvider> {
-    await delay(500);
-
-    for (const event of this.eventsData) {
-      const providerIndex = event.providers.findIndex(p => p.id === providerId);
-      if (providerIndex > -1) {
-        if (event.providers[providerIndex].status !== ProviderStatus.Applied) {
-          throw new Error(
-            "Apenas inscrições com status 'Inscrito' podem ser confirmadas."
-          );
-        }
-        event.providers[providerIndex].status = ProviderStatus.Confirmed;
-        this.emit('events:changed');
-        return event.providers[providerIndex];
-      }
+  async updateProviderStatus(
+    providerId: string,
+    status: EventProviderStatus,
+    paymentDetails?: { paymentAmount: number; paymentReceipt: string }
+  ): Promise<EventProvider> {
+    const data: any = { status };
+    if (status === EventProviderStatus.confirmed) {
+        data.confirmedAt = new Date();
+    }
+    if (status === EventProviderStatus.paid && paymentDetails) {
+        data.paymentAmount = paymentDetails.paymentAmount;
+        data.paymentReceipt = paymentDetails.paymentReceipt;
+        data.paymentDate = new Date();
     }
 
-    throw new Error('Prestador de serviço não encontrado.');
+    const updatedProvider = await this.prisma.eventProvider.update({
+      where: { id: providerId },
+      data,
+    });
+    this.emit('providers:changed', updatedProvider.eventId);
+    return toJSON(updatedProvider);
   }
 
-  async payProvider(providerId: string): Promise<EventProvider> {
-    await delay(500);
+  // Placeholder methods for other features
+  async saveResource(resourceData: Omit<EventResource, 'id'> & { id?: string }): Promise<EventResource> {
+    const { id, ...data } = resourceData;
+    const resource = id
+        ? await this.prisma.eventResource.update({ where: { id }, data })
+        : await this.prisma.eventResource.create({ data });
+    this.emit('resources:changed', resource.eventId);
+    return toJSON(resource);
+  }
 
-    for (const event of this.eventsData) {
-      const providerIndex = event.providers.findIndex(p => p.id === providerId);
-      if (providerIndex > -1) {
-        if (
-          event.providers[providerIndex].status !== ProviderStatus.Confirmed
-        ) {
-          throw new Error(
-            'Apenas prestadores confirmados podem receber pagamento.'
-          );
-        }
-        event.providers[providerIndex].status = ProviderStatus.Paid;
-        this.emit('events:changed');
-        return event.providers[providerIndex];
-      }
-    }
+  async generateCertificate(certificateData: Omit<EventCertificate, 'id' | 'issuedAt' | 'viewCount'>): Promise<EventCertificate> {
+    const certificate = await this.prisma.eventCertificate.create({
+        data: certificateData
+    });
+    this.emit('certificates:changed', certificate.eventId);
+    return toJSON(certificate);
+  }
 
-    throw new Error('Prestador de serviço não encontrado.');
+  async saveCommunication(communicationData: Omit<EventCommunication, 'id'> & { id?: string }): Promise<EventCommunication> {
+    const { id, ...data } = communicationData;
+    const communication = id
+        ? await this.prisma.eventCommunication.update({ where: { id }, data })
+        : await this.prisma.eventCommunication.create({ data });
+    this.emit('communications:changed', communication.eventId);
+    return toJSON(communication);
   }
 }
 

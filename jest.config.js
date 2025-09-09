@@ -8,7 +8,7 @@ const createJestConfig = nextJest({
 // Add any custom config to be passed to Jest
 const customJestConfig = {
   // Add more setup options before each test is run
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 
   // if using TypeScript with a baseUrl set to the root directory then you need the below for alias' to work
   moduleDirectories: ['node_modules', '<rootDir>/'],
@@ -65,8 +65,11 @@ const customJestConfig = {
   // Test timeout configured per project below
 
   // Setup files
-  setupFiles: ['<rootDir>/tests/global-setup.js'],
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFiles: [
+    '<rootDir>/tests/text-encoder-polyfill.js',
+    '<rootDir>/tests/global-setup.js',
+  ],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
 
   // Global teardown
   globalTeardown: '<rootDir>/tests/global-teardown.js',

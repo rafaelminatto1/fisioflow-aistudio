@@ -849,55 +849,89 @@ export interface InventoryMetrics {
 // --- Event Management Types ---
 
 export enum EventType {
-  Corrida = 'Corrida de Rua',
-  Workshop = 'Workshop',
-  Palestra = 'Palestra',
-  Campanha = 'Campanha de Saúde',
-  Atendimento = 'Atendimento Externo'
+  corrida = 'corrida',
+  workshop = 'workshop',
+  palestra = 'palestra',
+  campanha = 'campanha',
+  atendimento = 'atendimento',
 }
 
 export enum EventStatus {
-  Draft = 'Rascunho',
-  Published = 'Publicado',
-  Active = 'Ativo',
-  Completed = 'Concluído',
-  Cancelled = 'Cancelado'
+  draft = 'draft',
+  published = 'published',
+  active = 'active',
+  completed = 'completed',
+  cancelled = 'cancelled',
 }
 
-export enum RegistrationStatus {
-  Pending = 'Pendente',
-  Confirmed = 'Confirmado',
-  Attended = 'Compareceu',
-  Cancelled = 'Cancelado'
+export enum EventRegistrationStatus {
+  pending = 'pending',
+  confirmed = 'confirmed',
+  attended = 'attended',
+  cancelled = 'cancelled',
 }
 
-export enum ProviderStatus {
-  Applied = 'Inscrito',
-  Confirmed = 'Confirmado',
-  Paid = 'Pago',
-  Cancelled = 'Cancelado'
+export enum CheckInMethod {
+  qr = 'qr',
+  manual = 'manual',
+}
+
+export enum EventProviderStatus {
+  applied = 'applied',
+  confirmed = 'confirmed',
+  paid = 'paid',
+  cancelled = 'cancelled',
+}
+
+export enum EventResourceType {
+  sala = 'sala',
+  equipamento = 'equipamento',
+  material = 'material',
+}
+
+export enum EventResourceStatus {
+  requested = 'requested',
+  confirmed = 'confirmed',
+  unavailable = 'unavailable',
+}
+
+export enum EventCertificateType {
+  participation = 'participation',
+  collaboration = 'collaboration',
+}
+
+export enum CommunicationChannel {
+  email = 'email',
+  sms = 'sms',
+  whatsapp = 'whatsapp',
+  push = 'push',
 }
 
 export interface Event {
   id: string;
   name: string;
-  description: string;
+  description?: string | null;
   eventType: EventType;
   startDate: Date;
   endDate: Date;
-  location: string;
-  address?: string;
-  capacity?: number;
+  location?: string | null;
+  address?: string | null;
+  capacity?: number | null;
   isFree: boolean;
-  price?: number;
+  price?: number | null; // Should be Decimal, but number is fine for frontend
   status: EventStatus;
-  organizerId: string; // User ID
+  organizerId: string;
   requiresRegistration: boolean;
   allowsProviders: boolean;
-  providerRate?: number;
-  bannerUrl?: string;
-  registrations: EventRegistration[];
-  providers: EventProvider[];
+  whatsappGroup?: string | null;
+  defaultMessage?: string | null;
+  providerRate?: number | null; // Decimal
+  bannerUrl?: string | null;
+  images?: any | null; // JSON
+  createdAt: Date;
+  updatedAt: Date;
+  registrations?: EventRegistration[]; // Added for convenience
+  providers?: EventProvider[]; // Added for convenience
 }
 
 export interface EventRegistration {
@@ -905,13 +939,19 @@ export interface EventRegistration {
   eventId: string;
   fullName: string;
   email: string;
-  phone: string;
-  cpf?: string;
-  status: RegistrationStatus;
+  phone?: string | null;
+  cpf?: string | null;
+  birthDate?: Date | null;
+  address?: string | null;
+  instagram?: string | null;
+  status: EventRegistrationStatus;
   registrationDate: Date;
-  qrCode: string;
-  checkedInAt?: Date;
-  checkedInBy?: string; // User ID
+  qrCode?: string | null;
+  checkedInAt?: Date | null;
+  checkedInById?: string | null;
+  checkInMethod?: CheckInMethod | null;
+  checkInLocation?: string | null;
+  adminNotes?: string | null;
 }
 
 export interface EventProvider {
@@ -919,10 +959,54 @@ export interface EventProvider {
   eventId: string;
   name: string;
   phone: string;
-  professionalId?: string; // CREFITO, etc.
-  pixKey?: string;
-  status: ProviderStatus;
+  professionalId?: string | null;
+  pixKey?: string | null;
+  hourlyRate?: number | null; // Decimal
+  availability?: any | null; // JSON
+  status: EventProviderStatus;
   applicationDate: Date;
+  confirmedAt?: Date | null;
+  paymentAmount?: number | null; // Decimal
+  paymentDate?: Date | null;
+  paymentReceipt?: string | null;
+  adminNotes?: string | null;
+}
+
+export interface EventResource {
+  id: string;
+  eventId: string;
+  resourceName: string;
+  resourceType: EventResourceType;
+  quantityNeeded?: number | null;
+  startTime?: Date | null;
+  endTime?: Date | null;
+  status: EventResourceStatus;
+}
+
+export interface EventCertificate {
+  id: string;
+  eventId: string;
+  registrationId?: string | null;
+  providerId?: string | null;
+  certificateType: EventCertificateType;
+  certificateCode: string;
+  issuedAt: Date;
+  viewCount: number;
+}
+
+export interface EventCommunication {
+  id: string;
+  eventId: string;
+  campaignName: string;
+  message: string;
+  channel: CommunicationChannel;
+  targetAudience?: any | null; // JSON
+  scheduledAt?: Date | null;
+  sentAt?: Date | null;
+  recipientsCount?: number | null;
+  deliveredCount?: number | null;
+  openedCount?: number | null;
+  clickedCount?: number | null;
 }
 
 // --- Additional Types for Build Compatibility ---
