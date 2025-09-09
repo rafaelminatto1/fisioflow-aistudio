@@ -24,11 +24,13 @@ RUN addgroup --system --gid 1001 nodejs && \
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files and Prisma schema
+# Copy package files first
 COPY package*.json ./
+
+# Copy Prisma schema before installing dependencies
 COPY prisma ./prisma/
 
-# Install dependencies
+# Install dependencies (this will run prisma generate in postinstall)
 RUN npm ci --only=production && npm cache clean --force
 
 # Development dependencies stage
