@@ -69,6 +69,9 @@ RUN npx prisma generate
 # Build the application
 RUN npm run build
 
+# FIX: Copy prisma schema to the standalone output folder
+RUN cp -r prisma ./.next/standalone/
+
 # Production runtime stage
 FROM base AS runner
 WORKDIR /app
@@ -88,16 +91,12 @@ ENV DO_ENVIRONMENT="production"
 ENV NODE_OPTIONS="--max-old-space-size=1024 --optimize-for-size"
 ENV UV_THREADPOOL_SIZE=4
 
-# Copy built application
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/package.json ./package.json
+# Copy standalone output (which now includes prisma)
+COPY --from=builder /app/.next/standalone ./
 
-# Copy prisma schema and generated client
-COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
+# Copy static assets
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next/static ./.next/static
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /app/tmp && \
@@ -116,5 +115,5 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 # Use dumb-init for proper signal handling
 ENTRYPOINT ["dumb-init", "--"]
 
-# Start the application
-CMD ["npm", "start"]
+# Start the application using the standalone server file
+CMD ["node", "server.js"]
