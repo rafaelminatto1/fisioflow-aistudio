@@ -2,8 +2,8 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
-  // Remove standalone output for Railway
-  // output: 'standalone', // This causes issues with Railway
+  // Enable standalone output for DigitalOcean
+  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true,
   },
