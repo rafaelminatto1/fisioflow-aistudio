@@ -13,7 +13,7 @@ services:
 - name: web
   source_dir: /
   github:
-    repo: seu-usuario/fisioflow-aistudio
+    repo: rafaelminatto1/fisioflow-aistudio
     branch: main
     deploy_on_push: true
   run_command: npm start

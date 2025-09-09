@@ -242,6 +242,12 @@ class DigitalOceanEnvSetup {
         }
         
         // Atualizar metadata
+        if (!config.metadata) {
+            config.metadata = {
+                created_at: new Date().toISOString(),
+                version: '1.0.0'
+            };
+        }
         config.metadata.updated_at = new Date().toISOString();
         
         return config;
