@@ -67,7 +67,12 @@ class DigitalOceanDeployer {
     this.log('✅ Ambiente validado com sucesso!', 'success');
   }
 
-  async runTests() {
+  async runTests(skipTests = false) {
+    if (skipTests) {
+      this.log('⏭️ Pulando testes (--skip-tests fornecido)...', 'warning');
+      return;
+    }
+    
     this.log('🧪 Executando testes...');
     
     try {
@@ -221,13 +226,13 @@ class DigitalOceanDeployer {
 `);
   }
 
-  async deploy() {
+  async deploy(options = {}) {
     try {
       this.log('🚀 Iniciando processo de deploy para DigitalOcean...', 'success');
       
       await this.validateEnvironment();
       await this.checkGitStatus();
-      await this.runTests();
+      await this.runTests(options.skipTests);
       await this.buildProject();
       await this.validateDocker();
       await this.generateAppSpec();
@@ -245,8 +250,11 @@ class DigitalOceanDeployer {
 
 // Executar se chamado diretamente
 if (require.main === module) {
+  const args = process.argv.slice(2);
+  const skipTests = args.includes('--skip-tests');
+  
   const deployer = new DigitalOceanDeployer();
-  deployer.deploy();
+  deployer.deploy({ skipTests });
 }
 
 module.exports = DigitalOceanDeployer;
