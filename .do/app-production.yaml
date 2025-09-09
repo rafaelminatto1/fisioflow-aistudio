@@ -1,0 +1,54 @@
+name: fisioflow
+region: atl
+features:
+- buildpack-stack=ubuntu-22
+ingress:
+  rules:
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /
+services:
+- name: web
+  image:
+    registry: library
+    registry_type: DOCKER_HUB
+    repository: node
+    tag: 22-alpine
+  run_command: npm start
+  instance_count: 1
+  instance_size_slug: professional-xs
+  http_port: 3000
+  health_check:
+    http_path: /api/health
+    initial_delay_seconds: 60
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: NODE_ENV
+    scope: RUN_AND_BUILD_TIME
+    value: production
+  - key: NEXT_TELEMETRY_DISABLED
+    scope: RUN_AND_BUILD_TIME
+    value: "1"
+  - key: PORT
+    scope: RUN_AND_BUILD_TIME
+    value: "3000"
+  - key: DATABASE_URL
+    scope: RUN_AND_BUILD_TIME
+    value: postgresql://doadmin:AVNS_4zgOHhDU6UGzIe8OlTg@fisioflow-production-db-do-user-25633309-0.m.db.ondigitalocean.com:25060/defaultdb?sslmode=require
+  - key: NEXTAUTH_SECRET
+    scope: RUN_AND_BUILD_TIME
+    value: fisioflow-nextauth-secret-2025-production-key-32chars
+  - key: NEXTAUTH_URL
+    scope: RUN_AND_BUILD_TIME
+    value: https://fisioflow-fc4f8558.ondigitalocean.app
+  - key: PRISMA_GENERATE_DATAPROXY
+    scope: RUN_AND_BUILD_TIME
+    value: "true"
+  - key: SKIP_ENV_VALIDATION
+    scope: RUN_AND_BUILD_TIME
+    value: "true"
