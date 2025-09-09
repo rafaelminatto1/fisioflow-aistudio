@@ -48,6 +48,19 @@ afterAll(() => {
 // Global test timeout
 jest.setTimeout(30000);
 
+// Mock next-auth
+jest.mock('@/lib/auth', () => ({
+  auth: jest.fn().mockResolvedValue({
+    user: {
+      id: 'test-user-id',
+      name: 'Test User',
+      email: 'test@example.com',
+      role: 'ADMIN',
+    },
+    expires: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+  }),
+}));
+
 // Global fetch mock
 global.fetch = jest.fn();
 

@@ -21,7 +21,7 @@ const validateCPF = (cpf: string): boolean => {
   }
 
   remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) {
+  if (remainder === 10) {
     remainder = 0;
   }
 
@@ -35,7 +35,7 @@ const validateCPF = (cpf: string): boolean => {
   }
 
   remainder = (sum * 10) % 11;
-  if (remainder === 10 || remainder === 11) {
+  if (remainder === 10) {
     remainder = 0;
   }
 

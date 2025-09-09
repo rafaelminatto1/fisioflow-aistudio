@@ -20,6 +20,8 @@ if (!redisUrl) {
     get: async () => null,
     set: async () => 'OK',
     del: async () => 1,
+    expire: async () => 1,
+    keys: async () => [],
     sadd: async () => 1,
     smembers: async () => [],
     scan: async function* () {
@@ -30,6 +32,8 @@ if (!redisUrl) {
     on: () => {},
     connect: async () => {},
     disconnect: async () => {},
+    expire: async () => 1,
+    keys: async () => [],
   } as unknown as IORedis;
 
   redis = mockRedis;

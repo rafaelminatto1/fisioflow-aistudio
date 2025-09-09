@@ -32,13 +32,11 @@ export function createTestRequest(
 // Helper para autenticação em testes
 export function createAuthenticatedRequest(
   url: string,
-  token: string,
   options: RequestInit = {}
 ): NextRequest {
   return createTestRequest(url, {
     ...options,
     headers: {
-      Authorization: `Bearer ${token}`,
       ...options.headers,
     },
   });
