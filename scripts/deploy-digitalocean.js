@@ -253,6 +253,9 @@ if (require.main === module) {
   const args = process.argv.slice(2);
   const skipTests = args.includes('--skip-tests');
   
+  console.log('🔍 Debug - Args recebidos:', args);
+  console.log('🔍 Debug - Skip tests:', skipTests);
+  
   const deployer = new DigitalOceanDeployer();
   deployer.deploy({ skipTests });
 }
