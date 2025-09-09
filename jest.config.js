@@ -109,28 +109,8 @@ const customJestConfig = {
     ],
   ],
 
-  // Test categories (projects)
-  projects: [
-    {
-      displayName: 'unit',
-      testMatch: ['<rootDir>/components/**/*.test.{js,jsx,ts,tsx}'],
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-      testEnvironment: 'jsdom',
-    },
-    {
-      displayName: 'integration',
-      testMatch: ['<rootDir>/tests/integration/**/*.test.{js,jsx,ts,tsx}'],
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-      testTimeout: 60000,
-      testEnvironment: 'jsdom',
-    },
-    {
-      displayName: 'api',
-      testMatch: ['<rootDir>/tests/api/**/*.test.{js,jsx,ts,tsx}'],
-      testEnvironment: 'node',
-      setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-    },
-  ],
+  // Simplified test configuration without projects
+  testTimeout: 30000,
 
   // Error handling
   bail: false,

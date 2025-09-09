@@ -13,13 +13,13 @@ describe('Basic Integration Tests', () => {
   describe('Health Check Endpoints', () => {
     it('should have health endpoint available', async () => {
       // Teste básico para verificar se o endpoint existe
-      const healthModule = await import('../../src/app/api/health/route');
+      const healthModule = await import('../../app/api/health/route');
       expect(healthModule.GET).toBeDefined();
     });
 
     it('should have status endpoint available', async () => {
       // Teste básico para verificar se o endpoint existe
-      const statusModule = await import('../../src/app/api/status/route');
+      const statusModule = await import('../../app/api/status/route');
       expect(statusModule.GET).toBeDefined();
     });
   });
@@ -29,7 +29,7 @@ describe('Basic Integration Tests', () => {
       const fs = require('fs');
       const path = require('path');
 
-      const apiDir = path.join(process.cwd(), 'src', 'app', 'api');
+      const apiDir = path.join(process.cwd(), 'app', 'api');
       expect(fs.existsSync(apiDir)).toBe(true);
 
       // Verificar se os diretórios de endpoints existem
@@ -51,7 +51,7 @@ describe('Basic Integration Tests', () => {
       const fs = require('fs');
       const path = require('path');
 
-      const componentsDir = path.join(process.cwd(), 'src', 'components');
+      const componentsDir = path.join(process.cwd(), 'components');
       expect(fs.existsSync(componentsDir)).toBe(true);
     });
   });
