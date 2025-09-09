@@ -80,7 +80,7 @@ export default function BookingModal({
 }: BookingModalProps) {
   const [step, setStep] = useState(1);
   const [selectedPatient, setSelectedPatient] = useState<
-    Patient | PatientSummary | null
+    PatientSummary | null
   >(null);
   const [appointmentType, setAppointmentType] = useState<AppointmentType>(
     AppointmentType.Session

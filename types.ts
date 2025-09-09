@@ -126,6 +126,16 @@ export interface PatientSummary {
   avatarUrl: string;
   medicalAlerts?: string;
   cpf?: string;
+  createdAt: string;
+  birthDate: string;
+  address?: {
+    street: string;
+    number: string;
+    neighborhood: string;
+    city: string;
+    state: string;
+    zip: string;
+  };
 }
 
 // --- Appointment & Scheduling Types ---

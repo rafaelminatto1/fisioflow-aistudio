@@ -6,7 +6,7 @@ services:
     repo: rafaelminatto1/fisioflow-aistudio
     branch: main
   dockerfile_path: Dockerfile
-  run_command: node server.js
+  run_command: npm start
   instance_count: 1
   instance_size_slug: professional-xs
   http_port: 3000
@@ -31,4 +31,4 @@ services:
   - key: NEXTAUTH_SECRET
     value: your-nextauth-secret-here-32-chars-min
   - key: NEXTAUTH_URL
-    value: https://fisioflow-fc4f8558.ondigitalocean.app
+    value: ${APP_URL}

@@ -42,7 +42,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
   allAppointments,
 }) => {
   const [selectedPatient, setSelectedPatient] = useState<
-    Patient | PatientSummary | null
+    PatientSummary | null
   >(null);
   const [appointmentType, setAppointmentType] = useState(
     AppointmentType.Session
@@ -81,7 +81,18 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
         const patient = patients.find(
           p => p.id === appointmentToEdit.patientId
         );
-        setSelectedPatient(patient || null);
+        setSelectedPatient(patient ? {
+          id: patient.id,
+          name: patient.name,
+          email: patient.email,
+          phone: patient.phone,
+          status: patient.status,
+          lastVisit: patient.lastVisit,
+          avatarUrl: patient.avatarUrl,
+          cpf: patient.cpf,
+          createdAt: new Date().toISOString(),
+          birthDate: patient.birthDate || new Date().toISOString()
+        } as PatientSummary : null);
         setAppointmentType(appointmentToEdit.type);
         const dur =
           (appointmentToEdit.endTime.getTime() -

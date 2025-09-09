@@ -24,7 +24,7 @@ RUN addgroup --system --gid 1001 nodejs && \
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files
+# Copy package files and prisma schema
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
@@ -50,14 +50,17 @@ WORKDIR /app
 # Copy all dependencies
 COPY --from=dev-deps /app/node_modules ./node_modules
 
-# Copy source code
+# Copy prisma schema first
+COPY prisma ./prisma/
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy rest of source code
 COPY . .
 
 # Copy production dependencies for runtime
 COPY --from=deps /app/node_modules ./node_modules_prod
-
-# Generate Prisma client
-RUN npx prisma generate
 
 # Build application with optimizations
 ENV NODE_ENV=production
