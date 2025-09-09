@@ -89,21 +89,13 @@ ENV DO_ENVIRONMENT="production"
 ENV NODE_OPTIONS="--max-old-space-size=1024 --optimize-for-size"
 ENV UV_THREADPOOL_SIZE=4
 
-# Copy production dependencies
-COPY --from=deps /app/node_modules ./node_modules
-
 # Copy built application
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/public ./public
+COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-
-# Copy Next.js build output
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy additional files for DigitalOcean
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/scripts ./scripts
 
 # Create necessary directories with proper permissions
 RUN mkdir -p /app/logs /app/tmp && \
@@ -123,4 +115,4 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
 ENTRYPOINT ["dumb-init", "--"]
 
 # Start the application
-CMD ["node", "server.js"]
+CMD ["npm", "start"]
