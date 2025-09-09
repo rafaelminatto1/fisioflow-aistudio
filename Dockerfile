@@ -54,18 +54,17 @@ RUN npm ci --no-audit --no-fund && \
 FROM base AS builder
 WORKDIR /app
 
-# Copy package files and Prisma schema first
+# Copy package files first
 COPY package*.json ./
-COPY prisma ./prisma/
 
 # Install all dependencies (including devDependencies)
 RUN npm ci
 
+# Copy source code (including Prisma schema)
+COPY . .
+
 # Generate Prisma client
 RUN npx prisma generate
-
-# Copy source code
-COPY . .
 
 # Build the application
 RUN npm run build
