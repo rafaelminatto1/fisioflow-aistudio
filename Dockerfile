@@ -30,8 +30,14 @@ COPY package*.json ./
 # Copy Prisma schema before installing dependencies
 COPY prisma ./prisma/
 
-# Install dependencies (this will run prisma generate in postinstall)
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies first (including Prisma CLI for generation)
+RUN npm ci
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Clean up and keep only production dependencies
+RUN npm prune --production && npm cache clean --force
 
 # Development dependencies stage
 FROM base AS dev-deps
