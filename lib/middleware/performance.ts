@@ -1,7 +1,12 @@
 // lib/middleware/performance.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { structuredLogger } from '../monitoring/logger';
-import { BusinessMetrics, timeAsyncOperation } from '../monitoring/metrics';
+
+// Simple logger replacement
+const logger = {
+  info: (message: string, meta?: any) => console.log(`[INFO] ${message}`, meta ? JSON.stringify(meta) : ''),
+  error: (message: string, meta?: any) => console.error(`[ERROR] ${message}`, meta ? JSON.stringify(meta) : ''),
+  warn: (message: string, meta?: any) => console.warn(`[WARN] ${message}`, meta ? JSON.stringify(meta) : '')
+};
 
 export interface PerformanceMetrics {
   startTime: number;
@@ -35,19 +40,12 @@ export function withPerformanceMonitoring(
     let statusCode = 200;
 
     try {
-      response = await timeAsyncOperation(
-        `api.${method.toLowerCase()}.${url.split('?')[0]}`,
-        () => handler(req)
-      );
-
+      response = await handler(req);
       statusCode = response.status;
-
-      // Record business metrics
-      BusinessMetrics.recordAPICall(url, method, statusCode);
     } catch (error: any) {
       statusCode = 500;
 
-      structuredLogger.error('API handler error', {
+      logger.error('API handler error', {
         method,
         url,
         error: error.message,
@@ -75,7 +73,11 @@ export function withPerformanceMonitoring(
     };
 
     // Log performance metrics
-    structuredLogger.logAPICall(method, url, statusCode, duration, {
+    logger.info('API request completed', {
+      method,
+      url,
+      statusCode,
+      duration,
       ip,
       userAgent,
       memoryDelta,
@@ -83,11 +85,10 @@ export function withPerformanceMonitoring(
 
     // Add performance headers to response
     response.headers.set('X-Response-Time', `${duration}ms`);
-    response.headers.set('X-Memory-Usage', JSON.stringify(memoryDelta));
 
     // Warning for slow requests
     if (duration > 1000) {
-      structuredLogger.warn('Slow API request detected', {
+      logger.warn('Slow API request detected', {
         method,
         url,
         duration,
@@ -106,40 +107,12 @@ export async function trackDatabaseOperation<T>(
   query: () => Promise<T>,
   context?: Record<string, any>
 ): Promise<T> {
-  return timeAsyncOperation(`database.${operation}`, query);
-}
-
-// Cache operation performance tracking
-export async function trackCacheOperation<T>(
-  operation: 'get' | 'set' | 'del',
-  key: string,
-  cacheOperation: () => Promise<T>
-): Promise<T> {
-  return timeAsyncOperation(`cache.${operation}`, async () => {
-    const result = await cacheOperation();
-
-    // Map operation types to logger expected types
-    let logOperation: 'hit' | 'miss' | 'set' | 'delete';
-    if (operation === 'get') {
-      logOperation = result !== null ? 'hit' : 'miss';
-    } else if (operation === 'del') {
-      logOperation = 'delete';
-    } else {
-      logOperation = operation as 'set';
-    }
-
-    structuredLogger.logCacheOperation(logOperation, key);
-    return result;
-  });
-}
-
-// Performance monitoring for external API calls
-export async function trackExternalAPICall<T>(
-  service: string,
-  endpoint: string,
-  apiCall: () => Promise<T>
-): Promise<T> {
-  return timeAsyncOperation(`external.${service}.${endpoint}`, apiCall);
+  const startTime = Date.now();
+  const result = await query();
+  const duration = Date.now() - startTime;
+  
+  logger.info(`Database operation: ${operation}`, { duration, context });
+  return result;
 }
 
 // Utility to measure function execution time

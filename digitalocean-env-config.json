@@ -1,0 +1,17 @@
+{
+  "mandatory": {
+    "NODE_ENV": "production",
+    "NEXT_TELEMETRY_DISABLED": "1",
+    "PORT": "3000",
+    "DATABASE_URL": "postgresql://doadmin:AVNS_4zgOHhDU6UGzIe8OlTg@fisioflow-production-db-do-user-25633309-0.m.db.ondigitalocean.com:25060/defaultdb?sslmode=require",
+    "NEXTAUTH_SECRET": "86c4799464fdfd227bec4a9de993b2e38b0fef2947ba35803930e8b2c66dba45",
+    "NEXTAUTH_URL": "https://fisioflow-aistudio.ondigitalocean.app"
+  },
+  "optional": {
+    "OPENAI_API_KEY": "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",
+    "ANTHROPIC_API_KEY": "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",
+    "GOOGLE_API_KEY": "AIzaSyA18kUlixzcUVHpjAu5gpJkUIQSoS2Tz3k",
+    "STRIPE_SECRET_KEY": "",
+    "STRIPE_PUBLISHABLE_KEY": ""
+  }
+}

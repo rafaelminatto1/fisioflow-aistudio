@@ -13,12 +13,12 @@ services:
   routes:
   - path: /
   health_check:
-    http_path: /api/health
+    http_path: "/"
     initial_delay_seconds: 60
-    period_seconds: 10
-    timeout_seconds: 5
+    period_seconds: 30
+    timeout_seconds: 10
     success_threshold: 1
-    failure_threshold: 3
+    failure_threshold: 5
   envs:
   - key: NODE_ENV
     value: production
@@ -29,6 +29,6 @@ services:
   - key: DATABASE_URL
     value: postgresql://doadmin:AVNS_4zgOHhDU6UGzIe8OlTg@fisioflow-production-db-do-user-25633309-0.m.db.ondigitalocean.com:25060/defaultdb?sslmode=require
   - key: NEXTAUTH_SECRET
-    value: your-nextauth-secret-here-32-chars-min
+    value: 86c4799464fdfd227bec4a9de993b2e38b0fef2947ba35803930e8b2c66dba45
   - key: NEXTAUTH_URL
-    value: ${APP_URL}
+    value: https://fisioflow-aistudio-fc4f8558-d183-4d7e-8ea4-347355a20230.ondigitalocean.app

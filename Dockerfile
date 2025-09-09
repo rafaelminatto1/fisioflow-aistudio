@@ -24,13 +24,12 @@ RUN addgroup --system --gid 1001 nodejs && \
 FROM base AS deps
 WORKDIR /app
 
-# Copy package files and prisma schema
-COPY package.json package-lock.json* ./
+# Copy package files and Prisma schema
+COPY package*.json ./
 COPY prisma ./prisma/
 
-# Install dependencies with optimizations
-RUN npm ci --only=production --no-audit --no-fund && \
-    npm cache clean --force
+# Install dependencies
+RUN npm ci --only=production && npm cache clean --force
 
 # Development dependencies stage
 FROM base AS dev-deps
@@ -47,28 +46,21 @@ RUN npm ci --no-audit --no-fund && \
 FROM base AS builder
 WORKDIR /app
 
-# Copy all dependencies
-COPY --from=dev-deps /app/node_modules ./node_modules
-
-# Copy prisma schema first
+# Copy package files and Prisma schema first
+COPY package*.json ./
 COPY prisma ./prisma/
+
+# Install all dependencies (including devDependencies)
+RUN npm ci
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy rest of source code
+# Copy source code
 COPY . .
 
-# Copy production dependencies for runtime
-COPY --from=deps /app/node_modules ./node_modules_prod
-
-# Build application with optimizations
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV SKIP_ENV_VALIDATION=1
-
-RUN npm run build && \
-    npm prune --production
+# Build the application
+RUN npm run build
 
 # Production runtime stage
 FROM base AS runner

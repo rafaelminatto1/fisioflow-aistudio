@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import { prisma } from '../neon-config';
+import { prisma } from '../prisma';
 
 // Types for security policies
 export interface SecurityPolicy {
