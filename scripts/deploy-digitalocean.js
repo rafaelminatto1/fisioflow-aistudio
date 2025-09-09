@@ -89,6 +89,12 @@ class DigitalOceanDeployer {
     this.log('🏗️ Fazendo build do projeto...');
     
     try {
+      // First ensure Prisma client is generated with correct targets
+      this.log('🔧 Gerando cliente Prisma com targets corretos...');
+      execSync('npx prisma generate', { stdio: 'inherit' });
+      
+      // Then build the project
+      this.log('🔨 Fazendo build do Next.js...');
       execSync('npm run build', { stdio: 'inherit' });
       this.log('✅ Build concluído com sucesso!', 'success');
     } catch (error) {
@@ -151,43 +157,66 @@ class DigitalOceanDeployer {
   async generateAppSpec() {
     this.log('📋 Gerando App Spec para DigitalOcean...');
     
-    const appSpec = {
-      name: 'fisioflow',
-      services: [{
-        name: 'web',
-        source_dir: '/',
-        github: {
-          repo: 'seu-usuario/fisioflow-aistudio', // Será atualizado manualmente
-          branch: 'main',
-          deploy_on_push: true
-        },
-        run_command: 'npm start',
-        environment_slug: 'node-js',
-        instance_count: 1,
-        instance_size_slug: 'professional-xs',
-        http_port: 3000,
-        routes: [{ path: '/' }],
-        health_check: {
-          http_path: '/api/health',
-          initial_delay_seconds: 60,
-          period_seconds: 10,
-          timeout_seconds: 5,
-          success_threshold: 1,
-          failure_threshold: 3
-        },
-        envs: [
-          { key: 'NODE_ENV', value: 'production' },
-          { key: 'NEXT_TELEMETRY_DISABLED', value: '1' },
-          { key: 'PORT', value: '3000' }
-        ]
-      }],
-      databases: [{
-        name: 'fisioflow-db',
-        engine: 'PG',
-        version: '14',
-        size: 'db-s-1vcpu-1gb'
-      }]
-    };
+    const yamlContent = `name: fisioflow
+region: nyc1
+features:
+- buildpack-stack=ubuntu-22
+ingress:
+  rules:
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: seu-usuario/fisioflow-aistudio
+    branch: main
+    deploy_on_push: true
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: professional-xs
+  http_port: 3000
+  health_check:
+    http_path: /api/health
+    initial_delay_seconds: 60
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+  envs:
+  - key: NODE_ENV
+    scope: RUN_AND_BUILD_TIME
+    value: production
+  - key: NEXT_TELEMETRY_DISABLED
+    scope: RUN_AND_BUILD_TIME
+    value: "1"
+  - key: PORT
+    scope: RUN_AND_BUILD_TIME
+    value: "3000"
+  - key: DATABASE_URL
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: NEXTAUTH_SECRET
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: NEXTAUTH_URL
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: PRISMA_GENERATE_DATAPROXY
+    scope: RUN_AND_BUILD_TIME
+    value: "true"
+  - key: SKIP_ENV_VALIDATION
+    scope: RUN_AND_BUILD_TIME
+    value: "true"
+databases:
+- name: fisioflow-db
+  engine: PG
+  version: "14"
+  size: db-s-1vcpu-1gb`;
 
     const specPath = path.join(this.projectRoot, '.do', 'app.yaml');
     
@@ -197,7 +226,7 @@ class DigitalOceanDeployer {
       fs.mkdirSync(doDir, { recursive: true });
     }
 
-    fs.writeFileSync(specPath, `# DigitalOcean App Platform Spec\n# Generated automatically - do not edit manually\n\n${JSON.stringify(appSpec, null, 2)}`);
+    fs.writeFileSync(specPath, `# DigitalOcean App Platform Spec\n# Updated to fix deployment issues\n\n${yamlContent}`);
     
     this.log(`✅ App Spec gerado em: ${specPath}`, 'success');
   }
