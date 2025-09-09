@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { FinancialTransactionType } from '@/types';
+import prisma from '@/lib/prisma';
+
+type FinancialTransactionType = 'RECEITA' | 'DESPESA' | 'TRANSFERENCIA';
 
 export async function GET(request: NextRequest) {
   try {
@@ -39,7 +40,7 @@ export async function GET(request: NextRequest) {
     const totals = transactions.reduce(
       (acc, transaction) => {
         const amount = Number(transaction.amount);
-        if (transaction.type === FinancialTransactionType.INCOME) {
+        if (transaction.type === 'INCOME') {
           acc.totalIncome += amount;
         } else {
           acc.totalExpenses += amount;
@@ -56,11 +57,11 @@ export async function GET(request: NextRequest) {
 
     // Calculate categories breakdown
     const incomeByCategory = calculateCategoryBreakdown(
-      transactions.filter(t => t.type === FinancialTransactionType.INCOME)
+      transactions.filter(t => t.type === 'INCOME')
     );
     
     const expensesByCategory = calculateCategoryBreakdown(
-      transactions.filter(t => t.type === FinancialTransactionType.EXPENSE)
+      transactions.filter(t => t.type === 'EXPENSE')
     );
 
     return NextResponse.json({
@@ -124,7 +125,7 @@ function groupTransactionsByPeriod(transactions: any[], groupBy: string) {
     const group = grouped.get(key);
     const amount = Number(transaction.amount);
     
-    if (transaction.type === FinancialTransactionType.INCOME) {
+    if (transaction.type === 'INCOME') {
       group.income += amount;
     } else {
       group.expenses += amount;

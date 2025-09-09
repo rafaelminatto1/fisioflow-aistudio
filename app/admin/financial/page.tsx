@@ -19,7 +19,18 @@ import {
   SearchIcon,
   FilterIcon
 } from 'lucide-react';
-import { FinancialTransactionType, FinancialTransaction, ProfessionalPayout } from '@/types';
+import { FinancialTransaction, TransactionType } from '@/types';
+
+// Definir tipos locais já que não existem no types
+type FinancialTransactionType = 'RECEITA' | 'DESPESA' | 'TRANSFERENCIA';
+type ProfessionalPayout = {
+  id: string;
+  professional: string;
+  amount: number;
+  period: string;
+  status: 'PENDING' | 'COMPLETED' | 'CANCELLED';
+  dueDate: string;
+};
 
 interface CashflowSummary {
   totalIncome: number;
@@ -238,23 +249,23 @@ export default function FinancialPage() {
                         <div className="text-sm text-muted-foreground">
                           {formatDate(transaction.date.toString())} • {transaction.category || 'Sem categoria'}
                         </div>
-                        {transaction.patient && (
+                        {transaction.patientName && (
                           <div className="text-xs text-blue-600">
-                            Paciente: {transaction.patient.name}
+                            Paciente: {transaction.patientName}
                           </div>
                         )}
                       </div>
                       <div className="text-right">
                         <div className={`font-bold ${
-                          transaction.type === FinancialTransactionType.INCOME 
+                          transaction.type === TransactionType.Receita 
                             ? 'text-green-600' 
                             : 'text-red-600'
                         }`}>
-                          {transaction.type === FinancialTransactionType.INCOME ? '+' : '-'}
+                          {transaction.type === TransactionType.Receita ? '+' : '-'}
                           {formatCurrency(transaction.amount)}
                         </div>
-                        <Badge variant={transaction.type === FinancialTransactionType.INCOME ? 'default' : 'secondary'}>
-                          {transaction.type === FinancialTransactionType.INCOME ? 'Receita' : 'Despesa'}
+                        <Badge variant={transaction.type === TransactionType.Receita ? 'default' : 'secondary'}>
+                          {transaction.type === TransactionType.Receita ? 'Receita' : 'Despesa'}
                         </Badge>
                       </div>
                     </div>
@@ -287,26 +298,25 @@ export default function FinancialPage() {
                     <div key={payout.id} className="flex justify-between items-center p-3 border rounded-lg">
                       <div className="flex-1">
                         <div className="font-medium">
-                          {payout.professional?.name}
+                          {payout.professional}
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Período: {payout.period} • Taxa: {(payout.commissionRate * 100).toFixed(1)}%
+                          Período: {payout.period}
                         </div>
                       </div>
                       <div className="text-right">
                         <div className="font-bold text-blue-600">
-                          {formatCurrency(payout.netAmount)}
+                          {formatCurrency(payout.amount)}
                         </div>
                         <Badge 
                           variant={
-                            payout.status === 'paid' ? 'default' :
-                            payout.status === 'processing' ? 'secondary' :
+                            payout.status === 'COMPLETED' ? 'default' :
+                            payout.status === 'PENDING' ? 'secondary' :
                             'outline'
                           }
                         >
-                          {payout.status === 'paid' ? 'Pago' :
-                           payout.status === 'processing' ? 'Processando' :
-                           payout.status === 'pending' ? 'Pendente' :
+                          {payout.status === 'COMPLETED' ? 'Pago' :
+                           payout.status === 'PENDING' ? 'Pendente' :
                            'Cancelado'}
                         </Badge>
                       </div>

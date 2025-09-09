@@ -1,4 +1,4 @@
-# FisioFlow - Optimized Dockerfile for Railway
+# FisioFlow - Optimized Dockerfile for DigitalOcean App Platform
 # Multi-stage build for production deployment
 
 # Base image with Node.js 22 (LTS)
@@ -77,10 +77,10 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Railway-specific optimizations
-ENV RAILWAY_STATIC_URL=""
-ENV RAILWAY_GIT_COMMIT_SHA=""
-ENV RAILWAY_ENVIRONMENT="production"
+# DigitalOcean App Platform optimizations
+ENV DO_APP_NAME="fisioflow"
+ENV DO_REGION="nyc1"
+ENV DO_ENVIRONMENT="production"
 
 # Performance optimizations
 ENV NODE_OPTIONS="--max-old-space-size=1024 --optimize-for-size"
@@ -98,7 +98,7 @@ COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
-# Copy additional files for Railway
+# Copy additional files for DigitalOcean
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/scripts ./scripts
 

@@ -30,3 +30,4 @@ const PageHeader = React.forwardRef<HTMLDivElement, PageHeaderProps>(
 PageHeader.displayName = 'PageHeader'
 
 export { PageHeader }
+export default PageHeader

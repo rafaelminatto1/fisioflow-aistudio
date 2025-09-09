@@ -1,7 +1,7 @@
 // app/api/analytics/dashboard/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
-import { prisma } from '@/lib/prisma'
+import prisma from '@/lib/prisma'
 import { subDays, startOfDay, endOfDay, format } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 

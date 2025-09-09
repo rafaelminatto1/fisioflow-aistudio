@@ -14,7 +14,7 @@ import {
   PhoneOff,
   Settings,
   MessageSquare,
-  Record,
+  Circle as RecordIcon,
   StopCircle,
   Users,
   Monitor,
@@ -354,7 +354,7 @@ export function VideoCallInterface({
           </span>
           {callState.isRecording && (
             <Badge variant="destructive" className="animate-pulse">
-              <Record className="w-3 h-3 mr-1" />
+              <RecordIcon className="w-3 h-3 mr-1 fill-red-500 text-red-500" />
               REC
             </Badge>
           )}
@@ -445,7 +445,7 @@ export function VideoCallInterface({
             {callState.isRecording ? (
               <StopCircle className="w-5 h-5" />
             ) : (
-              <Record className="w-5 h-5" />
+              <RecordIcon className="w-5 h-5 fill-current" />
             )}
           </Button>
 

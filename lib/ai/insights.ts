@@ -2,7 +2,7 @@
 import { structuredLogger } from '../monitoring/logger';
 import { trackExternalAPICall } from '../middleware/performance';
 import { BusinessMetrics } from '../monitoring/metrics';
-import cachedPrisma from '../prisma';
+import prisma from '../prisma';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { withCache } from '../prisma-performance';
 import type { Patient, Appointment, PainPoint } from '@prisma/client';
@@ -216,7 +216,7 @@ export class AIInsightsService {
   }
 
   private async gatherPatientData(patientId: string) {
-    const patient = await cachedPrisma.patient.findUnique({
+    const patient = await prisma.patient.findUnique({
       where: { id: patientId },
       include: {
         appointments: {
@@ -247,7 +247,7 @@ export class AIInsightsService {
 
   private async gatherClinicData(therapistId: string) {
     const [patients, appointments, painPoints] = await Promise.all([
-      cachedPrisma.patient.findMany({
+      prisma.patient.findMany({
         where: {
           appointments: {
             some: {
@@ -264,7 +264,7 @@ export class AIInsightsService {
           metricResults: true,
         },
       }),
-      cachedPrisma.appointment.findMany({
+      prisma.appointment.findMany({
         where: {
           therapistId,
           startTime: {
@@ -277,7 +277,7 @@ export class AIInsightsService {
           },
         },
       }),
-      cachedPrisma.painPoint.findMany({
+      prisma.painPoint.findMany({
         where: {
           patient: {
             appointments: {
@@ -675,7 +675,7 @@ Seja estratégico e orientado por dados.
   ): Promise<void> {
     try {
       // Store in database for historical tracking
-      await cachedPrisma.$executeRaw`
+      await prisma.$executeRaw`
         INSERT INTO "PatientInsights" ("patientId", "riskLevel", "insights", "generatedAt")
         VALUES (${patientId}, ${insights.riskLevel}, ${JSON.stringify(insights.insights)}::jsonb, ${insights.generatedAt})
         ON CONFLICT ("patientId") 

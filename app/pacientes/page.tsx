@@ -1,5 +1,5 @@
 // app/pacientes/page.tsx
-import { cachedPrisma } from '../../lib/prisma';
+import prisma from '@/lib/prisma';
 import PatientList from '@/components/pacientes/PatientList';
 import PageHeader from '@/components/ui/PageHeader';
 
@@ -51,7 +51,7 @@ export default async function PacientesPage({
     findManyOptions.cursor = { id: cursor };
   }
   
-  const initialPatients = await cachedPrisma.patient.findMany(findManyOptions);
+  const initialPatients = await prisma.patient.findMany(findManyOptions);
 
   // Transform to PatientSummary format
   const transformedPatients = initialPatients.map((patient: any) => ({

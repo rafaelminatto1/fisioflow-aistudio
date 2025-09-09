@@ -1,5 +1,1 @@
-{
-  "node": {},
-  "edge": {},
-  "encryptionKey": "DpkW1cVn5X6Vvwvv+GqalTl2G0hNL8AuhZxMk8Yoe9g="
-}
+{"node":{"3679fc138ca12588c92b9e480df1b77ff89756a6":{"workers":{"app/teleconsulta/[id]/page":"90406"},"layer":{"app/teleconsulta/[id]/page":"rsc"}},"c5a355b74829514d47b87aafd22093d03633a7c8":{"workers":{"app/pacientes/[id]/page":"37473"},"layer":{"app/pacientes/[id]/page":"action-browser"}}},"edge":{},"encryptionKey":"0MbYIgo2aDheE2huzsS4gooxj6uapVqsxFMTB+0hBQE="}

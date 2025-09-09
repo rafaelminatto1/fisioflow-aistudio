@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PaymentGateway, PaymentMethod, CreatePaymentData } from './payment-gateway';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { addDays, addMonths, addWeeks, isBefore, isAfter, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 

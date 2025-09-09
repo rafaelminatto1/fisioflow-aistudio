@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { PayoutStatus } from '@/types';
+import prisma from '@/lib/prisma';
+
+type PayoutStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
 
 export async function GET(request: NextRequest) {
   try {
@@ -107,7 +108,7 @@ export async function POST(request: NextRequest) {
         grossAmount,
         deductions: parseFloat(deductions),
         netAmount,
-        status: PayoutStatus.PENDING,
+        status: 'pending',
       },
       include: {
         professional: {
@@ -151,9 +152,9 @@ export async function PUT(request: NextRequest) {
       updateData.status = status;
       
       // If marking as paid, set paidAt timestamp
-      if (status === PayoutStatus.PAID && !paidAt) {
+      if (status === 'paid' && !paidAt) {
         updateData.paidAt = new Date();
-      } else if (status !== PayoutStatus.PAID) {
+      } else if (status !== 'paid') {
         updateData.paidAt = null;
       }
     }

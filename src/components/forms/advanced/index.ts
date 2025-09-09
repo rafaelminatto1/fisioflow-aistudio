@@ -31,15 +31,15 @@ export { default as FormRadioGroup, FormRadioGroupSimple, FormRadioGroupCards, F
 // Schemas de validação
 export * from './schemas';
 
-// Formulários migrados (temporariamente comentados para build)
-// export { default as PatientFormAdvanced } from '../PatientFormAdvanced';
-// export { default as AppointmentFormAdvanced } from '../AppointmentFormAdvanced';
-// export { default as ExampleAdvancedForm } from '../ExampleAdvancedForm';
+// Formulários migrados
+export { default as PatientFormAdvanced } from '../PatientFormAdvanced';
+export { default as AppointmentFormAdvanced } from '../AppointmentFormAdvanced';
+export { default as ExampleAdvancedForm } from '../ExampleAdvancedForm';
 
-// Hooks (temporariamente comentados para build)
+// Hooks
 export { useAdvancedForm } from '../../../hooks/forms/useAdvancedForm';
-// export { useFormLoading } from './useFormLoading';
-// export { useFormErrors } from './useFormErrors';
+export { useFormLoading } from './useFormLoading';
+export { useFormErrors } from './useFormErrors';
 export { useProgressiveValidation, useFieldValidation } from './useProgressiveValidation';
 export { useSmartLoading, useFormLoading as useFormSmartLoading, commonLoadingSteps } from './useSmartLoading';
 export { useErrorHandling, useFieldErrorHandling, ErrorUtils } from './useErrorHandling';

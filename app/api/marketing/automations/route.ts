@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { AutomationType } from '@/types';
+import prisma from '@/lib/prisma';
+
+type AutomationType = 'EMAIL' | 'SMS' | 'WHATSAPP' | 'PUSH_NOTIFICATION' | 'BIRTHDAY' | 'APPOINTMENT_REMINDER' | 'FOLLOW_UP' | 'INACTIVITY_REMINDER' | 'NPS';
 
 export async function GET(request: NextRequest) {
   try {
@@ -47,7 +48,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate automation type
-    if (!Object.values(AutomationType).includes(type)) {
+    if (!['EMAIL', 'SMS', 'WHATSAPP', 'PUSH_NOTIFICATION'].includes(type)) {
       return NextResponse.json(
         { error: 'Tipo de automação inválido' },
         { status: 400 }
@@ -162,29 +163,29 @@ function validateTrigger(type: AutomationType, trigger: any): { valid: boolean; 
   if (!trigger) return { valid: true };
 
   switch (type) {
-    case AutomationType.BIRTHDAY:
+    case 'BIRTHDAY':
       // Birthday automation doesn't need specific trigger validation
       return { valid: true };
       
-    case AutomationType.INACTIVITY_REMINDER:
+    case 'INACTIVITY_REMINDER':
       if (trigger.days_inactive && (typeof trigger.days_inactive !== 'number' || trigger.days_inactive < 1)) {
         return { valid: false, error: 'days_inactive deve ser um número positivo' };
       }
       return { valid: true };
       
-    case AutomationType.NPS:
+    case 'NPS':
       if (trigger.session_count && (typeof trigger.session_count !== 'number' || trigger.session_count < 1)) {
         return { valid: false, error: 'session_count deve ser um número positivo' };
       }
       return { valid: true };
       
-    case AutomationType.APPOINTMENT_REMINDER:
+    case 'APPOINTMENT_REMINDER':
       if (trigger.hours_before && (typeof trigger.hours_before !== 'number' || trigger.hours_before < 1)) {
         return { valid: false, error: 'hours_before deve ser um número positivo' };
       }
       return { valid: true };
       
-    case AutomationType.FOLLOW_UP:
+    case 'FOLLOW_UP':
       if (trigger.days_after && (typeof trigger.days_after !== 'number' || trigger.days_after < 1)) {
         return { valid: false, error: 'days_after deve ser um número positivo' };
       }

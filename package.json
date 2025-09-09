@@ -16,6 +16,7 @@
     "prisma:reset": "prisma migrate reset --force && npm run prisma:seed",
     "db:setup": "prisma generate && prisma db push && npm run prisma:seed",
     "deploy": "node scripts/deploy.js",
+    "deploy:digitalocean": "node scripts/deploy-digitalocean.js",
     "health-check": "node scripts/health-check.js check",
     "health-monitor": "node scripts/health-check.js monitor",
     "health-report": "node scripts/health-check.js report",

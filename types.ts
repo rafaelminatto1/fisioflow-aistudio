@@ -914,3 +914,32 @@ export interface EventProvider {
   status: ProviderStatus;
   applicationDate: Date;
 }
+
+// --- Additional Types for Build Compatibility ---
+
+export type FinancialTransactionType = 'RECEITA' | 'DESPESA' | 'TRANSFERENCIA';
+
+export type PayoutStatus = 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'CANCELLED';
+
+export type AutomationType = 'EMAIL' | 'SMS' | 'WHATSAPP' | 'PUSH_NOTIFICATION';
+
+export interface InventoryLog {
+  id: string;
+  itemId: string;
+  type: 'IN' | 'OUT' | 'ADJUSTMENT';
+  quantity: number;
+  reason: string;
+  userId: string;
+  timestamp: Date;
+}
+
+export interface Pathology {
+  id: string;
+  name: string;
+  description: string;
+  symptoms: string[];
+  causes: string[];
+  icd10Code: string;
+  createdAt: Date;
+  updatedAt: Date;
+}

@@ -1,5 +1,5 @@
 // lib/database/optimization.ts
-import cachedPrisma from '../prisma';
+import prisma from '../prisma';
 import { cache, CacheOptions } from '../cache';
 import { trackDatabaseOperation } from '../middleware/performance';
 import { structuredLogger } from '../monitoring/logger';
@@ -132,7 +132,7 @@ export class DatabaseOptimizer {
         // Try full-text search first (if available)
         try {
           return await trackDatabaseOperation('search_patients_fulltext', () =>
-            cachedPrisma.patient.findMany({
+            prisma.patient.findMany({
               where: {
                 ...filters,
                 OR: [
@@ -157,7 +157,7 @@ export class DatabaseOptimizer {
           structuredLogger.debug('Full-text search not available, using ILIKE');
 
           return await trackDatabaseOperation('search_patients_ilike', () =>
-            cachedPrisma.patient.findMany({
+            prisma.patient.findMany({
               where: {
                 ...filters,
                 OR: [
@@ -195,7 +195,7 @@ export class DatabaseOptimizer {
       cacheKey,
       () =>
         trackDatabaseOperation('get_appointments_by_date', () =>
-          cachedPrisma.appointment.findMany({
+          prisma.appointment.findMany({
             where: {
               startTime: { gte: startDate },
               endTime: { lte: endDate },
@@ -235,14 +235,14 @@ export class DatabaseOptimizer {
       async () => {
         const [appointmentStats, recentMetrics] = await Promise.all([
           trackDatabaseOperation('patient_appointment_stats', () =>
-            cachedPrisma.appointment.groupBy({
+            prisma.appointment.groupBy({
               by: ['status'],
               where: { patientId },
               _count: { status: true },
             })
           ),
           trackDatabaseOperation('patient_recent_metrics', () =>
-            cachedPrisma.metricResult.findMany({
+            prisma.metricResult.findMany({
               where: { patientId },
               orderBy: { measuredAt: 'desc' },
               take: 10,
@@ -287,7 +287,7 @@ export class DatabaseOptimizer {
   }> {
     try {
       const start = Date.now();
-      await cachedPrisma.$queryRaw`SELECT 1 as health_check`;
+      await prisma.$queryRaw`SELECT 1 as health_check`;
       const responseTime = Date.now() - start;
 
       return {
@@ -311,7 +311,7 @@ export class DatabaseOptimizer {
 
     try {
       // This would work with PostgreSQL's pg_stat_statements extension
-      const slowQueries = await cachedPrisma.$queryRaw`
+      const slowQueries = await prisma.$queryRaw`
         SELECT query, calls, total_time, mean_time, rows
         FROM pg_stat_statements
         WHERE mean_time > 100

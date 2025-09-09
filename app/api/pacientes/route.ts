@@ -1,6 +1,6 @@
 // app/api/pacientes/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { cachedPrisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import redisPromise from '@/lib/redis';
 import { patientFormSchema } from '@/lib/validations/patient';
 import { z } from 'zod';
@@ -61,7 +61,7 @@ export async function GET(request: NextRequest) {
       findManyOptions.cursor = { id: cursor };
     }
     
-    const patients = await cachedPrisma.patient.findMany(findManyOptions);
+    const patients = await prisma.patient.findMany(findManyOptions);
 
     let nextCursor = null;
     if (patients.length === take && patients.length > 0) {
@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     if (validatedData.consentGiven !== undefined) patientData.consentGiven = validatedData.consentGiven;
     if (validatedData.whatsappConsent) patientData.whatsappConsent = validatedData.whatsappConsent;
     
-    const newPatient = await cachedPrisma.patient.create({
+    const newPatient = await prisma.patient.create({
       data: patientData,
     });
 

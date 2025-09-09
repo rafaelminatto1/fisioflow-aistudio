@@ -126,13 +126,12 @@ export default function PathologiesPage() {
       <PageHeader
         title="Patologias"
         description="Gerencie a base de conhecimento de patologias e suas características clínicas"
-        action={
-          <Button>
-            <PlusIcon className="h-4 w-4 mr-2" />
-            Nova Patologia
-          </Button>
-        }
-      />
+      >
+        <Button>
+          <PlusIcon className="h-4 w-4 mr-2" />
+          Nova Patologia
+        </Button>
+      </PageHeader>
 
       {/* Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

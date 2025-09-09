@@ -87,12 +87,12 @@ export default function InventoryPage() {
     thirtyDaysFromNow.setDate(now.getDate() + 30);
 
     const totalItems = items.length;
-    const lowStockItems = items.filter(item => item.quantity <= item.minStockLevel).length;
+    const lowStockItems = items.filter(item => item.currentStock <= item.minStock).length;
     const expiringSoon = items.filter(item => 
       item.expiryDate && new Date(item.expiryDate) <= thirtyDaysFromNow
     ).length;
     const totalValue = items.reduce((sum, item) => 
-      sum + (item.unitCost ? item.quantity * item.unitCost : 0), 0
+      sum + (item.unitCost ? item.currentStock * item.unitCost : 0), 0
     );
 
     setStats({
@@ -115,16 +115,16 @@ export default function InventoryPage() {
   };
 
   const getStockLevelColor = (item: InventoryItem) => {
-    if (item.quantity <= item.minStockLevel) return 'text-red-600';
-    if (item.quantity <= item.minStockLevel * 1.5) return 'text-yellow-600';
+    if (item.currentStock <= item.minStock) return 'text-red-600';
+    if (item.currentStock <= item.minStock * 1.5) return 'text-yellow-600';
     return 'text-green-600';
   };
 
   const getStockLevelBadge = (item: InventoryItem) => {
-    if (item.quantity <= item.minStockLevel) {
+    if (item.currentStock <= item.minStock) {
       return <Badge variant="destructive">Baixo</Badge>;
     }
-    if (item.quantity <= item.minStockLevel * 1.5) {
+    if (item.currentStock <= item.minStock * 1.5) {
       return <Badge variant="secondary">Atenção</Badge>;
     }
     return <Badge variant="default">Normal</Badge>;
@@ -307,7 +307,7 @@ export default function InventoryPage() {
 
         <TabsContent value="alerts" className="space-y-6">
           <div className="space-y-4">
-            <AlertsSection title="Estoque Baixo" items={items.filter(item => item.quantity <= item.minStockLevel)} type="low-stock" />
+            <AlertsSection title="Estoque Baixo" items={items.filter(item => item.currentStock <= item.minStock)} type="low-stock" />
             <AlertsSection 
               title="Vencimento Próximo" 
               items={items.filter(item => {
@@ -328,6 +328,22 @@ export default function InventoryPage() {
 function InventoryItemCard({ item }: { item: InventoryItem }) {
   const isExpiringSoon = item.expiryDate && new Date(item.expiryDate) <= new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
   
+  const getStockLevelBadge = (item: InventoryItem) => {
+    if (item.currentStock <= item.minStock) {
+      return <Badge variant="destructive">Baixo</Badge>;
+    }
+    if (item.currentStock <= item.minStock * 1.5) {
+      return <Badge variant="secondary">Atenção</Badge>;
+    }
+    return <Badge variant="default">Normal</Badge>;
+  };
+
+  const getStockLevelColor = (item: InventoryItem) => {
+    if (item.currentStock <= item.minStock) return 'text-red-600';
+    if (item.currentStock <= item.minStock * 1.5) return 'text-yellow-600';
+    return 'text-green-600';
+  };
+
   return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
@@ -335,7 +351,7 @@ function InventoryItemCard({ item }: { item: InventoryItem }) {
           <div className="flex-1">
             <div className="flex items-center gap-3 mb-2">
               <CardTitle className="text-lg">{item.name}</CardTitle>
-              {item.getStockLevelBadge && item.getStockLevelBadge(item)}
+              {getStockLevelBadge(item)}
               {isExpiringSoon && <Badge variant="destructive">Vencendo</Badge>}
             </div>
             {item.description && (
@@ -349,15 +365,15 @@ function InventoryItemCard({ item }: { item: InventoryItem }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
           <div>
             <span className="text-muted-foreground">Quantidade:</span>
-            <div className={`font-bold ${item.getStockLevelColor && item.getStockLevelColor(item)}`}>
-              {item.quantity} {item.unit}
+            <div className={`font-bold ${getStockLevelColor(item)}`}>
+              {item.currentStock} {item.unit}
             </div>
           </div>
           
           <div>
             <span className="text-muted-foreground">Mín/Máx:</span>
             <div className="font-medium">
-              {item.minStockLevel}/{item.maxStockLevel || '∞'} {item.unit}
+              {item.minStock}/{item.maxStock || '∞'} {item.unit}
             </div>
           </div>
           
@@ -407,7 +423,7 @@ function InventoryItemCard({ item }: { item: InventoryItem }) {
 }
 
 function MovementRow({ movement }: { movement: InventoryLog }) {
-  const isPositive = movement.change > 0;
+  const isPositive = movement.type === 'IN';
   
   return (
     <div className="p-4 flex items-center justify-between">
@@ -420,20 +436,20 @@ function MovementRow({ movement }: { movement: InventoryLog }) {
         </div>
         
         <div>
-          <div className="font-medium">{movement.item?.name}</div>
+          <div className="font-medium">Item #{movement.itemId}</div>
           <div className="text-sm text-muted-foreground">{movement.reason}</div>
         </div>
       </div>
       
       <div className="text-right">
         <div className={`font-bold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-          {isPositive ? '+' : ''}{movement.change} {movement.item?.unit}
+          {isPositive ? '+' : '-'}{movement.quantity}
         </div>
         <div className="text-sm text-muted-foreground">
-          {new Date(movement.createdAt).toLocaleDateString('pt-BR')}
+          {new Date(movement.timestamp).toLocaleDateString('pt-BR')}
         </div>
         <div className="text-xs text-muted-foreground">
-          por {movement.user?.name}
+          por {movement.userId}
         </div>
       </div>
     </div>
@@ -471,7 +487,7 @@ function AlertsSection({
                   <div className="font-medium">{item.name}</div>
                   <div className="text-sm text-muted-foreground">
                     {type === 'low-stock' ? 
-                      `Quantidade: ${item.quantity}/${item.minStockLevel} ${item.unit}` :
+                      `Quantidade: ${item.currentStock}/${item.minStock} ${item.unit}` :
                       `Vencimento: ${item.expiryDate ? new Date(item.expiryDate).toLocaleDateString('pt-BR') : 'N/A'}`
                     }
                   </div>

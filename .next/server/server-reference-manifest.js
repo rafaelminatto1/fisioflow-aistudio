@@ -1,1 +1,1 @@
-self.__RSC_SERVER_MANIFEST="{\n  \"node\": {},\n  \"edge\": {},\n  \"encryptionKey\": \"process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY\"\n}"
+self.__RSC_SERVER_MANIFEST="{\"node\":{\"3679fc138ca12588c92b9e480df1b77ff89756a6\":{\"workers\":{\"app/teleconsulta/[id]/page\":\"90406\"},\"layer\":{\"app/teleconsulta/[id]/page\":\"rsc\"}},\"c5a355b74829514d47b87aafd22093d03633a7c8\":{\"workers\":{\"app/pacientes/[id]/page\":\"37473\"},\"layer\":{\"app/pacientes/[id]/page\":\"action-browser\"}}},\"edge\":{},\"encryptionKey\":\"process.env.NEXT_SERVER_ACTIONS_ENCRYPTION_KEY\"}"

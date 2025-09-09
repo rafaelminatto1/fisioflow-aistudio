@@ -94,10 +94,10 @@ export default function InventoryPage() {
 
   const filteredItems = items.filter(item =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.categoryId || 'Sem categoria').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const lowStockItems = items.filter(item => item.quantity <= item.minQuantity);
+  const lowStockItems = items.filter(item => item.currentStock <= item.minStock);
 
   return (
     <div className="container mx-auto p-6">
@@ -128,7 +128,7 @@ export default function InventoryPage() {
             <div className="flex flex-wrap gap-2">
               {lowStockItems.map(item => (
                 <Badge key={item.id} variant="outline" className="text-orange-800 border-orange-300">
-                  {item.name} ({item.quantity} restante(s))
+                  {item.name} ({item.currentStock} restante(s))
                 </Badge>
               ))}
             </div>
@@ -163,7 +163,7 @@ export default function InventoryPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {new Set(items.map(item => item.category)).size}
+              {new Set(items.map(item => item.categoryId || 'Sem categoria')).size}
             </div>
           </CardContent>
         </Card>

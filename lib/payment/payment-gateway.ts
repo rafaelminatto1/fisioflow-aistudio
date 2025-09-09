@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { PixProvider, PixPaymentData, PixPaymentResponse } from './pix-provider';
-import { prisma } from '@/lib/prisma';
+import prisma from '@/lib/prisma';
 import { addDays, addMinutes, isBefore } from 'date-fns';
 
 // Schemas de validação

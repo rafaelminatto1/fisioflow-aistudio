@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import {
-  Record,
+  Circle as RecordIcon,
   StopCircle,
   Pause,
   Play,
@@ -482,7 +482,7 @@ export function SessionRecorder({
                   variant={currentSession.status === 'recording' ? 'destructive' : 'secondary'}
                   className={currentSession.status === 'recording' ? 'animate-pulse' : ''}
                 >
-                  {currentSession.status === 'recording' && <Record className="w-3 h-3 mr-1" />}
+                  {currentSession.status === 'recording' && <RecordIcon className="w-3 h-3 mr-1 fill-red-500 text-red-500" />}
                   {currentSession.status === 'paused' && <Pause className="w-3 h-3 mr-1" />}
                   {currentSession.status === 'processing' && <Clock className="w-3 h-3 mr-1" />}
                   {currentSession.status === 'recording' && 'Gravando'}
@@ -506,7 +506,7 @@ export function SessionRecorder({
           <div className="flex items-center space-x-2">
             {!currentSession ? (
               <Button onClick={startRecording} className="flex-1">
-                <Record className="w-4 h-4 mr-2" />
+                <RecordIcon className="w-4 h-4 mr-2 fill-current" />
                 Iniciar Gravação
               </Button>
             ) : (

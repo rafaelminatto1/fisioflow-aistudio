@@ -23,8 +23,8 @@ import {
   appointmentSchema,
   AppointmentFormData
 } from '../forms/advanced';
-// import PatientSearchInput from '../../agenda/PatientSearchInput';
-// import RecurrenceSelector from '../../RecurrenceSelector';
+import PatientSearchInput from '../../../components/agenda/PatientSearchInput';
+import RecurrenceSelector from '../../../components/RecurrenceSelector';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { findConflict } from '../../../services/scheduling/conflictDetection';

@@ -22,7 +22,9 @@ if (process.env.NODE_ENV !== 'production') {
 // --- PRISMA MIDDLEWARE ---
 // No middleware currently configured
 
-// Export cachedPrisma for compatibility with existing code
+// Export multiple aliases for compatibility
 export const cachedPrisma = prisma;
+export const prismaClient = prisma;
+export { prisma };
 
 export default prisma;

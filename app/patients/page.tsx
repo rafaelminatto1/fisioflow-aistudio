@@ -7,12 +7,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Search, Users, Calendar, Phone, Mail } from 'lucide-react';
 import { patientService } from '@/services/patientService';
-import { Patient } from '@/types';
+import { Patient, PatientSummary } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 
 export default function PatientsPage() {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<PatientSummary[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -24,8 +24,8 @@ export default function PatientsPage() {
   const loadPatients = async () => {
     try {
       setLoading(true);
-      const data = await patientService.getPatients();
-      setPatients(data);
+      const data = await patientService.getPatients({});
+      setPatients(data.patients);
     } catch (error) {
       toast({
         title: 'Erro',

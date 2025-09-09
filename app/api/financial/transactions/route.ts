@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
-import { FinancialTransactionType } from '@/types';
+import prisma from '@/lib/prisma';
+
+type FinancialTransactionType = 'RECEITA' | 'DESPESA' | 'TRANSFERENCIA';
 
 export async function GET(request: NextRequest) {
   try {
@@ -79,7 +80,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate transaction type
-    if (!Object.values(FinancialTransactionType).includes(type)) {
+    if (!['INCOME', 'EXPENSE'].includes(type)) {
       return NextResponse.json(
         { error: 'Tipo de transação inválido' },
         { status: 400 }
