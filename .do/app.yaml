@@ -1,34 +1,57 @@
-name: fisioflow
-services:
-- name: web
-  source_dir: /
-  github:
-    repo: rafaelminatto1/fisioflow-aistudio
-    branch: main
-  dockerfile_path: Dockerfile
-  run_command: npm start
-  instance_count: 1
-  instance_size_slug: professional-xs
-  http_port: 3000
-  routes:
-  - path: /
-  health_check:
-    http_path: "/"
-    initial_delay_seconds: 60
-    period_seconds: 30
-    timeout_seconds: 10
-    success_threshold: 1
-    failure_threshold: 5
-  envs:
-  - key: NODE_ENV
-    value: production
-  - key: NEXT_TELEMETRY_DISABLED
-    value: "1"
-  - key: PORT
-    value: "3000"
-  - key: DATABASE_URL
-    value: postgresql://doadmin:AVNS_4zgOHhDU6UGzIe8OlTg@fisioflow-production-db-do-user-25633309-0.m.db.ondigitalocean.com:25060/defaultdb?sslmode=require
-  - key: NEXTAUTH_SECRET
-    value: 86c4799464fdfd227bec4a9de993b2e38b0fef2947ba35803930e8b2c66dba45
-  - key: NEXTAUTH_URL
-    value: https://fisioflow-aistudio-fc4f8558-d183-4d7e-8ea4-347355a20230.ondigitalocean.app
+# DigitalOcean App Platform Spec
+# Generated automatically - do not edit manually
+
+{
+  "name": "fisioflow",
+  "services": [
+    {
+      "name": "web",
+      "source_dir": "/",
+      "github": {
+        "repo": "seu-usuario/fisioflow-aistudio",
+        "branch": "main",
+        "deploy_on_push": true
+      },
+      "run_command": "npm start",
+      "environment_slug": "node-js",
+      "instance_count": 1,
+      "instance_size_slug": "professional-xs",
+      "http_port": 3000,
+      "routes": [
+        {
+          "path": "/"
+        }
+      ],
+      "health_check": {
+        "http_path": "/api/health",
+        "initial_delay_seconds": 60,
+        "period_seconds": 10,
+        "timeout_seconds": 5,
+        "success_threshold": 1,
+        "failure_threshold": 3
+      },
+      "envs": [
+        {
+          "key": "NODE_ENV",
+          "value": "production"
+        },
+        {
+          "key": "NEXT_TELEMETRY_DISABLED",
+          "value": "1"
+        },
+        {
+          "key": "PORT",
+          "value": "3000"
+        }
+      ]
+    }
+  ],
+  "databases": [
+    {
+      "name": "fisioflow-db",
+      "engine": "PG",
+      "version": "14",
+      "size": "db-s-1vcpu-1gb"
+    }
+  ]
+}

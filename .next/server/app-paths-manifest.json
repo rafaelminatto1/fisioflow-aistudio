@@ -7,8 +7,8 @@
   "/api/analytics/events/route": "app/api/analytics/events/route.js",
   "/api/analytics/metrics/route": "app/api/analytics/metrics/route.js",
   "/api/billing/[id]/route": "app/api/billing/[id]/route.js",
-  "/api/billing/route": "app/api/billing/route.js",
   "/api/financial/cashflow/route": "app/api/financial/cashflow/route.js",
+  "/api/billing/route": "app/api/billing/route.js",
   "/api/financial/payouts/route": "app/api/financial/payouts/route.js",
   "/api/financial/transactions/route": "app/api/financial/transactions/route.js",
   "/api/inventory/items/route": "app/api/inventory/items/route.js",
@@ -30,8 +30,8 @@
   "/page": "app/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/api/health/route": "app/api/health/route.js",
-  "/agenda/page": "app/agenda/page.js",
   "/ai/page": "app/ai/page.js",
   "/relatorios/page": "app/relatorios/page.js",
-  "/configuracoes/page": "app/configuracoes/page.js"
+  "/configuracoes/page": "app/configuracoes/page.js",
+  "/agenda/page": "app/agenda/page.js"
 }
