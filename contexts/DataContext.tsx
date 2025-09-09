@@ -12,7 +12,7 @@ import { Patient, Therapist, Appointment } from '../types';
 import * as therapistService from '../services/therapistService';
 import * as appointmentService from '../services/appointmentService';
 import * as patientService from '../services/patientService';
-import PageLoader from '../src/components/ui/PageLoader';
+// import PageLoader from '../src/components/ui/PageLoader';
 import { eventService } from '../services/eventService';
 
 interface DataContextType {
@@ -103,7 +103,7 @@ export const DataProvider: React.FC<{ children: ReactNode }> = ({
   }, [fetchData, patients.length]);
 
   if (isLoading && therapists.length === 0) {
-    return <PageLoader />;
+    return <div className="flex items-center justify-center min-h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div></div>;
   }
 
   if (error) {

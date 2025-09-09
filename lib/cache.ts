@@ -380,7 +380,7 @@ export class CacheManager {
       this.responseTimes.shift();
     }
     this.metrics.avgResponseTime = this.responseTimes.reduce((a, b) => a + b, 0) / this.responseTimes.length;
-    const totalOperations = this.metrics.hits + this.misses;
+    const totalOperations = this.metrics.hits + this.metrics.misses;
     this.metrics.hitRate = totalOperations > 0 ? (this.metrics.hits / totalOperations) * 100 : 0;
     this.metrics.totalSize = this.currentMemorySize;
   }
