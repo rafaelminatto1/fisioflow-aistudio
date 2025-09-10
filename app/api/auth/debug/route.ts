@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,6 +39,7 @@ export async function GET(request: NextRequest) {
     // Test database connection
     try {
       console.log('[DEBUG] Testing database connection');
+      const { default: prisma } = await import('@/lib/prisma');
       await prisma.$connect();
       const userCount = await prisma.user.count();
       debug.database = { connected: true, error: null };
