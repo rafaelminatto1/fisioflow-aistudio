@@ -1,10 +1,47 @@
 // app/ai/page.tsx
 'use client';
 
-import React from 'react';
-import { Brain, MessageSquare, FileText, Zap, Sparkles, Bot } from 'lucide-react';
+import React, { useState } from 'react';
+import { Brain, MessageSquare, FileText, Zap, Sparkles, Bot, Send, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AIPage() {
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+  const [response, setResponse] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleAIQuery = async (toolType: string, userQuery: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/ai/query', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          query: userQuery,
+          context: { toolType },
+          provider: 'gemini'
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (data.success) {
+        setResponse(data.response);
+        toast.success('Resposta gerada com sucesso!');
+      } else {
+        toast.error('Erro ao processar consulta: ' + data.error);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('Erro de conexão com o serviço de IA');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const aiTools = [
     {
       id: 1,
@@ -126,11 +163,14 @@ export default function AIPage() {
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{tool.title}</h3>
               <p className="text-gray-600 mb-4">{tool.description}</p>
               <div className="flex gap-2">
-                <button className={`flex-1 py-2 px-4 rounded-lg font-medium ${
-                  tool.status === 'Ativo'
-                    ? 'bg-blue-600 text-white hover:bg-blue-700'
-                    : 'bg-gray-200 text-gray-600 cursor-not-allowed'
-                }`}>
+                <button 
+                  onClick={() => tool.status === 'Ativo' ? setActiveModal(tool.title) : null}
+                  className={`flex-1 py-2 px-4 rounded-lg font-medium ${
+                    tool.status === 'Ativo'
+                      ? 'bg-blue-600 text-white hover:bg-blue-700'
+                      : 'bg-gray-200 text-gray-600 cursor-not-allowed'
+                  }`}
+                >
                   {tool.status === 'Ativo' ? 'Usar Agora' : 'Em Breve'}
                 </button>
                 <button className="px-4 py-2 border border-gray-300 rounded-lg text-gray-600 hover:bg-gray-50">
@@ -173,6 +213,82 @@ export default function AIPage() {
           </div>
         </div>
       </div>
+
+      {/* AI Tool Modals */}
+      {activeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[80vh] overflow-y-auto">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">{activeModal}</h2>
+              <button 
+                onClick={() => {
+                  setActiveModal(null);
+                  setQuery('');
+                  setResponse('');
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {activeModal === 'Assistente de Diagnóstico' && 'Descreva os sintomas do paciente:'}
+                  {activeModal === 'Gerador de Relatórios' && 'Informações para o relatório:'}
+                  {activeModal === 'Chat Inteligente' && 'Sua pergunta:'}
+                  {activeModal === 'Análise Preditiva' && 'Dados para análise:'}
+                </label>
+                <textarea
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  rows={4}
+                  placeholder={
+                    activeModal === 'Assistente de Diagnóstico' 
+                      ? 'Ex: Paciente apresenta dor lombar há 3 dias, com irradiação para perna direita...'
+                      : activeModal === 'Gerador de Relatórios'
+                      ? 'Ex: Paciente João Silva, 45 anos, realizou 10 sessões de fisioterapia...'
+                      : activeModal === 'Chat Inteligente'
+                      ? 'Ex: Quais são os exercícios recomendados para dor no ombro?'
+                      : 'Ex: Histórico de 20 pacientes com lesão no joelho...'
+                  }
+                />
+              </div>
+              
+              <button
+                onClick={() => handleAIQuery(activeModal, query)}
+                disabled={!query.trim() || isLoading}
+                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4" />
+                    Enviar Consulta
+                  </>
+                )}
+              </button>
+              
+              {response && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Resposta da IA:
+                  </label>
+                  <div className="bg-gray-50 p-4 rounded-lg border">
+                    <p className="whitespace-pre-wrap">{response}</p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

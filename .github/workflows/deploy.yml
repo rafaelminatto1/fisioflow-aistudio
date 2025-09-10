@@ -1,4 +1,4 @@
-name: Deploy to Railway
+name: Deploy to Production
 
 on:
   push:
@@ -8,10 +8,8 @@ on:
 
 env:
   NODE_VERSION: '20'
-  RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
-  NEON_API_KEY: ${{ secrets.NEON_API_KEY }}
-  NEON_PROJECT_ID: ${{ secrets.NEON_PROJECT_ID }}
-  NEON_BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
+  DATABASE_URL: ${{ secrets.DATABASE_URL }}
+    DIRECT_URL: ${{ secrets.DIRECT_URL }}
 
 jobs:
   # =============================================================================
@@ -72,8 +70,8 @@ jobs:
           DIRECT_URL: "postgresql://user:pass@localhost:5432/test"
           NEXTAUTH_SECRET: "test-secret"
           NEXTAUTH_URL: "http://localhost:3000"
-          NEON_DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
-          NEON_DIRECT_URL: "postgresql://user:pass@localhost:5432/test"
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
+          DIRECT_URL: "postgresql://user:pass@localhost:5432/test"
           
       - name: Run tests (if available)
         run: |
@@ -118,10 +116,10 @@ jobs:
         continue-on-error: true
 
   # =============================================================================
-  # NEON DB BRANCH MANAGEMENT
+  # DATABASE SETUP
   # =============================================================================
-  neon-branch-management:
-    name: Neon DB Branch Management
+  database-setup:
+    name: Database Setup
     runs-on: ubuntu-latest
     needs: build-and-test
     if: github.event_name == 'pull_request'
@@ -139,48 +137,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Create Neon branch for PR
+      - name: Setup test database
         run: |
-          echo "🌿 Creating Neon branch for PR: ${{ env.NEON_BRANCH_NAME }}"
-          
-          # Create branch using Neon API
-          BRANCH_RESPONSE=$(curl -s -X POST \
-            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches" \
-            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}" \
-            -H "Content-Type: application/json" \
-            -d '{
-              "name": "${{ env.NEON_BRANCH_NAME }}",
-              "parent_id": "main",
-              "compute_units": 0.25
-            }')
-          
-          echo "Branch creation response: $BRANCH_RESPONSE"
-          
-          # Extract branch ID and connection string
-          BRANCH_ID=$(echo "$BRANCH_RESPONSE" | jq -r '.branch.id')
-          echo "NEON_BRANCH_ID=$BRANCH_ID" >> $GITHUB_ENV
-          
-          echo "✅ Neon branch created: $BRANCH_ID"
-        env:
-          NEON_API_KEY: ${{ env.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
-          
-      - name: Run migrations on branch
-        run: |
-          echo "🔄 Running migrations on Neon branch..."
-          
-          # Get branch connection string
-          BRANCH_INFO=$(curl -s \
-            "https://console.neon.tech/api/v2/projects/${{ env.NEON_PROJECT_ID }}/branches/${{ env.NEON_BRANCH_ID }}" \
-            -H "Authorization: Bearer ${{ env.NEON_API_KEY }}")
-          
-          # Extract connection details and run migrations
+          echo "🔄 Setting up test database..."
+          # Run Prisma migrations
           npx prisma migrate deploy
-          
-          echo "✅ Migrations completed on branch"
-        env:
-          NEON_API_KEY: ${{ env.NEON_API_KEY }}
-          NEON_PROJECT_ID: ${{ env.NEON_PROJECT_ID }}
+          echo "✅ Test database setup completed"
           
   # =============================================================================
   # DATABASE MIGRATION CHECK
@@ -188,7 +150,7 @@ jobs:
   migration-check:
     name: Database Migration Check
     runs-on: ubuntu-latest
-    needs: [build-and-test, neon-branch-management]
+    needs: [build-and-test, database-setup]
     if: github.event_name == 'pull_request'
     
     steps:
@@ -218,21 +180,26 @@ jobs:
         if: env.MIGRATION_CHANGES == 'true'
         run: npx prisma validate
         
-      - name: Test migrations on Neon branch
+      - name: Test database migrations
         if: env.MIGRATION_CHANGES == 'true'
         run: |
-          echo "🧪 Testing migrations on Neon branch..."
+          echo "🧪 Testing database migrations..."
           
-          # Run migration tests
-          npm run test:migrations || echo "Migration tests not configured"
+          # Test database connection
+          npx prisma db pull --force
           
-          echo "✅ Migration tests completed"
+          # Run seed if exists
+          if [ -f "prisma/seed.ts" ]; then
+            npm run db:seed
+          fi
+          
+          echo "Database migrations tested successfully"
         
       - name: Check migration status
         if: env.MIGRATION_CHANGES == 'true'
         run: |
           echo "⚠️ Database migration changes detected!"
-          echo "Migrations tested on Neon branch: ${{ env.NEON_BRANCH_NAME }}"
+          echo "Database migrations tested successfully"
           echo "Please ensure migrations are reviewed before merging."
 
   # =============================================================================
@@ -377,7 +344,7 @@ jobs:
       - name: Health check production
         id: health_check
         run: |
-          PROD_URL="https://fisioflow.up.railway.app"
+          PROD_URL="https://fisioflow.vercel.app"
           
           echo "🏥 Running production health checks..."
           
@@ -424,7 +391,7 @@ jobs:
         run: |
           echo "🔍 Running post-deployment verification..."
           
-          PROD_URL="https://fisioflow.up.railway.app"
+          PROD_URL="https://fisioflow.vercel.app"
           
           # Test critical endpoints
           echo "Testing authentication endpoint..."
@@ -553,14 +520,12 @@ jobs:
   # CLEANUP
   # =============================================================================
   cleanup:
-    name: Cleanup
+    name: Cleanup Resources
     runs-on: ubuntu-latest
-    needs: [deploy-production, post-deployment-monitoring]
-    if: always()
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
     
     steps:
-      - name: Cleanup temporary resources
+      - name: Cleanup test resources
         run: |
-          echo "🧹 Cleaning up temporary resources..."
-          # Add any cleanup tasks here
+          echo "🧹 Cleaning up test resources..."
           echo "✅ Cleanup completed"

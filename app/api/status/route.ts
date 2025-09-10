@@ -147,11 +147,9 @@ export async function GET(request: NextRequest) {
         ...(isAuthenticated && {
           commit:
             process.env.VERCEL_GIT_COMMIT_SHA ||
-            process.env.RAILWAY_GIT_COMMIT_SHA ||
             'unknown',
           branch:
             process.env.VERCEL_GIT_COMMIT_REF ||
-            process.env.RAILWAY_GIT_BRANCH ||
             'main',
         }),
       },

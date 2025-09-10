@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { EventRegistration, RegistrationStatus } from '../../types';
+import { EventRegistration, EventRegistrationStatus } from '../../types';
 import { Search, CheckCircle } from 'lucide-react';
 
-const statusStyles: Record<RegistrationStatus, { text: string; bg: string }> = {
-  [RegistrationStatus.Pending]: { text: 'text-amber-700', bg: 'bg-amber-100' },
-  [RegistrationStatus.Confirmed]: { text: 'text-blue-700', bg: 'bg-blue-100' },
-  [RegistrationStatus.Attended]: { text: 'text-green-700', bg: 'bg-green-100' },
-  [RegistrationStatus.Cancelled]: { text: 'text-red-700', bg: 'bg-red-100' },
+const statusStyles: Record<EventRegistrationStatus, { text: string; bg: string }> = {
+  [EventRegistrationStatus.pending]: { text: 'text-amber-700', bg: 'bg-amber-100' },
+  [EventRegistrationStatus.confirmed]: { text: 'text-blue-700', bg: 'bg-blue-100' },
+  [EventRegistrationStatus.attended]: { text: 'text-green-700', bg: 'bg-green-100' },
+  [EventRegistrationStatus.cancelled]: { text: 'text-red-700', bg: 'bg-red-100' },
 };
 
 interface ParticipantTableProps {
@@ -77,7 +77,7 @@ const ParticipantTable: React.FC<ParticipantTableProps> = ({
                   </span>
                 </td>
                 <td className='p-3 text-center'>
-                  {reg.status === RegistrationStatus.Confirmed && (
+                  {reg.status === EventRegistrationStatus.confirmed && (
                     <button
                       onClick={() => onCheckIn(reg.id)}
                       className='p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-full'

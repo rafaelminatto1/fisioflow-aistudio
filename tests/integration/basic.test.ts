@@ -91,9 +91,9 @@ describe('Basic Integration Tests', () => {
       const fs = require('fs');
       const path = require('path');
 
-      // Verificar Railway config
-      const railwayConfigPath = path.join(process.cwd(), 'railway.toml');
-      expect(fs.existsSync(railwayConfigPath)).toBe(true);
+      // Verificar configuração básica
+  const packageJsonPath = path.join(process.cwd(), 'package.json');
+  expect(fs.existsSync(packageJsonPath)).toBe(true);
 
       // Verificar Vercel config
       const vercelConfigPath = path.join(process.cwd(), 'vercel.json');

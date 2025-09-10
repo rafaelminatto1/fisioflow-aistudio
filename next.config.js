@@ -15,7 +15,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
 
-  // Simplified Image Configuration for Railway
+  // Simplified Image Configuration
   images: {
     remotePatterns: [
       {
@@ -44,7 +44,7 @@ const nextConfig = {
     return config;
   },
 
-  // Basic headers for Railway
+  // Basic headers
   async headers() {
     return [
       {
@@ -59,11 +59,8 @@ const nextConfig = {
     ];
   },
 
-  // Generate build ID for Railway
+  // Generate build ID
   generateBuildId: async () => {
-    if (process.env.RAILWAY_GIT_COMMIT_SHA) {
-      return process.env.RAILWAY_GIT_COMMIT_SHA.substring(0, 7);
-    }
     return `build-${Date.now()}`;
   },
 };

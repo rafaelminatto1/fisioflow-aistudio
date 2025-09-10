@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
 import { eventService } from '@/services/eventService';
+import { EventType, EventStatus } from '@/types';
 import { z } from 'zod';
 
 // Zod schema for event creation validation
 const eventSchema = z.object({
   name: z.string().min(3, 'O nome deve ter pelo menos 3 caracteres'),
   description: z.string().optional(),
-  eventType: z.enum(['corrida', 'workshop', 'palestra', 'campanha', 'atendimento']),
+  eventType: z.nativeEnum(EventType),
   startDate: z.string().datetime(),
   endDate: z.string().datetime(),
   location: z.string().optional(),
@@ -14,7 +15,7 @@ const eventSchema = z.object({
   capacity: z.number().int().positive().optional(),
   isFree: z.boolean().default(true),
   price: z.number().optional(),
-  status: z.enum(['draft', 'published', 'active', 'completed', 'cancelled']).default('draft'),
+  status: z.nativeEnum(EventStatus).default(EventStatus.draft),
   organizerId: z.string(), // TODO: Get this from authenticated session
   requiresRegistration: z.boolean().default(true),
   allowsProviders: z.boolean().default(false),
@@ -41,12 +42,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const parsedData = eventSchema.safeParse({
-        ...body,
-        // Convert date strings to Date objects for the service if needed
-        startDate: new Date(body.startDate),
-        endDate: new Date(body.endDate),
-    });
+    const parsedData = eventSchema.safeParse(body);
 
     if (!parsedData.success) {
       return NextResponse.json(
@@ -55,9 +51,16 @@ export async function POST(req: Request) {
       );
     }
 
+    // Convert date strings to Date objects for the service
+    const eventData = {
+      ...parsedData.data,
+      startDate: new Date(parsedData.data.startDate),
+      endDate: new Date(parsedData.data.endDate),
+    };
+
     // In a real app, organizerId would come from the authenticated user's session
     // For now, it must be provided in the request body.
-    const newEvent = await eventService.saveEvent(parsedData.data);
+    const newEvent = await eventService.saveEvent(eventData);
     return NextResponse.json(newEvent, { status: 201 });
 
   } catch (error) {

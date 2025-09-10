@@ -1,6 +1,6 @@
 /**
  * Edge Logger - Sistema de logging compatível com Edge Runtime
- * Otimizado para Railway e Vercel Edge Functions
+ * Otimizado para Vercel Edge Functions
  */
 
 interface LogEntry {

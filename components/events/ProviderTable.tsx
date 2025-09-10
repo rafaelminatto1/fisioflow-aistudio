@@ -1,15 +1,15 @@
 // components/events/ProviderTable.tsx
 import React, { useState } from 'react';
-import { EventProvider, ProviderStatus } from '../../types';
+import { EventProvider, EventProviderStatus } from '../../types';
 import { Search, Check, DollarSign, Loader } from 'lucide-react';
 import { eventService } from '../../services/eventService';
 import { useToast } from '../../contexts/ToastContext';
 
-const statusStyles: Record<ProviderStatus, { text: string; bg: string }> = {
-  [ProviderStatus.Applied]: { text: 'text-amber-700', bg: 'bg-amber-100' },
-  [ProviderStatus.Confirmed]: { text: 'text-blue-700', bg: 'bg-blue-100' },
-  [ProviderStatus.Paid]: { text: 'text-green-700', bg: 'bg-green-100' },
-  [ProviderStatus.Cancelled]: { text: 'text-red-700', bg: 'bg-red-100' },
+const statusStyles: Record<EventProviderStatus, { text: string; bg: string }> = {
+  [EventProviderStatus.applied]: { text: 'text-amber-700', bg: 'bg-amber-100' },
+  [EventProviderStatus.confirmed]: { text: 'text-blue-700', bg: 'bg-blue-100' },
+  [EventProviderStatus.paid]: { text: 'text-green-700', bg: 'bg-green-100' },
+  [EventProviderStatus.cancelled]: { text: 'text-red-700', bg: 'bg-red-100' },
 };
 
 const ProviderTable: React.FC<{ providers: EventProvider[] }> = ({
@@ -22,7 +22,7 @@ const ProviderTable: React.FC<{ providers: EventProvider[] }> = ({
   const handleConfirm = async (providerId: string) => {
     setProcessingId(providerId);
     try {
-      await eventService.confirmProvider(providerId);
+      await eventService.updateProviderStatus(providerId, EventProviderStatus.confirmed);
       showToast('Participação confirmada!', 'success');
     } catch (error: any) {
       showToast(error.message, 'error');
@@ -34,7 +34,7 @@ const ProviderTable: React.FC<{ providers: EventProvider[] }> = ({
   const handlePay = async (providerId: string) => {
     setProcessingId(providerId);
     try {
-      await eventService.payProvider(providerId);
+      await eventService.updateProviderStatus(providerId, EventProviderStatus.paid);
       showToast('Pagamento registrado!', 'success');
     } catch (error: any) {
       showToast(error.message, 'error');
@@ -102,7 +102,7 @@ const ProviderTable: React.FC<{ providers: EventProvider[] }> = ({
                     <Loader className='w-4 h-4 animate-spin mx-auto text-slate-400' />
                   ) : (
                     <>
-                      {provider.status === ProviderStatus.Applied && (
+                      {provider.status === EventProviderStatus.applied && (
                         <button
                           onClick={() => handleConfirm(provider.id)}
                           className='p-1.5 text-blue-600 bg-blue-50 hover:bg-blue-100 rounded-full'
@@ -111,7 +111,7 @@ const ProviderTable: React.FC<{ providers: EventProvider[] }> = ({
                           <Check className='w-4 h-4' />
                         </button>
                       )}
-                      {provider.status === ProviderStatus.Confirmed && (
+                      {provider.status === EventProviderStatus.confirmed && (
                         <button
                           onClick={() => handlePay(provider.id)}
                           className='p-1.5 text-green-600 bg-green-50 hover:bg-green-100 rounded-full'

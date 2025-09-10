@@ -110,7 +110,7 @@ export function RLSSecurityDashboard() {
 
   const loadRLSStatus = async () => {
     try {
-      const response = await fetch('/api/neon/rls?action=status');
+      const response = await fetch('/api/database/rls?action=status');
       const data = await response.json();
 
       if (data.success) {
@@ -137,7 +137,7 @@ export function RLSSecurityDashboard() {
         ),
       });
 
-      const response = await fetch(`/api/neon/rls?${params}`);
+      const response = await fetch(`/api/database/rls?${params}`);
       const data = await response.json();
 
       if (data.success) {
@@ -154,7 +154,7 @@ export function RLSSecurityDashboard() {
 
   const loadPolicies = async () => {
     try {
-      const response = await fetch('/api/neon/rls?action=policies');
+      const response = await fetch('/api/database/rls?action=policies');
       const data = await response.json();
 
       if (data.success) {
@@ -171,7 +171,7 @@ export function RLSSecurityDashboard() {
 
   const loadAccessStats = async () => {
     try {
-      const response = await fetch('/api/neon/rls?action=stats');
+      const response = await fetch('/api/database/rls?action=stats');
       const data = await response.json();
 
       if (data.success) {
@@ -189,7 +189,7 @@ export function RLSSecurityDashboard() {
   const setupRLS = async (force = false) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/neon/rls', {
+      const response = await fetch('/api/database/rls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'setup', force }),
@@ -224,7 +224,7 @@ export function RLSSecurityDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/neon/rls', {
+      const response = await fetch('/api/database/rls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'reset' }),
@@ -251,7 +251,7 @@ export function RLSSecurityDashboard() {
   const testRLS = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/neon/rls', {
+      const response = await fetch('/api/database/rls', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'test' }),
@@ -285,7 +285,7 @@ export function RLSSecurityDashboard() {
 
     setLoading(true);
     try {
-      const response = await fetch(`/api/neon/rls?days=${days}`, {
+      const response = await fetch(`/api/database/rls?days=${days}`, {
         method: 'DELETE',
       });
 

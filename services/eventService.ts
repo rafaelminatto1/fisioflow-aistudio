@@ -7,6 +7,8 @@ import {
   EventResource,
   EventCertificate,
   EventCommunication,
+  EventType,
+  EventStatus,
   EventRegistrationStatus,
   EventProviderStatus,
   CheckInMethod,

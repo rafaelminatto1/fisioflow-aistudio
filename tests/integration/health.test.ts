@@ -97,7 +97,7 @@ describe('Health Check Endpoints', () => {
       expect(data.services.database).toHaveProperty('status');
       expect(data.services.database).toHaveProperty('provider');
       expect(data.services.database).toHaveProperty('responseTime');
-      expect(data.services.database.provider).toBe('neon');
+      expect(data.services.database.provider).toBe('postgresql');
     });
 
     it('should include AI services status', async () => {

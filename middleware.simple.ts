@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Simple middleware for Railway deployment
+  // Simple middleware for deployment
   const response = NextResponse.next();
   
   // Basic CORS headers

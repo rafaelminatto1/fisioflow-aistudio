@@ -19,7 +19,7 @@ const defaultConfig: SecurityConfig = {
   corsOrigins: [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://fisioflow.railway.app',
+    'https://fisioflow.vercel.app',
   ],
   enableCSRF: true,
   enableHelmet: true,

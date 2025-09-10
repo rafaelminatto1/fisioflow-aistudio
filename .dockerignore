@@ -75,6 +75,3 @@ pids
 
 # Optional eslint cache
 .eslintcache
-
-# Railway
-railway.toml

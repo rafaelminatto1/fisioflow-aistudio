@@ -2606,7 +2606,7 @@ export const mockEventRegistrations: EventRegistration[] = [
     registrationDate: new Date('2024-09-05'),
     qrCode: 'qr_reg1_ev1',
     checkedInAt: new Date('2024-10-20T08:15:00Z'),
-    checkedInBy: 'user_1',
+    checkedInById: 'user_1',
   },
   {
     id: 'reg2_ev1',
@@ -2628,7 +2628,7 @@ export const mockEventRegistrations: EventRegistration[] = [
     registrationDate: new Date('2024-09-07'),
     qrCode: 'qr_reg3_ev1',
     checkedInAt: new Date('2024-10-20T08:30:00Z'),
-    checkedInBy: 'user_admin',
+    checkedInById: 'user_admin',
   },
   {
     id: 'reg1_ev2',
@@ -2648,7 +2648,7 @@ export const mockEvents: Event[] = [
     name: 'Corrida FisioFlow 5K - Etapa Ibirapuera',
     description:
       'Participe da nossa corrida de rua com suporte fisioterapêutico completo, incluindo aquecimento, acompanhamento e recovery pós-prova.',
-    eventType: EventType.Corrida,
+    eventType: EventType.corrida,
     startDate: new Date(new Date().setMonth(new Date().getMonth() - 1)), // Past event
     endDate: new Date(new Date().setMonth(new Date().getMonth() - 1)),
     location: 'Parque Ibirapuera, São Paulo',
@@ -2656,13 +2656,15 @@ export const mockEvents: Event[] = [
     capacity: 200,
     isFree: false,
     price: 79.9,
-    status: EventStatus.Completed,
+    status: EventStatus.completed,
     organizerId: 'user_admin',
     requiresRegistration: true,
     allowsProviders: true,
     providerRate: 150.0,
     bannerUrl:
       'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?q=80&w=1470',
+    createdAt: new Date('2024-08-15'),
+    updatedAt: new Date('2024-09-01'),
     registrations: mockEventRegistrations.filter(r => r.eventId === 'event_1'),
     providers: mockEventProviders.filter(p => p.eventId === 'event_1'),
   },
@@ -2671,18 +2673,20 @@ export const mockEvents: Event[] = [
     name: 'Workshop: Prevenção de Lesões para Corredores',
     description:
       'Um workshop teórico e prático com nossos melhores especialistas sobre como prevenir as lesões mais comuns na corrida.',
-    eventType: EventType.Workshop,
+    eventType: EventType.workshop,
     startDate: new Date(new Date().setDate(new Date().getDate() + 15)), // Future event
     endDate: new Date(new Date().setDate(new Date().getDate() + 15)),
     location: 'Clínica FisioFlow - Unidade Central',
     capacity: 30,
     isFree: true,
-    status: EventStatus.Published,
+    status: EventStatus.published,
     organizerId: 'user_1',
     requiresRegistration: true,
     allowsProviders: false,
     bannerUrl:
       'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?q=80&w=1469',
+    createdAt: new Date('2024-09-01'),
+    updatedAt: new Date('2024-09-15'),
     registrations: mockEventRegistrations.filter(r => r.eventId === 'event_2'),
     providers: [],
   },
@@ -2691,11 +2695,11 @@ export const mockEvents: Event[] = [
     name: 'Campanha de Saúde Postural',
     description:
       'Avaliações posturais gratuitas e orientação para trabalhadores de escritório. Parceria com a Empresa XYZ.',
-    eventType: EventType.Campanha,
+    eventType: EventType.campanha,
     startDate: new Date(new Date().setDate(new Date().getDate() + 30)), // Future event
     endDate: new Date(new Date().setDate(new Date().getDate() + 30)),
     location: 'Sede da Empresa XYZ',
-    status: EventStatus.Active,
+    status: EventStatus.active,
     organizerId: 'user_1',
     isFree: true,
     requiresRegistration: false,
@@ -2703,6 +2707,8 @@ export const mockEvents: Event[] = [
     providerRate: 500.0, // Daily rate
     bannerUrl:
       'https://images.unsplash.com/photo-1552196563-55cd4e45efb3?q=80&w=1326',
+    createdAt: new Date('2024-09-10'),
+    updatedAt: new Date('2024-09-20'),
     registrations: [],
     providers: mockEventProviders.filter(p => p.eventId === 'event_3'),
   },

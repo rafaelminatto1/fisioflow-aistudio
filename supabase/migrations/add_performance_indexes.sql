@@ -2,7 +2,7 @@
 -- FISIOFLOW - PERFORMANCE OPTIMIZATION INDEXES
 -- =============================================================================
 -- This migration adds strategic indexes to optimize common queries
--- Created for Railway + Neon DB migration
+-- Performance indexes for FisioFlow
 -- =============================================================================
 
 -- Drop existing indexes if they exist (for idempotency)

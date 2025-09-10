@@ -13,27 +13,27 @@ const statusStyles: Record<
   EventStatus,
   { text: string; bg: string; dot: string }
 > = {
-  [EventStatus.Draft]: {
+  [EventStatus.draft]: {
     text: 'text-slate-700',
     bg: 'bg-slate-200',
     dot: 'bg-slate-500',
   },
-  [EventStatus.Published]: {
+  [EventStatus.published]: {
     text: 'text-blue-700',
     bg: 'bg-blue-200',
     dot: 'bg-blue-500',
   },
-  [EventStatus.Active]: {
+  [EventStatus.active]: {
     text: 'text-green-700',
     bg: 'bg-green-200',
     dot: 'bg-green-500',
   },
-  [EventStatus.Completed]: {
+  [EventStatus.completed]: {
     text: 'text-gray-700',
     bg: 'bg-gray-300',
     dot: 'bg-gray-600',
   },
-  [EventStatus.Cancelled]: {
+  [EventStatus.cancelled]: {
     text: 'text-red-700',
     bg: 'bg-red-200',
     dot: 'bg-red-500',

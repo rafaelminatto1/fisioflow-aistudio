@@ -55,8 +55,7 @@ interface SystemStatus {
     database: ServiceStatus;
     api: ServiceStatus;
     frontend: ServiceStatus;
-    railway: ServiceStatus;
-    neondb: ServiceStatus;
+    storage: ServiceStatus;
   };
   metrics: {
     cpu: number;
@@ -600,7 +599,7 @@ const MonitoringDashboard: React.FC = () => {
                 <Card key={serviceName}>
                   <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
                     <CardTitle className='text-sm font-medium capitalize'>
-                      {serviceName === 'neondb' ? 'Neon DB' : serviceName}
+                      {serviceName === 'database' ? 'Database' : serviceName}
                     </CardTitle>
                     <div className={getStatusColor(service.status)}>
                       {getStatusIcon(service.status)}

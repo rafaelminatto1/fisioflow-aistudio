@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Event, EventRegistration, RegistrationStatus } from '../../types';
+import { Event, EventRegistration, EventRegistrationStatus } from '../../types';
 
 interface EventDashboardMetricsProps {
   event: Event;
@@ -14,7 +14,7 @@ const EventDashboardMetrics: React.FC<EventDashboardMetricsProps> = ({
     useMemo(() => {
       const total = registrations.length;
       const attended = registrations.filter(
-        r => r.status === RegistrationStatus.Attended
+        r => r.status === EventRegistrationStatus.attended
       ).length;
       const rate = total > 0 ? (attended / total) * 100 : 0;
       const rev = event.isFree ? 0 : total * (event.price || 0);

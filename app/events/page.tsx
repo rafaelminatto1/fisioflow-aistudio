@@ -45,7 +45,7 @@ export default function EventsPage() {
   };
 
   const handleSave = async (
-    eventData: Omit<Event, 'id' | 'registrations' | 'providers'> & { id?: string }
+    eventData: Omit<Event, 'id' | 'createdAt' | 'updatedAt' | 'registrations' | 'providers'> & { id?: string }
   ) => {
     try {
       const isEditing = !!eventData.id;
@@ -90,14 +90,15 @@ export default function EventsPage() {
       <PageHeader
         title="Próximos Eventos"
         subtitle="Participe nas nossas corridas, workshops e campanhas."
-        actions={[
-          {
-            label: 'Novo Evento',
-            onClick: () => handleOpenModal(),
-            icon: <PlusCircle size={18} />,
-          },
-        ]}
-      />
+      >
+        <button
+          onClick={() => handleOpenModal()}
+          className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+        >
+          <PlusCircle size={18} className="mr-2" />
+          Novo Evento
+        </button>
+      </PageHeader>
 
       <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
         {events.map(event => (

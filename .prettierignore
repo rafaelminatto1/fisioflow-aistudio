@@ -77,8 +77,7 @@ CHANGELOG.md
 backups/
 *.backup
 
-# Railway files
-railway.json
+
 
 # Docker files
 Dockerfile

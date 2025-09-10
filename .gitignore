@@ -54,8 +54,7 @@ lerna-debug.log*
 *.sln
 *.sw?
 
-# Railway
-.railway
+
 
 # Security - Never commit these
 *.pem

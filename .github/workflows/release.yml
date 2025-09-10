@@ -128,7 +128,7 @@ jobs:
           NODE_ENV: production
           DATABASE_URL: "postgresql://user:pass@localhost:5432/prod"
           NEXTAUTH_SECRET: "production-secret"
-          NEXTAUTH_URL: "https://fisioflow.up.railway.app"
+          NEXTAUTH_URL: "https://fisioflow.vercel.app"
           
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -350,22 +350,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-        
-      - name: Deploy to Railway Production
+      - name: Deploy to Production
         run: |
           echo "🚀 Deploying release ${{ needs.validate-release.outputs.version }} to production..."
           
-          railway login --token ${{ secrets.RAILWAY_TOKEN }}
-          railway environment production
-          
-          # Deploy with release tag
-          railway up --detach
+          # Run deployment script
+          npm run deploy
           
           echo "✅ Release deployed to production"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
           
       - name: Post-deployment verification
         run: |
@@ -375,7 +367,7 @@ jobs:
           sleep 60
           
           # Health check
-          PROD_URL="https://fisioflow.up.railway.app"
+          PROD_URL="https://fisioflow.vercel.app"
           
           for i in {1..10}; do
             if curl -f "$PROD_URL/api/health"; then
@@ -421,7 +413,7 @@ jobs:
                   \"type\": \"section\",
                   \"text\": {
                     \"type\": \"mrkdwn\",
-                    \"text\": \"$EMOJI *FisioFlow $TYPE $VERSION* has been deployed to production!\\n\\n:link: <https://fisioflow.up.railway.app|View Application>\\n:octocat: <https://github.com/${{ github.repository }}/releases/tag/$VERSION|View Release>\"
+                    \"text\": \"$EMOJI *FisioFlow $TYPE $VERSION* has been deployed to production!\\n\\n:link: <https://fisioflow.vercel.app|View Application>\\n:octocat: <https://github.com/${{ github.repository }}/releases/tag/$VERSION|View Release>\"
                   }
                 }
               ]

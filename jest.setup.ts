@@ -24,7 +24,7 @@ expect.extend({
 });
 
 // Mock environment variables for tests
-process.env.NODE_ENV = 'test';
+// NODE_ENV is automatically set to 'test' by Jest
 process.env.DATABASE_URL =
   process.env.TEST_DATABASE_URL ||
   'postgresql://test:test@localhost:5432/fisioflow_test';
