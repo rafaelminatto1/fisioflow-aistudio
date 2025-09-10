@@ -1,116 +1,27 @@
-import winston from 'winston';
-import path from 'path';
+import pino from 'pino';
 
-// Configuração de níveis de log personalizados
-const logLevels = {
-  error: 0,
-  warn: 1,
-  info: 2,
-  http: 3,
-  debug: 4,
-};
-
-// Cores para cada nível
-const logColors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'white',
-};
-
-// Adicionar cores ao winston
-winston.addColors(logColors);
-
-// Formato personalizado para logs estruturados
-const logFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
-  winston.format.errors({ stack: true }),
-  winston.format.json(),
-  winston.format.printf(info => {
-    const { timestamp, level, message, ...meta } = info;
-
-    const logEntry = {
-      timestamp,
-      level,
-      message,
-      service: 'fisioflow-api',
-      environment: process.env.NODE_ENV || 'development',
-      version: process.env.npm_package_version || '1.0.0',
-      ...meta,
-    };
-
-    return JSON.stringify(logEntry);
-  })
-);
-
-// Formato para console (desenvolvimento)
-const consoleFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'HH:mm:ss' }),
-  winston.format.colorize({ all: true }),
-  winston.format.printf(info => {
-    const { timestamp, level, message, ...meta } = info;
-    const metaStr = Object.keys(meta).length
-      ? JSON.stringify(meta, null, 2)
-      : '';
-    return `${timestamp} [${level}]: ${message} ${metaStr}`;
-  })
-);
-
-// Configuração de transports
-const transports: winston.transport[] = [];
-
-// Console transport (sempre ativo em desenvolvimento)
-if (process.env.NODE_ENV !== 'production') {
-  transports.push(
-    new winston.transports.Console({
-      format: consoleFormat,
-      level: process.env.LOG_LEVEL || 'debug',
-    })
-  );
-}
-
-// File transports (produção)
-if (process.env.NODE_ENV === 'production') {
-  // Log de erros
-  transports.push(
-    new winston.transports.File({
-      filename: path.join(process.cwd(), 'logs', 'error.log'),
-      level: 'error',
-      format: logFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    })
-  );
-
-  // Log combinado
-  transports.push(
-    new winston.transports.File({
-      filename: path.join(process.cwd(), 'logs', 'combined.log'),
-      format: logFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    })
-  );
-
-  // Console em produção (formato JSON)
-  transports.push(
-    new winston.transports.Console({
-      format: logFormat,
-      level: process.env.LOG_LEVEL || 'info',
-    })
-  );
-}
-
-// Criar logger principal
-const logger = winston.createLogger({
-  level:
-    process.env.LOG_LEVEL ||
-    (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
-  levels: logLevels,
-  format: logFormat,
-  transports,
-  exitOnError: false,
+// Configuração otimizada do Pino para produção
+const logger = pino({
+  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+  formatters: {
+    level: (label) => {
+      return { level: label };
+    },
+  },
+  timestamp: pino.stdTimeFunctions.isoTime,
+  base: {
+    service: 'fisioflow-api',
+    environment: process.env.NODE_ENV || 'development',
+    version: process.env.npm_package_version || '1.0.0',
+  },
+  transport: process.env.NODE_ENV !== 'production' ? {
+    target: 'pino-pretty',
+    options: {
+      colorize: true,
+      translateTime: 'HH:MM:ss',
+      ignore: 'pid,hostname',
+    },
+  } : undefined,
 });
 
 // Interfaces para logs estruturados
@@ -147,52 +58,53 @@ interface SecurityLogContext extends LogContext {
 
 // Classe Logger estruturado
 class StructuredLogger {
-  private logger: winston.Logger;
+  private logger: pino.Logger;
 
-  constructor(logger: winston.Logger) {
+  constructor(logger: pino.Logger) {
     this.logger = logger;
   }
 
   // Logs gerais
   info(message: string, context?: LogContext) {
-    this.logger.info(message, context);
+    this.logger.info(context, message);
   }
 
   warn(message: string, context?: LogContext) {
-    this.logger.warn(message, context);
+    this.logger.warn(context, message);
   }
 
   error(message: string, error?: Error, context?: LogContext) {
-    this.logger.error(message, {
-      ...context,
-      error: error
-        ? {
+    const errorContext = error
+      ? {
+          ...context,
+          error: {
             name: error.name,
             message: error.message,
             stack: error.stack,
-          }
-        : undefined,
-    });
+          },
+        }
+      : context;
+    this.logger.error(errorContext, message);
   }
 
   debug(message: string, context?: LogContext) {
-    this.logger.debug(message, context);
+    this.logger.debug(context, message);
   }
 
   // Logs específicos para HTTP
   http(message: string, context: LogContext) {
-    this.logger.http(message, {
+    this.logger.info({
       ...context,
       type: 'http_request',
-    });
+    }, message);
   }
 
   // Logs de banco de dados
   database(message: string, context: DatabaseLogContext) {
-    this.logger.info(message, {
+    this.logger.info({
       ...context,
       type: 'database',
-    });
+    }, message);
   }
 
   // Logs de segurança
@@ -201,10 +113,18 @@ class StructuredLogger {
       context.severity === 'critical' || context.severity === 'high'
         ? 'error'
         : 'warn';
-    this.logger.log(level, message, {
-      ...context,
-      type: 'security',
-    });
+    
+    if (level === 'error') {
+      this.logger.error({
+        ...context,
+        type: 'security',
+      }, message);
+    } else {
+      this.logger.warn({
+        ...context,
+        type: 'security',
+      }, message);
+    }
   }
 
   // Logs de performance
@@ -212,10 +132,10 @@ class StructuredLogger {
     message: string,
     context: LogContext & { duration: number; operation: string }
   ) {
-    this.logger.info(message, {
+    this.logger.info({
       ...context,
       type: 'performance',
-    });
+    }, message);
   }
 
   // Logs de auditoria
@@ -223,10 +143,10 @@ class StructuredLogger {
     message: string,
     context: LogContext & { action: string; resource: string }
   ) {
-    this.logger.info(message, {
+    this.logger.info({
       ...context,
       type: 'audit',
-    });
+    }, message);
   }
 }
 
