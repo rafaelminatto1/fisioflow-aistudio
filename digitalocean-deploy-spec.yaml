@@ -1,0 +1,50 @@
+name: fisioflow-test
+region: nyc
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: fisioflow/fisioflow-aistudio-1
+    branch: main
+    deploy_on_push: false
+  build_command: |
+    echo "Installing dependencies..."
+    npm ci --only=production --no-audit --no-fund
+    echo "Generating Prisma client..."
+    npx prisma generate
+    echo "Building application..."
+    npm run build
+  run_command: npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: professional-xs
+  http_port: 3000
+  health_check:
+    http_path: /api/health
+    initial_delay_seconds: 90
+    period_seconds: 30
+    timeout_seconds: 15
+    success_threshold: 1
+    failure_threshold: 5
+  routes:
+  - path: /
+  envs:
+  - key: NODE_ENV
+    value: production
+  - key: NEXT_TELEMETRY_DISABLED
+    value: "1"
+  - key: PORT
+    value: "3000"
+  - key: HOSTNAME
+    value: "0.0.0.0"
+  - key: SKIP_ENV_VALIDATION
+    value: "true"
+  # These should be set as encrypted environment variables in DO console
+  - key: DATABASE_URL
+    value: "postgresql://fisioflow_user:REPLACE_PASSWORD@fisioflow-db-do-user-XXXXX-0.b.db.ondigitalocean.com:25060/fisioflow?sslmode=require&pool_timeout=30"
+  - key: DIRECT_URL
+    value: "postgresql://fisioflow_user:REPLACE_PASSWORD@fisioflow-db-do-user-XXXXX-0.b.db.ondigitalocean.com:25060/fisioflow?sslmode=require"
+  - key: NEXTAUTH_SECRET
+    value: "REPLACE_WITH_32_CHAR_SECRET"
+  - key: NEXTAUTH_URL
+    value: "https://fisioflow-test.ondigitalocean.app"

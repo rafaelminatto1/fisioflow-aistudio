@@ -10,18 +10,22 @@ WORKDIR /app
 
 # Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
+COPY prisma ./prisma/
+
 # Install all dependencies including dev dependencies for build process
-# Use npm ci with cache mount for faster builds
+# Use npm ci with cache mount for faster builds (with postinstall disabled)
 RUN --mount=type=cache,target=/root/.npm \
-    npm ci --no-audit --no-fund
+    npm ci --no-audit --no-fund --ignore-scripts
 
 # Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy package.json and prisma schema first
+# Copy package files first for better caching
 COPY package*.json ./
+
+# Copy prisma schema BEFORE installing dependencies
 COPY prisma ./prisma/
 
 # Set build-time environment variables
@@ -29,7 +33,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
 
-# Generate Prisma client with cache
+# Generate Prisma client with cache (after copying schema)
 RUN --mount=type=cache,target=/app/.prisma \
     npx prisma generate
 

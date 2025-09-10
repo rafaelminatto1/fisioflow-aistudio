@@ -1,0 +1,101 @@
+name: fisioflow-optimized
+region: nyc
+services:
+- name: web
+  source_dir: /
+  github:
+    repo: fisioflow/fisioflow-aistudio-1
+    branch: main
+    deploy_on_push: true
+  dockerfile_path: Dockerfile.optimized
+  build_command: |
+    echo "🚀 Starting optimized build..."
+    echo "📦 Installing dependencies..."
+    npm ci --only=production --no-audit --no-fund
+    echo "🔧 Generating Prisma client..."
+    npx prisma generate
+    echo "🏗️ Building application..."
+    NODE_OPTIONS="--max-old-space-size=2048" npm run build
+    echo "✅ Build completed successfully!"
+  run_command: NODE_OPTIONS="--max-old-space-size=1024" npm start
+  environment_slug: node-js
+  instance_count: 1
+  instance_size_slug: professional-xs
+  http_port: 3000
+  health_check:
+    http_path: /api/health
+    initial_delay_seconds: 90
+    period_seconds: 30
+    timeout_seconds: 15
+    success_threshold: 1
+    failure_threshold: 3
+  routes:
+  - path: /
+  envs:
+  # Core environment
+  - key: NODE_ENV
+    value: production
+  - key: NEXT_TELEMETRY_DISABLED
+    value: "1"
+  - key: PORT
+    value: "3000"
+  - key: HOSTNAME
+    value: "0.0.0.0"
+  - key: SKIP_ENV_VALIDATION
+    value: "true"
+  
+  # Memory optimization
+  - key: NODE_OPTIONS
+    value: "--max-old-space-size=1024"
+  
+  # Database (configure with real values)
+  - key: DATABASE_URL
+    value: "postgresql://username:password@host:25060/database?sslmode=require&pool_timeout=30&pool_max=5&pool_min=1"
+  - key: DIRECT_URL
+    value: "postgresql://username:password@host:25060/database?sslmode=require"
+  
+  # Database optimization
+  - key: DB_POOL_SIZE
+    value: "5"
+  - key: DB_CONNECTION_TIMEOUT
+    value: "30000"
+  - key: DB_MAX_CONNECTIONS
+    value: "5"
+  - key: DB_MIN_CONNECTIONS
+    value: "1"
+  
+  # Auth
+  - key: NEXTAUTH_SECRET
+    value: "REPLACE_WITH_32_CHAR_SECRET"
+  - key: NEXTAUTH_URL
+    value: "https://fisioflow-optimized.ondigitalocean.app"
+  
+  # Performance optimization
+  - key: ROUTE_CACHE_ENABLED
+    value: "true"
+  - key: ROUTE_CACHE_TTL
+    value: "600"
+  - key: COMPRESSION_ENABLED
+    value: "true"
+  - key: STATIC_CACHE_TTL
+    value: "3600"
+  
+  # Logging (reduced for performance)
+  - key: LOG_LEVEL
+    value: "warn"
+  - key: LOG_PRETTY
+    value: "false"
+  
+  # Features (disabled for performance)
+  - key: DISABLE_ANALYTICS
+    value: "true"
+  - key: DISABLE_TELEMETRY
+    value: "true"
+
+# Optional: Managed Database
+# databases:
+# - engine: PG
+#   name: fisioflow-db-optimized
+#   num_nodes: 1
+#   size: db-s-1vcpu-2gb
+#   version: "15"

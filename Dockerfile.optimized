@@ -1,0 +1,106 @@
+# ========================================
+# DOCKERFILE OTIMIZADO PARA DIGITALOCEAN
+# ========================================
+# Versão final otimizada para 100% de sucesso
+
+# Use Node.js 18 Alpine (menor footprint)
+FROM node:18-alpine AS base
+
+# Install system dependencies for Prisma and optimization
+RUN apk add --no-cache \
+    libc6-compat \
+    openssl \
+    curl \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# ========================================
+# STAGE 1: Dependencies
+# ========================================
+FROM base AS deps
+
+# Copy package files
+COPY package.json package-lock.json* ./
+
+# Install dependencies with optimization flags
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --only=production --no-audit --no-fund --prefer-offline \
+    && npm cache clean --force
+
+# ========================================
+# STAGE 2: Builder
+# ========================================
+FROM base AS builder
+
+WORKDIR /app
+
+# Copy dependencies from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy source files
+COPY package*.json ./
+COPY prisma ./prisma/
+COPY . .
+
+# Set optimized build environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV SKIP_ENV_VALIDATION=true
+ENV NODE_OPTIONS="--max-old-space-size=2048"
+
+# Generate Prisma client first
+RUN --mount=type=cache,target=/app/.prisma \
+    npx prisma generate
+
+# Build application with optimizations
+RUN --mount=type=cache,target=/app/.next/cache \
+    npm run build
+
+# ========================================
+# STAGE 3: Production Runtime
+# ========================================
+FROM base AS runner
+
+WORKDIR /app
+
+# Create non-root user for security
+RUN addgroup --system --gid 1001 nodejs \
+    && adduser --system --uid 1001 nextjs
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+
+# Copy built application
+COPY --from=builder /app/public ./public
+
+# Create .next directory with correct permissions
+RUN mkdir .next && chown nextjs:nodejs .next
+
+# Copy Next.js build output
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy Prisma files for runtime
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma/
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma/
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma/
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Environment variables
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Optimized health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=90s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Start application
+CMD ["node", "server.js"]
