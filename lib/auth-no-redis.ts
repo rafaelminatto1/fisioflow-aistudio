@@ -34,7 +34,7 @@ declare module 'next-auth/jwt' {
   }
 }
 
-// Configuração simplificada do NextAuth sem Redis
+// Configuração do NextAuth sem Redis (versão simplificada para produção)
 export const authOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -44,7 +44,7 @@ export const authOptions = {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Senha', type: 'password' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         try {
           console.log('[AUTH] Starting authorization process');
           
@@ -60,7 +60,7 @@ export const authOptions = {
           
           console.log('[AUTH] Credentials format validated for:', credentials.email);
 
-          // Buscar usuário no banco
+          // Rate limiting removido para evitar dependência do Redis
           console.log('[AUTH] Searching for user:', credentials.email);
           const user = await prisma.user.findUnique({
             where: { email: credentials.email },
@@ -95,6 +95,18 @@ export const authOptions = {
           
         } catch (error) {
           console.error('[AUTH] Authorization error:', error);
+          
+          // Log detailed error information in production
+          if (process.env.NODE_ENV === 'production') {
+            console.error('[AUTH] Production error details:', {
+              message: error instanceof Error ? error.message : 'Unknown error',
+              stack: error instanceof Error ? error.stack : 'No stack trace',
+              email: credentials?.email,
+              timestamp: new Date().toISOString()
+            });
+          }
+          
+          // Re-throw the error to maintain NextAuth's error handling
           throw error;
         }
       },
@@ -105,7 +117,7 @@ export const authOptions = {
     maxAge: 8 * 60 * 60, // 8 horas
   },
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }) {
       try {
         if (user) {
           console.log('[AUTH] JWT callback - adding user data to token');
@@ -119,7 +131,7 @@ export const authOptions = {
         throw error;
       }
     },
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       try {
         if (session.user) {
           console.log('[AUTH] Session callback - building session for user:', token.id);
@@ -141,12 +153,49 @@ export const authOptions = {
   },
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
+  // Production specific settings
+  useSecureCookies: process.env.NODE_ENV === 'production',
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === 'production' ? '__Secure-next-auth.session-token' : 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 8 * 60 * 60, // 8 hours
+      },
+    },
+  },
+  // Events for debugging production issues
+  events: {
+    async signIn(message) {
+      console.log('[AUTH] SignIn event:', { 
+        userId: message.user.id, 
+        email: message.user.email, 
+        isNewUser: message.isNewUser,
+        timestamp: new Date().toISOString() 
+      });
+    },
+    async signOut() {
+      console.log('[AUTH] SignOut event:', { 
+        timestamp: new Date().toISOString() 
+      });
+    },
+    async session(message) {
+      console.log('[AUTH] Session event:', { 
+        userId: message.session?.user?.id,
+        timestamp: new Date().toISOString() 
+      });
+    },
+  },
 };
 
 const handler = NextAuth(authOptions);
+const { auth, signIn, signOut } = handler;
+const handlers = { GET: handler.handlers.GET, POST: handler.handlers.POST };
 
-export { handler as GET, handler as POST };
-export const { auth, signIn, signOut } = handler;
+export { auth, handlers, signIn, signOut };
 
 /**
  * Helper para obter a sessão do usuário no lado do servidor.
