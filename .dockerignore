@@ -54,11 +54,12 @@ Thumbs.db
 # Git
 .git
 .gitignore
-README.md
 
 # Documentation
 /docs
 *.md
+README.md
+DEPLOY.md
 
 # Logs
 logs
@@ -75,3 +76,37 @@ pids
 
 # Optional eslint cache
 .eslintcache
+
+# Ensure prisma folder is included
+!prisma/
+
+# Scripts
+scripts/
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Development files
+.env.example
+.env.production.example
+
+# Cache directories
+.cache
+.parcel-cache
+
+# Temporary files
+.tmp
+.temp
+
+# MacOS
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Linux
+*~
