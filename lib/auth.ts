@@ -26,10 +26,10 @@ export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   providers: [
     CredentialsProvider({
-      name: 'Credentials',
+      name: 'Credenciais',
       credentials: {
         email: { label: 'Email', type: 'text' },
-        password: { label: 'Password', type: 'password' },
+        password: { label: 'Senha', type: 'password' },
       },
       async authorize(credentials, req) {
         if (

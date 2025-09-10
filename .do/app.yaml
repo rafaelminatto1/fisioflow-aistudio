@@ -38,10 +38,25 @@ services:
   - key: DATABASE_URL
     scope: RUN_AND_BUILD_TIME
     type: SECRET
+  - key: DIRECT_URL
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: REDIS_URL
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
   - key: NEXTAUTH_SECRET
     scope: RUN_AND_BUILD_TIME
     type: SECRET
   - key: NEXTAUTH_URL
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: ANTHROPIC_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: OPENAI_API_KEY
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  - key: GEMINI_API_KEY
     scope: RUN_AND_BUILD_TIME
     type: SECRET
   - key: PRISMA_GENERATE_DATAPROXY
@@ -50,8 +65,18 @@ services:
   - key: SKIP_ENV_VALIDATION
     scope: RUN_AND_BUILD_TIME
     value: "true"
+  - key: LOG_LEVEL
+    scope: RUN_AND_BUILD_TIME
+    value: "info"
+  - key: HEALTH_CHECK_ENABLED
+    scope: RUN_AND_BUILD_TIME
+    value: "true"
 databases:
 - name: fisioflow-db
   engine: PG
   version: "14"
+  size: db-s-1vcpu-1gb
+- name: fisioflow-redis
+  engine: REDIS
+  version: "7"
   size: db-s-1vcpu-1gb

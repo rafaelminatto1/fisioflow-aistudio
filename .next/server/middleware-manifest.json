@@ -1,6 +1,32 @@
 {
   "version": 3,
-  "middleware": {},
+  "middleware": {
+    "/": {
+      "files": [
+        "server/edge-runtime-webpack.js",
+        "server/middleware.js"
+      ],
+      "name": "middleware",
+      "page": "/",
+      "matchers": [
+        {
+          "regexp": "^(?:\\/(_next\\/data\\/[^/]{1,}))?(?:\\/((?!api|_next\\/static|_next\\/image|favicon.ico|health).*))(.json)?[\\/#\\?]?$",
+          "originalSource": "/((?!api|_next/static|_next/image|favicon.ico|health).*)"
+        }
+      ],
+      "wasm": [],
+      "assets": [],
+      "env": {
+        "__NEXT_BUILD_ID": "build-1757478963427",
+        "NEXT_SERVER_ACTIONS_ENCRYPTION_KEY": "oD5MERw76/aAfGCaYxeqgw/TI2agO2opc6GFrreu7Nw=",
+        "__NEXT_PREVIEW_MODE_ID": "f8b52eeb75fc149ff1ecd1ce66286250",
+        "__NEXT_PREVIEW_MODE_ENCRYPTION_KEY": "ec5130d78a90e1c7dd128570272986f4247cc0954f8223a5e60e43b41507ed01",
+        "__NEXT_PREVIEW_MODE_SIGNING_KEY": "1bcfe5b2debf6b8feb4645a738f51d6151cb32bfcc1ce0ab2fa10b907c7a4464"
+      }
+    }
+  },
   "functions": {},
-  "sortedMiddleware": []
+  "sortedMiddleware": [
+    "/"
+  ]
 }

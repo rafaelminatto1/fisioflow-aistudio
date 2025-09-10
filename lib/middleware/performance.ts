@@ -163,8 +163,9 @@ export function createHealthCheckHandler() {
         const { duration: dbDuration } = await measureExecutionTime(
           'database.ping',
           async () => {
-            // Add your database ping logic here
-            await new Promise(resolve => setTimeout(resolve, 10)); // Mock ping
+            // Real database ping using Prisma
+            const prisma = await import('@/lib/prisma').then(m => m.default);
+            await prisma.$queryRaw`SELECT 1`;
             return true;
           }
         );
@@ -186,8 +187,9 @@ export function createHealthCheckHandler() {
         const { duration: redisDuration } = await measureExecutionTime(
           'redis.ping',
           async () => {
-            // Add your Redis ping logic here
-            await new Promise(resolve => setTimeout(resolve, 5)); // Mock ping
+            // Real Redis ping
+            const redis = await import('@/lib/redis').then(m => m.default);
+            await redis.ping();
             return true;
           }
         );
