@@ -1,0 +1,16 @@
+RELATÓRIO DE SEGURANÇA - FISIOFLOW
+Data: Wed Sep 10 14:48:52 -03 2025
+URL: https://fisioflow-uaphq.ondigitalocean.app
+===========================================
+
+RESUMO:
+- SSL/TLS: Verificado
+- Headers de Segurança: Verificados
+- Rate Limiting: Testado
+- Endpoints Críticos: Verificados
+- Vulnerabilidades Comuns: Testadas
+- Exposição de Informações: Verificada
+
+Para detalhes completos, consulte os logs de execução.
+
+Próxima verificação recomendada: 

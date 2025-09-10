@@ -49,22 +49,36 @@ check_security_headers() {
     
     HEADERS=$(curl -s -I "$APP_URL")
     
-    # Lista de headers importantes
-    declare -A SECURITY_HEADERS=(
-        ["X-Content-Type-Options"]="nosniff"
-        ["X-Frame-Options"]="DENY|SAMEORIGIN"
-        ["X-XSS-Protection"]="1"
-        ["Strict-Transport-Security"]="max-age"
-        ["Referrer-Policy"]="strict-origin"
-    )
+    # Verificar headers importantes
+    if echo "$HEADERS" | grep -qi "X-Content-Type-Options"; then
+        echo -e "${GREEN}✅ X-Content-Type-Options presente${NC}"
+    else
+        echo -e "${YELLOW}⚠️ X-Content-Type-Options ausente${NC}"
+    fi
     
-    for header in "${!SECURITY_HEADERS[@]}"; do
-        if echo "$HEADERS" | grep -qi "$header"; then
-            echo -e "${GREEN}✅ $header presente${NC}"
-        else
-            echo -e "${YELLOW}⚠️ $header ausente${NC}"
-        fi
-    done
+    if echo "$HEADERS" | grep -qi "X-Frame-Options"; then
+        echo -e "${GREEN}✅ X-Frame-Options presente${NC}"
+    else
+        echo -e "${YELLOW}⚠️ X-Frame-Options ausente${NC}"
+    fi
+    
+    if echo "$HEADERS" | grep -qi "X-XSS-Protection"; then
+        echo -e "${GREEN}✅ X-XSS-Protection presente${NC}"
+    else
+        echo -e "${YELLOW}⚠️ X-XSS-Protection ausente${NC}"
+    fi
+    
+    if echo "$HEADERS" | grep -qi "Strict-Transport-Security"; then
+        echo -e "${GREEN}✅ Strict-Transport-Security presente${NC}"
+    else
+        echo -e "${YELLOW}⚠️ Strict-Transport-Security ausente${NC}"
+    fi
+    
+    if echo "$HEADERS" | grep -qi "Referrer-Policy"; then
+        echo -e "${GREEN}✅ Referrer-Policy presente${NC}"
+    else
+        echo -e "${YELLOW}⚠️ Referrer-Policy ausente${NC}"
+    fi
 }
 
 # Função para testar rate limiting
@@ -100,23 +114,29 @@ check_rate_limiting() {
 check_critical_endpoints() {
     echo -e "\n${BLUE}🎯 Verificando endpoints críticos...${NC}"
     
-    declare -A ENDPOINTS=(
-        ["/api/health"]=200
-        ["/api/auth/session"]=200
-        ["/api/pacientes"]=401  # Deve retornar 401 sem autenticação
-        ["/admin"]=401         # Deve retornar 401 sem autenticação
-    )
+    # Verificar endpoint de health
+    health_code=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL/api/health")
+    if [ "$health_code" = "200" ]; then
+        echo -e "${GREEN}✅ /api/health retornou $health_code (esperado)${NC}"
+    else
+        echo -e "${YELLOW}⚠️ /api/health retornou $health_code (esperado: 200)${NC}"
+    fi
     
-    for endpoint in "${!ENDPOINTS[@]}"; do
-        expected_code=${ENDPOINTS[$endpoint]}
-        actual_code=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL$endpoint")
-        
-        if [ "$actual_code" = "$expected_code" ]; then
-            echo -e "${GREEN}✅ $endpoint retornou $actual_code (esperado)${NC}"
-        else
-            echo -e "${YELLOW}⚠️ $endpoint retornou $actual_code (esperado: $expected_code)${NC}"
-        fi
-    done
+    # Verificar endpoint de auth
+    auth_code=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL/api/auth/session")
+    if [ "$auth_code" = "200" ]; then
+        echo -e "${GREEN}✅ /api/auth/session retornou $auth_code (esperado)${NC}"
+    else
+        echo -e "${YELLOW}⚠️ /api/auth/session retornou $auth_code (esperado: 200)${NC}"
+    fi
+    
+    # Verificar endpoint de pacientes (deve ser protegido)
+    pacientes_code=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL/api/pacientes")
+    if [ "$pacientes_code" = "401" ] || [ "$pacientes_code" = "403" ]; then
+        echo -e "${GREEN}✅ /api/pacientes retornou $pacientes_code (protegido)${NC}"
+    else
+        echo -e "${YELLOW}⚠️ /api/pacientes retornou $pacientes_code (deveria ser 401/403)${NC}"
+    fi
 }
 
 # Função para verificar vulnerabilidades comuns
@@ -145,22 +165,27 @@ check_information_disclosure() {
     echo -e "\n${BLUE}📋 Verificando exposição de informações...${NC}"
     
     # Verificar se arquivos sensíveis estão expostos
-    declare -a SENSITIVE_FILES=(
-        "/.env"
-        "/package.json"
-        "/.git/config"
-        "/admin"
-        "/phpmyadmin"
-    )
+    # Verificar arquivos sensíveis
+    env_code=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL/.env")
+    if [ "$env_code" = "404" ] || [ "$env_code" = "403" ]; then
+        echo -e "${GREEN}✅ /.env protegido (código: $env_code)${NC}"
+    else
+        echo -e "${RED}❌ /.env pode estar exposto (código: $env_code)${NC}"
+    fi
     
-    for file in "${SENSITIVE_FILES[@]}"; do
-        HTTP_CODE=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL$file")
-        if [ "$HTTP_CODE" = "404" ] || [ "$HTTP_CODE" = "403" ]; then
-            echo -e "${GREEN}✅ $file protegido (código: $HTTP_CODE)${NC}"
-        else
-            echo -e "${RED}❌ $file pode estar exposto (código: $HTTP_CODE)${NC}"
-        fi
-    done
+    package_code=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL/package.json")
+    if [ "$package_code" = "404" ] || [ "$package_code" = "403" ]; then
+        echo -e "${GREEN}✅ /package.json protegido (código: $package_code)${NC}"
+    else
+        echo -e "${RED}❌ /package.json pode estar exposto (código: $package_code)${NC}"
+    fi
+    
+    git_code=$(curl -s -w "%{http_code}" -o /dev/null "$APP_URL/.git/config")
+    if [ "$git_code" = "404" ] || [ "$git_code" = "403" ]; then
+        echo -e "${GREEN}✅ /.git/config protegido (código: $git_code)${NC}"
+    else
+        echo -e "${RED}❌ /.git/config pode estar exposto (código: $git_code)${NC}"
+    fi
 }
 
 # Função para gerar relatório

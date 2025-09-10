@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
       auth_check: 'pending'
     },
     
-    recommendations: []
+    recommendations: [] as string[]
   };
 
   try {
