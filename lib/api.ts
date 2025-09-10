@@ -1,16 +1,17 @@
 // lib/api.ts
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
-import winston from 'winston';
+import pino from 'pino';
 
-// Configure Winston logger
-const logger = winston.createLogger({
-  level: 'info',
-  format: winston.format.combine(
-    winston.format.timestamp(),
-    winston.format.json()
-  ),
-  transports: [new winston.transports.Console()],
+// Configure Pino logger (optimized for production)
+const logger = pino({
+  level: process.env.LOG_LEVEL || 'info',
+  formatters: {
+    level: (label) => {
+      return { level: label };
+    },
+  },
+  timestamp: pino.stdTimeFunctions.isoTime,
 });
 
 // --- Instância Axios Configurada ---
