@@ -36,18 +36,18 @@ Arquitetura Híbrida Detectada:
 
 ```mermaid
 graph TD
-    A[Usuários] --> B[Cloudflare CDN]
-    B --> C[Vercel Edge Network]
-    C --> D[Next.js Application]
-    D --> E[Neon DB]
+    A[Usuários] --> B[DO CDN]
+    B --> C[DO Load Balancer]
+    C --> D[DO App Platform]
+    D --> E[DO Managed PostgreSQL]
     D --> F[NextAuth.js]
-    D --> G[Upstash Redis]
-    D --> H[Cloudinary Media]
+    D --> G[DO Managed Redis]
+    D --> H[DO Spaces]
 
-    subgraph "Monitoramento"
-        I[Vercel Analytics]
-        J[Sentry Error Tracking]
-        K[LogRocket Session Replay]
+    subgraph "Monitoramento Digital Ocean"
+        I[DO Monitoring]
+        J[DO Alerting]
+        K[DO Insights]
     end
 
     D --> I
@@ -57,14 +57,14 @@ graph TD
 
 ### 2.2 Infraestrutura Recomendada
 
-| Componente        | Solução                   | Justificativa                          |
-| ----------------- | ------------------------- | -------------------------------------- |
-| **Hosting**       | Vercel Pro                | Otimizado para Next.js, Edge Functions |
-| **Database**      | Neon DB                   | PostgreSQL gerenciado, serverless      |
-| **Cache**         | Upstash Redis             | Serverless, baixa latência             |
-| **CDN**           | Cloudflare                | Performance global, DDoS protection    |
-| **Media Storage** | Cloudinary                | Otimização automática de imagens       |
-| **Monitoring**    | Vercel Analytics + Sentry | Performance e error tracking           |
+| Componente        | Solução                     | Justificativa                            |
+| ----------------- | --------------------------- | ---------------------------------------- |
+| **Hosting**       | DO App Platform             | Deploy automático, escalabilidade       |
+| **Database**      | DO Managed PostgreSQL      | PostgreSQL gerenciado, alta performance  |
+| **Cache**         | DO Managed Redis            | Cache gerenciado, baixa latência        |
+| **CDN**           | DO CDN                      | Performance global, integração nativa   |
+| **Media Storage** | DO Spaces                   | Storage S3-compatível, custo-benefício  |
+| **Monitoring**    | DO Monitoring + Alerting    | Monitoramento integrado, alertas        |
 
 ### 2.3 Configuração de Ambiente
 
@@ -72,10 +72,13 @@ graph TD
 # Produção
 NEXTAUTH_URL=https://fisioflow.com
 NEXTAUTH_SECRET=your-secret-key
-DATABASE_URL=your-neon-db-connection-string
-NEON_DATABASE_URL=your-neon-db-url
-UPSTASH_REDIS_URL=your-redis-url
-CLOUDINARY_URL=your-cloudinary-url
+DATABASE_URL=your-do-postgresql-connection-string
+DO_DATABASE_URL=your-do-managed-db-url
+DO_REDIS_URL=your-do-redis-url
+DO_SPACES_KEY=your-do-spaces-key
+DO_SPACES_SECRET=your-do-spaces-secret
+DO_SPACES_ENDPOINT=your-do-spaces-endpoint
+DO_SPACES_BUCKET=your-do-spaces-bucket
 
 # Desenvolvimento
 NEXTAUTH_URL=http://localhost:3000
@@ -151,26 +154,28 @@ const { data: session, isLoading } = useSWR('session', () => getSession(), {
 ### Fase 1: Preparação (Semanas 1-2)
 
 - [ ] Migração completa para App Router
-- [ ] Configuração do banco Neon DB
-- [ ] Setup de variáveis de ambiente
-- [ ] Implementação de NextAuth com Neon DB
+- [ ] Configuração do DO Managed PostgreSQL
+- [ ] Setup de variáveis de ambiente Digital Ocean
+- [ ] Implementação de NextAuth com DO Database
+- [ ] Configuração do DO Spaces para storage
 - [ ] Testes de integração básicos
 
 ### Fase 2: Otimização (Semanas 3-4)
 
 - [ ] Implementação das otimizações de login
 - [ ] Code splitting e lazy loading
-- [ ] Configuração de cache Redis
-- [ ] Otimização de imagens e assets
+- [ ] Configuração de cache DO Redis
+- [ ] Otimização de imagens com DO Spaces
+- [ ] Configuração do DO CDN
 - [ ] Implementação de PWA features
 
 ### Fase 3: Deploy e Monitoramento (Semana 5)
 
-- [ ] Setup de CI/CD com GitHub Actions
-- [ ] Deploy em staging (Vercel Preview)
-- [ ] Configuração de monitoramento
+- [ ] Setup de CI/CD com DO App Platform
+- [ ] Deploy em staging (DO Preview)
+- [ ] Configuração de DO Monitoring e Alerting
 - [ ] Testes de carga e performance
-- [ ] Deploy em produção
+- [ ] Deploy em produção DO App Platform
 
 ### Fase 4: Pós-Deploy (Semana 6+)
 

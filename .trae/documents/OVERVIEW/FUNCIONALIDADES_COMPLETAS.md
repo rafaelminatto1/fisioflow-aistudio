@@ -3,9 +3,9 @@
 ## 🎯 Visão Geral do Projeto
 
 O **FisioFlow** é uma plataforma completa de gestão para clínicas de fisioterapia, desenvolvida com
-Next.js 14, TypeScript e integrada com Railway (deploy) e Neon DB (banco de dados PostgreSQL). O
-sistema oferece funcionalidades abrangentes para gestão de pacientes, agendamentos, relatórios e
-muito mais.
+Next.js 14, TypeScript e integrada com Digital Ocean App Platform (deploy) e DO Managed PostgreSQL
+(banco de dados). O sistema oferece funcionalidades abrangentes para gestão de pacientes,
+agendamentos, relatórios e muito mais.
 
 ---
 
@@ -83,33 +83,33 @@ muito mais.
 
 ## 🔧 2. Sistema MCP (Model Context Protocol)
 
-### 🚂 Integração Railway
+### 🌊 Integração Digital Ocean App Platform
 
-- **Deploy Automatizado**: CI/CD completo
+- **Deploy Automatizado**: CI/CD integrado com GitHub
 
-- **Monitoramento**: Logs, métricas, alertas
+- **Monitoramento**: DO Monitoring com métricas e alertas
 
-- **Escalabilidade**: Auto-scaling baseado em demanda
+- **Escalabilidade**: Auto-scaling horizontal e vertical
 
 - **Configuração de Ambiente**: Produção, staging, desenvolvimento
 
 - **Health Checks**: Verificação automática de saúde da aplicação
 
-- **Rate Limiting**: Controle de requisições por IP/usuário
+- **Load Balancer**: Distribuição automática de carga
 
-### 🐘 Integração Neon DB
+### 🐘 Integração DO Managed PostgreSQL
 
-- **PostgreSQL Serverless**: Banco de dados escalável
+- **PostgreSQL Gerenciado**: Banco de dados alta performance
 
-- **Backup Automático**: Snapshots diários e recuperação
+- **Backup Automático**: Snapshots diários e point-in-time recovery
 
-- **Monitoramento de Performance**: Query analysis, índices
+- **Monitoramento de Performance**: Query insights e otimização
 
-- **SSL Obrigatório**: Conexões seguras
+- **SSL Obrigatório**: Conexões seguras por padrão
 
-- **Branching**: Ambientes isolados para desenvolvimento
+- **Read Replicas**: Réplicas de leitura para performance
 
-- **Connection Pooling**: Otimização de conexões
+- **Connection Pooling**: PgBouncer integrado
 
 ### 📋 Scripts MCP Disponíveis
 
@@ -121,21 +121,21 @@ npm run mcp:validate
 npm run mcp:setup
 
 # Testes específicos
-npm run mcp:test-railway
-npm run mcp:test-neon
+npm run mcp:test-do-app
+npm run mcp:test-do-db
 
 # Health checks
 npm run mcp:health
 
-# Operações Neon DB
-npm run neon:status
-npm run neon:backup
-npm run neon:maintenance
+# Operações DO Database
+npm run do-db:status
+npm run do-db:backup
+npm run do-db:maintenance
 
-# Operações Railway
-npm run railway:deploy
-npm run railway:logs
-npm run railway:status
+# Operações DO App Platform
+npm run do-app:deploy
+npm run do-app:logs
+npm run do-app:status
 ```
 
 ---
@@ -144,11 +144,11 @@ npm run railway:status
 
 ### 🔄 Sistema Automatizado
 
-- **Detecção de CLIs**: Verificação automática do Railway CLI e Neon CLI
+- **Detecção de CLIs**: Verificação automática do DO CLI (doctl)
 
-- **Login Automático**: Autenticação nas plataformas
+- **Login Automático**: Autenticação via DO API Token
 
-- **Obtenção de Credenciais**: Extração automática de API keys e configurações
+- **Obtenção de Credenciais**: Extração automática de connection strings e configurações
 
 - **Atualização do .env.local**: Substituição de placeholders por valores reais
 
@@ -164,8 +164,9 @@ npm run env:auto-setup
 npm run env:update-from-cli
 
 # Setup individual
-npm run env:setup-railway
-npm run env:setup-neon
+npm run env:setup-do-app
+npm run env:setup-do-db
+npm run env:setup-do-spaces
 
 # Validação e testes
 npm run env:validate
@@ -178,15 +179,17 @@ npm run env:restore
 
 ### 🔐 Variáveis Configuradas
 
-- **Railway**: API Key, Project ID, domínios de produção/staging
+- **Digital Ocean**: API Token, App ID, domínios de produção/staging
 
-- **Neon DB**: API Key, Project ID, connection strings
+- **DO Database**: Connection strings, SSL certificates
+
+- **DO Spaces**: Access Key, Secret Key, Endpoint, Bucket
 
 - **NextAuth**: Secret, URL, provedores OAuth
 
 - **APIs Externas**: OpenAI, Anthropic, Gemini
 
-- **Configurações Opcionais**: Redis, uploads, email
+- **Configurações Opcionais**: DO Redis, uploads, email
 
 ---
 

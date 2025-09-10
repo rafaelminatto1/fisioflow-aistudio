@@ -27,6 +27,7 @@ model User {
   financialTransactions FinancialTransaction[]
   professionalPayouts   ProfessionalPayout[]
   inventoryLogs         InventoryLog[]
+  issuedReceipts        Receipt[]
 
   organizedEvents        Event[]             @relation("OrganizedEvents")
   checkedInRegistrations EventRegistration[] @relation("CheckedInRegistrations")
@@ -58,6 +59,7 @@ model Patient {
   payments              Payment[]
   assessmentResults     AssessmentResult[]
   financialTransactions FinancialTransaction[]
+  receipts              Receipt[]
 
   @@map("patients")
 }
@@ -478,6 +480,7 @@ model FinancialTransaction {
   createdAt   DateTime                 @default(now()) @map("created_at")
   patient     Patient?                 @relation(fields: [patientId], references: [id], onDelete: SetNull)
   user        User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  receipt     Receipt?
 
   @@index([date(sort: Desc)])
   @@index([type])
@@ -790,4 +793,29 @@ model EventCommunication {
 
   @@index([eventId])
   @@map("event_communications")
+}
+
+model Receipt {
+  id            String        @id @default(cuid())
+  receiptNumber String        @unique @map("receipt_number") @db.VarChar(50)
+  transactionId String        @unique @map("transaction_id")
+  patientId     String        @map("patient_id")
+  amount        Decimal       @db.Decimal(10, 2)
+  description   String        @db.Text
+  serviceDate   DateTime      @map("service_date")
+  paymentMethod PaymentMethod @map("payment_method")
+  notes         String?       @db.Text
+  items         Json?         // JSON array of receipt items
+  issuedBy      String        @map("issued_by")
+  createdAt     DateTime      @default(now()) @map("created_at")
+  updatedAt     DateTime      @updatedAt @map("updated_at")
+
+  transaction FinancialTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  patient     Patient              @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  issuer      User                 @relation(fields: [issuedBy], references: [id], onDelete: Cascade)
+
+  @@index([receiptNumber])
+  @@index([patientId])
+  @@index([serviceDate])
+  @@map("receipts")
 }

@@ -69,7 +69,7 @@
     "monitor:typescript-fix": "npm run monitor:autofix-category typescript",
     "cli:setup": "node scripts/setup-cli-complete.js",
     "cli:test": "node scripts/test-cli-tools.js",
-    "cli:update": "npm update -g vercel",
+    "cli:update": "npm update -g @digitalocean/doctl",
     "cli:version": "node scripts/cli-version-check.js",
 
     "prisma:quick-studio": "npx prisma studio",

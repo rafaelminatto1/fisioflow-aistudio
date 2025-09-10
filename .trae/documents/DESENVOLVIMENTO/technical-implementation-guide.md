@@ -35,7 +35,7 @@ Testing: Jest + Playwright
 
 ```mermaid
 graph TD
-    A[Next.js Frontend] --> B[API Gateway]
+    A[Next.js Frontend] --> B[DO App Platform]
     B --> C[Auth Service]
     B --> D[Agenda Service]
     B --> E[Prontuário Service]
@@ -43,17 +43,29 @@ graph TD
     B --> G[AI Service]
     B --> H[Notification Service]
 
-    C --> I[(PostgreSQL)]
+    C --> I[(DO Managed PostgreSQL)]
     D --> I
     E --> I
     F --> I
-    G --> J[(Redis Cache)]
-    H --> K[Pusher/WebSocket]
+    G --> J[(DO Managed Redis)]
+    H --> K[WebSocket nativo]
 
-    L[File Storage] --> M[Cloudinary Storage]
+    L[File Storage] --> M[DO Spaces]
     N[External APIs] --> O[CID-10 API]
     N --> P[TUSS API]
     N --> Q[CEP API]
+    
+    subgraph "Digital Ocean Infrastructure"
+        R[DO Load Balancer]
+        S[DO Monitoring]
+        T[DO Alerting]
+        U[DO CDN]
+    end
+    
+    A --> R
+    B --> S
+    S --> T
+    M --> U
 ```
 
 ## 2. Implementação por Fases
