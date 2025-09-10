@@ -61,8 +61,8 @@ export async function GET(request: NextRequest) {
     debug.tests.auth_check = 'running';
     try {
       const authModule = await import('@/lib/auth');
-      debug.tests.auth_check = authModule.auth ? 'success' : 'failed';
-      if (!authModule.auth) {
+      debug.tests.auth_check = (typeof authModule.auth === 'function') ? 'success' : 'failed';
+      if (typeof authModule.auth !== 'function') {
         debug.recommendations.push('AUTH: NextAuth configuration failed to load');
       }
     } catch (authError) {
