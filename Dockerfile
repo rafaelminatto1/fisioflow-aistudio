@@ -4,7 +4,8 @@ FROM node:18-alpine AS base
 # Install dependencies only when needed
 FROM base AS deps
 # Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
-RUN apk add --no-cache libc6-compat
+# Install additional packages needed for Prisma
+RUN apk add --no-cache libc6-compat openssl
 WORKDIR /app
 
 # Install dependencies based on the preferred package manager
@@ -19,13 +20,21 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy all application files
-COPY . .
+# Copy package.json and prisma schema first
+COPY package*.json ./
+COPY prisma ./prisma/
 
 # Set build-time environment variables
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV SKIP_ENV_VALIDATION=true
+
+# Generate Prisma client with cache
+RUN --mount=type=cache,target=/app/.prisma \
+    npx prisma generate
+
+# Copy rest of application code
+COPY . .
 
 # Build the application with optimizations
 RUN --mount=type=cache,target=/app/.next/cache \
@@ -47,8 +56,8 @@ ENV NEXT_TELEMETRY_DISABLED 1
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install curl for health checks and openssl for Prisma
+RUN apk add --no-cache curl openssl
 
 COPY --from=builder /app/public ./public
 
@@ -60,6 +69,11 @@ RUN chown nextjs:nodejs .next
 # https://nextjs.org/docs/advanced-features/output-file-tracing
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Copy Prisma schema and generated client
+COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma/
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/.prisma ./node_modules/.prisma/
+COPY --from=builder --chown=nextjs:nodejs /app/node_modules/@prisma ./node_modules/@prisma/
 
 USER nextjs
 
