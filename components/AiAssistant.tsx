@@ -121,7 +121,7 @@ const AiAssistant: React.FC = () => {
         text: input,
         type: QueryType.GENERAL_QUESTION, // Default type
         context: { userRole: 'Fisioterapeuta' },
-        priority: 'normal' as 'normal',
+        priority: 'normal' as const,
         maxResponseTime: 5000,
         createdAt: new Date().toISOString(),
       };

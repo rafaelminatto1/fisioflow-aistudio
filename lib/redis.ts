@@ -20,6 +20,8 @@ if (!redisUrl) {
     get: async () => null,
     set: async () => 'OK',
     del: async () => 1,
+    incr: async () => 1,
+    expire: async () => 1,
     sadd: async () => 1,
     smembers: async () => [],
     scan: async function* () {

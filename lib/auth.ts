@@ -47,12 +47,17 @@ export const authOptions: NextAuthConfig = {
           'unknown';
         const rateLimitKey = `${RATE_LIMIT_PREFIX}${credentials.email}`;
 
-        const attempts = await redis.get(rateLimitKey);
-        if (attempts && Number(attempts) >= MAX_ATTEMPTS) {
-          // Rate limit exceeded - log removed as auditLog model doesn't exist
-          throw new Error(
-            'Muitas tentativas de login. Tente novamente em 15 minutos.'
-          );
+        try {
+          const attempts = await redis.get(rateLimitKey);
+          if (attempts && Number(attempts) >= MAX_ATTEMPTS) {
+            // Rate limit exceeded - log removed as auditLog model doesn't exist
+            throw new Error(
+              'Muitas tentativas de login. Tente novamente em 15 minutos.'
+            );
+          }
+        } catch (redisError) {
+          // Se Redis não estiver disponível, continue sem rate limiting
+          console.warn('Redis não disponível para rate limiting:', redisError);
         }
 
         const user = await prisma.user.findUnique({
@@ -60,8 +65,12 @@ export const authOptions: NextAuthConfig = {
         });
 
         if (!user || !user.passwordHash) {
-          await redis.incr(rateLimitKey);
-          await redis.expire(rateLimitKey, ATTEMPTS_WINDOW_SECONDS);
+          try {
+            await redis.incr(rateLimitKey);
+            await redis.expire(rateLimitKey, ATTEMPTS_WINDOW_SECONDS);
+          } catch (redisError) {
+            console.warn('Redis não disponível para incrementar tentativas:', redisError);
+          }
           // Login failure - log removed as auditLog model doesn't exist
           throw new Error('Usuário ou senha inválidos.');
         }
@@ -72,13 +81,21 @@ export const authOptions: NextAuthConfig = {
         );
 
         if (!isPasswordCorrect) {
-          await redis.incr(rateLimitKey);
-          await redis.expire(rateLimitKey, ATTEMPTS_WINDOW_SECONDS);
+          try {
+            await redis.incr(rateLimitKey);
+            await redis.expire(rateLimitKey, ATTEMPTS_WINDOW_SECONDS);
+          } catch (redisError) {
+            console.warn('Redis não disponível para incrementar tentativas:', redisError);
+          }
           // Login failure - log removed as auditLog model doesn't exist
           throw new Error('Usuário ou senha inválidos.');
         }
 
-        await redis.del(rateLimitKey);
+        try {
+          await redis.del(rateLimitKey);
+        } catch (redisError) {
+          console.warn('Redis não disponível para limpar tentativas:', redisError);
+        }
         // Login success - log removed as auditLog model doesn't exist
 
         return {

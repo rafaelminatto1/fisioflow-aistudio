@@ -35,8 +35,8 @@ yarn-error.log*
 .env.development
 .env.test
 
-# Vercel
-.vercel
+# Digital Ocean
+.do/
 
 # TypeScript
 *.tsbuildinfo

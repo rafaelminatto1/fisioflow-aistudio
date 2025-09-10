@@ -12,7 +12,7 @@ services:
   instance_size_slug: professional-xs
   http_port: 3000
   health_check:
-    http_path: /api/status
+    http_path: /api/health
     initial_delay_seconds: 60
     period_seconds: 30
     timeout_seconds: 10
@@ -31,16 +31,20 @@ services:
     value: "0.0.0.0"
   - key: SKIP_ENV_VALIDATION
     value: "true"
-  # Database variables (configure with real values)
+  # Database variables (will be auto-configured by DO)
   - key: DATABASE_URL
-    value: postgresql://username:password@host:25060/database?sslmode=require&pool_timeout=30
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
   - key: DIRECT_URL
-    value: postgresql://username:password@host:25060/database?sslmode=require
-  # Auth variables (generate secure values)
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  # Auth variables
   - key: NEXTAUTH_SECRET
-    value: REPLACE_WITH_SECURE_SECRET
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
   - key: NEXTAUTH_URL
-    value: https://fisioflow-app.ondigitalocean.app
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
   # Optional variables
   - key: LOG_LEVEL
     value: info

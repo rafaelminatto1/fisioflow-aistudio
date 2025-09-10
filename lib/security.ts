@@ -19,7 +19,7 @@ const defaultConfig: SecurityConfig = {
   corsOrigins: [
     'http://localhost:3000',
     'http://localhost:3001',
-    'https://fisioflow.vercel.app',
+    'https://fisioflow.digitalocean.app',
   ],
   enableCSRF: true,
   enableHelmet: true,
@@ -44,7 +44,7 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
     'Content-Security-Policy',
     [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://vercel.live",
+      "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://digitalocean.com",
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https: blob:",
       "font-src 'self' data:",

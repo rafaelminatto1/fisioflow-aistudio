@@ -84,7 +84,7 @@ const customJestConfig = {
     '<rootDir>/.next/',
     '<rootDir>/node_modules/',
     '<rootDir>/coverage/',
-    '<rootDir>/.vercel/',
+    '<rootDir>/.do/',
   ],
 
   // Watch plugins

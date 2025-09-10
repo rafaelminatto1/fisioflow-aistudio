@@ -9,7 +9,7 @@ examples.
 
 ## Base URL
 
-- **Production**: `https://fisioflow.vercel.app/api`
+- **Production**: `https://fisioflow.digitalocean.app/api`
 - **Development**: `http://localhost:3000/api`
 
 ## Authentication

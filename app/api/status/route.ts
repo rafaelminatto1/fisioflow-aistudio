@@ -146,10 +146,12 @@ export async function GET(request: NextRequest) {
         deployedAt: process.env.DEPLOYED_AT || new Date().toISOString(),
         ...(isAuthenticated && {
           commit:
-            process.env.VERCEL_GIT_COMMIT_SHA ||
+            process.env.GITHUB_SHA ||
+            process.env.DO_APP_COMMIT_SHA ||
             'unknown',
           branch:
-            process.env.VERCEL_GIT_COMMIT_REF ||
+            process.env.GITHUB_REF_NAME ||
+            process.env.DO_APP_BRANCH ||
             'main',
         }),
       },

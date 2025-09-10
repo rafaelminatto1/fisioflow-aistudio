@@ -31,8 +31,11 @@ yarn-error.log*
 .env.production
 .env.staging
 
-# vercel
-.vercel
+# Digital Ocean
+.do/
+*.do.yaml
+do-config.json
+do-credentials.json
 
 # typescript
 *.tsbuildinfo
@@ -80,7 +83,13 @@ ehthumbs.db
 # MCP sensitive configs
 mcp.config.local.json
 
+# Digital Ocean sensitive files
+do-api-token
+spaces-key
+spaces-secret
+
 # Backup files
 *.bak
 *.backup
 *.tmp
+package.json.backup

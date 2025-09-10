@@ -271,7 +271,7 @@ export class DistributedSessionManager {
    * Cleanup expired sessions (should be called periodically)
    */
   async cleanupExpiredSessions(): Promise<number> {
-    let cleanedCount = 0;
+    const cleanedCount = 0;
 
     try {
       // This is a simplified cleanup - in production you'd want a more efficient approach

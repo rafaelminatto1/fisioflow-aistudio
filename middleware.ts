@@ -22,7 +22,7 @@ export function middleware(request: NextRequest) {
   const allowedOrigins = [
     'http://localhost:3000',           // Development
     'http://localhost:3001',           // Alternative dev port
-    'https://fisioflow.vercel.app',    // Production Vercel
+    'https://fisioflow.digitalocean.app',    // Production Digital Ocean
     'https://fisioflow-aistudio-1.ondigitalocean.app', // Production DigitalOcean
     // Add your production domain here when deployed
   ];
