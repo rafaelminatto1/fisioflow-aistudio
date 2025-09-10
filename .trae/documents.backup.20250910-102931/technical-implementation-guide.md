@@ -9,11 +9,11 @@
 ```
 Frontend: Next.js 14 + React + TypeScript + Tailwind CSS
 Backend: Next.js API Routes + Prisma ORM
-Database: PostgreSQL (Digital Ocean Managed Database)
+Database: PostgreSQL (Neon DB)
 Auth: NextAuth.js
 AI: Gemini + OpenAI + Claude (via MCP)
-Deploy: Digital Ocean App Platform
-Monitoring: Digital Ocean Monitoring
+Deploy: Railway
+Monitoring: Sentry
 ```
 
 #### Stack Proposto (Melhorias)
@@ -21,13 +21,13 @@ Monitoring: Digital Ocean Monitoring
 ```
 Frontend: Next.js 14 + React + TypeScript + Tailwind CSS + Framer Motion
 Backend: Next.js API Routes + Prisma ORM + tRPC
-Database: PostgreSQL (DO Managed Database) + Redis (DO Managed Redis)
+Database: PostgreSQL (Neon DB) + Redis (Cache)
 Auth: NextAuth.js + RBAC
 AI: Gemini + OpenAI + Claude (via MCP) + Whisper (Transcrição)
-Realtime: WebSockets nativo
-Files: Digital Ocean Spaces
-Deploy: Digital Ocean App Platform
-Monitoring: DO Monitoring + DO Alerting
+Realtime: Pusher/Socket.io
+Files: Cloudinary Storage
+Deploy: Railway + Vercel (Frontend)
+Monitoring: Sentry + Posthog (Analytics)
 Testing: Jest + Playwright
 ```
 
