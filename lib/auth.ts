@@ -202,9 +202,8 @@ export const authOptions: NextAuthConfig = {
         timestamp: new Date().toISOString() 
       });
     },
-    async signOut({ token }) {
+    async signOut() {
       console.log('[AUTH] SignOut event:', { 
-        userId: token?.id,
         timestamp: new Date().toISOString() 
       });
     },
