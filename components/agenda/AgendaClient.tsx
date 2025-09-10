@@ -2,11 +2,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { format } from 'date-fns';
-import addDays from 'date-fns/addDays';
-import startOfWeek from 'date-fns/startOfWeek';
-import isSameDay from 'date-fns/isSameDay';
-import isToday from 'date-fns/isToday';
+import { format, addDays, startOfWeek, isSameDay, isToday } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
