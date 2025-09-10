@@ -1,119 +1,62 @@
-# FisioFlow - Optimized Dockerfile for DigitalOcean App Platform
-# Multi-stage build for production deployment
+# Use the official Node.js 18 image
+FROM node:18-alpine AS base
 
-# Base image with Node.js 22 (LTS)
-FROM node:22-alpine AS base
-
-# Install system dependencies and security updates
-RUN apk update && apk upgrade && \
-    apk add --no-cache \
-    libc6-compat \
-    openssl \
-    ca-certificates \
-    dumb-init && \
-    rm -rf /var/cache/apk/*
-
-# Set working directory
-WORKDIR /app
-
-# Create non-root user for security
-RUN addgroup --system --gid 1001 nodejs && \
-    adduser --system --uid 1001 nextjs
-
-# Dependencies stage - install production dependencies
+# Install dependencies only when needed
 FROM base AS deps
+# Check https://github.com/nodejs/docker-node/tree/b4117f9333da4138b03a546ec926ef50a31506c3#nodealpine to understand why libc6-compat might be needed.
+RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files first
-COPY package*.json ./
-
-# Copy Prisma schema before installing dependencies
-COPY prisma ./prisma/
-
-# Install ALL dependencies first (including Prisma CLI for generation)
-RUN npm ci
-
-# Generate Prisma client
-RUN npx prisma generate
-
-# Clean up and keep only production dependencies
-RUN npm prune --production && npm cache clean --force
-
-# Development dependencies stage
-FROM base AS dev-deps
-WORKDIR /app
-
-# Copy package files
+# Install dependencies based on the preferred package manager
 COPY package.json package-lock.json* ./
+RUN npm ci --only=production
 
-# Install all dependencies (including dev)
-RUN npm ci --no-audit --no-fund && \
-    npm cache clean --force
-
-# Builder stage - build the application
+# Rebuild the source code only when needed
 FROM base AS builder
 WORKDIR /app
-
-# Copy package files first
-COPY package*.json ./
-
-# Install all dependencies (including devDependencies)
-RUN npm ci
-
-# Copy source code (including Prisma schema)
+COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Build the application
+# Next.js collects completely anonymous telemetry data about general usage.
+# Learn more here: https://nextjs.org/telemetry
+# Uncomment the following line in case you want to disable telemetry during the build.
+ENV NEXT_TELEMETRY_DISABLED 1
+
 RUN npm run build
 
-# FIX: Copy prisma schema to the standalone output folder
-RUN cp -r prisma ./.next/standalone/
-
-# Production runtime stage
+# Production image, copy all the files and run next
 FROM base AS runner
 WORKDIR /app
 
-# Set production environment
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV PORT=3000
-ENV HOSTNAME="0.0.0.0"
+ENV NODE_ENV production
+# Uncomment the following line in case you want to disable telemetry during runtime.
+ENV NEXT_TELEMETRY_DISABLED 1
 
-# DigitalOcean App Platform optimizations
-ENV DO_APP_NAME="fisioflow"
-ENV DO_REGION="nyc1"
-ENV DO_ENVIRONMENT="production"
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
 
-# Performance optimizations
-ENV NODE_OPTIONS="--max-old-space-size=1024 --optimize-for-size"
-ENV UV_THREADPOOL_SIZE=4
-
-# Copy standalone output (which now includes prisma)
-COPY --from=builder /app/.next/standalone ./
-
-# Copy static assets
 COPY --from=builder /app/public ./public
-COPY --from=builder /app/.next/static ./.next/static
 
-# Create necessary directories with proper permissions
-RUN mkdir -p /app/logs /app/tmp && \
-    chown -R nextjs:nodejs /app/logs /app/tmp
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
 
-# Switch to non-root user
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
 USER nextjs
 
-# Expose port
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-    CMD node -e "require('http').get('http://localhost:3000/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))"
+ENV PORT 3000
+# set hostname to localhost
+ENV HOSTNAME "0.0.0.0"
 
-# Use dumb-init for proper signal handling
-ENTRYPOINT ["dumb-init", "--"]
-
-# Start the application using the standalone server file
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/next-config-js/output
 CMD ["node", "server.js"]

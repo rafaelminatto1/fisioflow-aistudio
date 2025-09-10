@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { Event } from '../../types';
 import EventCard from '../../components/events/EventCard';
-import { PageHeader } from '../../components/layout/PageHeader';
+import PageHeader from '../../components/layout/PageHeader';
 import { PlusCircle } from 'lucide-react';
 import EventFormModal from '../../components/events/EventFormModal';
 

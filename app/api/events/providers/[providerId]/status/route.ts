@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { eventService } from '@/services/eventService';
 import { z } from 'zod';
-import { EventProviderStatus } from '@prisma/client';
+import { EventProviderStatus } from '@/types';
 
 const updateStatusSchema = z.object({
   status: z.nativeEnum(EventProviderStatus),

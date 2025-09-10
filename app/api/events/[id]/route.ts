@@ -96,7 +96,7 @@ export async function DELETE(req: Request, { params }: RouteParams) {
         const cancelledEvent = await eventService.saveEvent({
             ...event,
             id,
-            status: 'cancelled',
+            status: 'cancelled' as any,
         });
 
         return NextResponse.json({ message: 'Evento cancelado com sucesso', event: cancelledEvent });

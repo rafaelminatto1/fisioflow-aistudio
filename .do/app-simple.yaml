@@ -1,23 +1,57 @@
 name: fisioflow
+region: nyc1
+features:
+- buildpack-stack=ubuntu-22
+ingress:
+  rules:
+  - component:
+      name: web
+    match:
+      path:
+        prefix: /
 services:
 - name: web
-  image:
-    registry_type: DOCKER_HUB
-    repository: nginx
-    tag: alpine
+  source_dir: /
+  build_command: npm ci && npm run build
+  run_command: npm start
+  environment_slug: node-js
   instance_count: 1
   instance_size_slug: professional-xs
   http_port: 3000
-  routes:
-  - path: /
+  health_check:
+    http_path: /api/health
+    initial_delay_seconds: 60
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
   envs:
   - key: NODE_ENV
+    scope: RUN_AND_BUILD_TIME
     value: production
+  - key: NEXT_TELEMETRY_DISABLED
+    scope: RUN_AND_BUILD_TIME
+    value: "1"
   - key: PORT
+    scope: RUN_AND_BUILD_TIME
     value: "3000"
   - key: DATABASE_URL
-    value: postgresql://doadmin:AVNS_4zgOHhDU6UGzIe8OlTg@fisioflow-production-db-do-user-25633309-0.m.db.ondigitalocean.com:25060/defaultdb?sslmode=require
+    scope: RUN_AND_BUILD_TIME
+    value: postgresql://fisioflow_user:secure_password_123@fisioflow-db:5432/fisioflow_db
   - key: NEXTAUTH_SECRET
-    value: your-nextauth-secret-here-32-chars-min
+    scope: RUN_AND_BUILD_TIME
+    value: your-nextauth-secret-key-here-change-in-production
   - key: NEXTAUTH_URL
-    value: https://fisioflow-xxxxx.ondigitalocean.app
+    scope: RUN_AND_BUILD_TIME
+    value: https://fisioflow-app.ondigitalocean.app
+  - key: PRISMA_GENERATE_DATAPROXY
+    scope: RUN_AND_BUILD_TIME
+    value: "true"
+  - key: SKIP_ENV_VALIDATION
+    scope: RUN_AND_BUILD_TIME
+    value: "true"
+databases:
+- name: fisioflow-db
+  engine: PG
+  version: "14"
+  size: db-s-1vcpu-1gb

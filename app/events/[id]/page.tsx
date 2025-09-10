@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { Event } from '../../../types';
-import { PageHeader } from '../../../components/layout/PageHeader';
+import PageHeader from '../../../components/layout/PageHeader';
 import { MapPin, Calendar, Users, Clock } from 'lucide-react';
 
 import RegistrationForm from '../../../components/events/RegistrationForm';

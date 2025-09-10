@@ -108,6 +108,7 @@ class EventService {
     const newRegistration = await this.prisma.eventRegistration.create({
         data: {
             ...registrationData,
+            registrationDate: new Date(),
             status: EventRegistrationStatus.confirmed // Or pending if payment is required
         }
     });

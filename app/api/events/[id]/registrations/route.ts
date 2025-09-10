@@ -46,10 +46,12 @@ export async function POST(req: Request, { params }: RouteParams) {
       );
     }
 
+    const { birthDate, ...restData } = parsedData.data;
+    
     const registrationPayload = {
-      ...parsedData.data,
+      ...restData,
       eventId,
-      ...(parsedData.data.birthDate && { birthDate: new Date(parsedData.data.birthDate) }),
+      birthDate: birthDate ? new Date(birthDate) : undefined,
     };
 
     const newRegistration = await eventService.registerParticipant(registrationPayload);

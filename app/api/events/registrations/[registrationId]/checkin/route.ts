@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { eventService } from '@/services/eventService';
 import { z } from 'zod';
+import { CheckInMethod } from '@/types';
 
 const checkInSchema = z.object({
   checkInMethod: z.enum(['qr', 'manual']),
@@ -32,7 +33,7 @@ export async function POST(req: Request, { params }: RouteParams) {
 
     const updatedRegistration = await eventService.checkInParticipant(
       registrationId,
-      checkInMethod,
+      checkInMethod as CheckInMethod,
       checkedInById,
       checkInLocation
     );
