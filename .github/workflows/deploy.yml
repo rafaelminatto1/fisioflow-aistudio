@@ -222,23 +222,25 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
           
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
-        
-      - name: Deploy to Railway Staging
+      - name: Install Digital Ocean CLI
         run: |
-          railway login --token ${{ secrets.RAILWAY_TOKEN }}
-          railway environment staging
-          railway up --detach
+          wget -O- https://github.com/digitalocean/doctl/releases/download/v1.104.0/doctl-1.104.0-linux-amd64.tar.gz | tar xz
+          sudo mv doctl /usr/local/bin
+        
+      - name: Deploy to Digital Ocean Staging
+        run: |
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }} --wait
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          DIGITALOCEAN_APP_ID: ${{ secrets.DIGITALOCEAN_APP_ID }}
           
       - name: Wait for deployment
         run: sleep 30
         
       - name: Health check staging
         run: |
-          STAGING_URL="https://fisioflow-staging.up.railway.app"
+          STAGING_URL="https://fisioflow-aistudio-1-fc4f8558-d183-4d7e-8ea4-347355a20230.ondigitalocean.app"
           for i in {1..10}; do
             if curl -f "$STAGING_URL/api/health"; then
               echo "✅ Staging deployment healthy"
@@ -273,8 +275,10 @@ jobs:
       - name: Install dependencies
         run: npm ci
         
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
+      - name: Install Digital Ocean CLI
+        run: |
+          wget -O- https://github.com/digitalocean/doctl/releases/download/v1.104.0/doctl-1.104.0-linux-amd64.tar.gz | tar xz
+          sudo mv doctl /usr/local/bin
         
       - name: Pre-deploy Neon backup
         run: |
@@ -318,23 +322,23 @@ jobs:
           NEON_DATABASE_URL: ${{ secrets.NEON_DATABASE_URL }}
           NEON_DIRECT_URL: ${{ secrets.NEON_DIRECT_URL }}
           
-      - name: Deploy to Railway Production
+      - name: Deploy to Digital Ocean Production
         id: deploy
         run: |
-          railway login --token ${{ secrets.RAILWAY_TOKEN }}
-          railway environment production
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           
           echo "🚀 Starting production deployment..."
-          DEPLOY_OUTPUT=$(railway up --detach 2>&1)
+          DEPLOY_OUTPUT=$(doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }} --wait 2>&1)
           echo "$DEPLOY_OUTPUT"
           
           # Extract deployment ID if available
-          DEPLOY_ID=$(echo "$DEPLOY_OUTPUT" | grep -o 'deployment-[a-zA-Z0-9-]*' | head -1 || echo "unknown")
+          DEPLOY_ID=$(echo "$DEPLOY_OUTPUT" | grep -o '[a-f0-9-]\{36\}' | head -1 || echo "unknown")
           echo "DEPLOY_ID=$DEPLOY_ID" >> $GITHUB_OUTPUT
           
           echo "✅ Deployment initiated: $DEPLOY_ID"
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          DIGITALOCEAN_APP_ID: ${{ secrets.DIGITALOCEAN_APP_ID }}
           
       - name: Wait for deployment
         run: |
@@ -344,7 +348,7 @@ jobs:
       - name: Health check production
         id: health_check
         run: |
-          PROD_URL="https://fisioflow.vercel.app"
+          PROD_URL="https://fisioflow-aistudio-1-fc4f8558-d183-4d7e-8ea4-347355a20230.ondigitalocean.app"
           
           echo "🏥 Running production health checks..."
           
@@ -375,23 +379,31 @@ jobs:
         run: |
           echo "🔄 Health check failed, initiating rollback..."
           
-          railway login --token ${{ secrets.RAILWAY_TOKEN }}
-          railway environment production
+          doctl auth init --access-token ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
           
           # Get previous deployment and rollback
           echo "Rolling back to previous deployment..."
-          railway rollback
+          DEPLOYMENTS=$(doctl apps list-deployments ${{ secrets.DIGITALOCEAN_APP_ID }} --format ID,CreatedAt --no-header | head -2)
+          PREVIOUS_DEPLOY=$(echo "$DEPLOYMENTS" | tail -1 | awk '{print $1}')
           
-          echo "❌ Deployment failed and rolled back"
+          if [ -n "$PREVIOUS_DEPLOY" ]; then
+            echo "Rolling back to deployment: $PREVIOUS_DEPLOY"
+            doctl apps create-deployment ${{ secrets.DIGITALOCEAN_APP_ID }} --from-deployment $PREVIOUS_DEPLOY
+          else
+            echo "No previous deployment found for rollback"
+          fi
+          
+          echo "❌ Deployment failed and rollback attempted"
         env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          DIGITALOCEAN_APP_ID: ${{ secrets.DIGITALOCEAN_APP_ID }}
           
       - name: Post-deployment verification
         if: success()
         run: |
           echo "🔍 Running post-deployment verification..."
           
-          PROD_URL="https://fisioflow.vercel.app"
+          PROD_URL="https://fisioflow-aistudio-1-fc4f8558-d183-4d7e-8ea4-347355a20230.ondigitalocean.app"
           
           # Test critical endpoints
           echo "Testing authentication endpoint..."
