@@ -1,26 +1,26 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { useState, useEffect } from 'react';
+import { Sidebar } from '@/components/Sidebar';
+import { Search, Filter, Grid, List, Star, Play, Clock, User, BarChart3, TrendingUp } from 'lucide-react';
 import { 
-  Search, 
-  Filter, 
-  Star,
-  Play,
-  Heart,
-  Grid3X3,
-  List
-} from 'lucide-react';
-import Sidebar from '../../components/layout/Sidebar';
+  getExerciseLibraryData, 
+  searchExercises, 
+  getExerciseStats,
+  getRandomExercises 
+} from '@/services/exerciseLibraryService';
+import { ExerciseCategory, Protocol, Exercise } from '@/types';
 
-interface Exercise {
-  id: string;
-  title: string;
-  difficulty: number; // 1-3 stars
-  category: string;
-  bodyPart: 'HIPS' | 'KNEE' | 'BACK' | 'SHOULDER' | 'LEG' | 'WRIST';
-  thumbnail: string;
-  isFavorite?: boolean;
+interface ExerciseStats {
+  totalExercises: number;
+  categoriesCount: number;
+  protocolsCount: number;
+  byCategory: { category: string; count: number }[];
+  byDifficulty: {
+    beginner: number;
+    intermediate: number;
+    advanced: number;
+  };
 }
 
 const ExerciseLibraryPage: React.FC = () => {
