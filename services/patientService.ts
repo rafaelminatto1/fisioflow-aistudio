@@ -71,14 +71,20 @@ export const addPatient = async (
 };
 
 export const updatePatient = async (
-  updatedPatient: Patient
+  id: string,
+  patientData: Partial<Patient>
 ): Promise<Patient> => {
   const response = await api.put(
-    `/api/patients/${updatedPatient.id}`,
-    updatedPatient
+    `/api/patients/${id}`,
+    patientData
   );
   eventService.emit('patients:changed');
   return response.data;
+};
+
+export const deletePatient = async (id: string): Promise<void> => {
+  await api.delete(`/api/patients/${id}`);
+  eventService.emit('patients:changed');
 };
 
 export const addAttachment = async (
@@ -134,6 +140,7 @@ export const patientService = {
   getPatientById,
   addPatient,
   updatePatient,
+  deletePatient,
   addAttachment,
   addCommunicationLog,
   savePainPoints

@@ -1,462 +1,566 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { X, Save, User, AlertCircle } from 'lucide-react';
-import { Patient } from '../types';
-import { useToast } from '../contexts/ToastContext';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { X, Save, User, Phone, Mail, MapPin, AlertTriangle, Calendar } from 'lucide-react';
+import { Patient } from '@/types';
+import { patientService } from '@/services/patientService';
+import { toast } from 'sonner';
 
 interface PatientFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (patient: Omit<Patient, 'id' | 'lastVisit'>) => Promise<void>;
-  patientToEdit?: Patient;
+  patient?: Patient | null;
+  onSave: (patient: Patient) => void;
 }
-
-const getInitialFormData = (): Omit<Patient, 'id' | 'lastVisit'> => ({
-  name: '',
-  cpf: '',
-  birthDate: '',
-  phone: '',
-  email: '',
-  emergencyContact: { name: '', phone: '' },
-  address: { street: '', city: '', state: '', zip: '' },
-  status: 'Active',
-  registrationDate: new Date().toISOString(),
-  avatarUrl: `https://picsum.photos/seed/${Date.now()}/200/200`,
-  consentGiven: false,
-  whatsappConsent: 'opt-out',
-  allergies: '',
-  medicalAlerts: '',
-});
 
 const PatientFormModal: React.FC<PatientFormModalProps> = ({
   isOpen,
   onClose,
+  patient,
   onSave,
-  patientToEdit,
 }) => {
-  const [formData, setFormData] =
-    useState<Omit<Patient, 'id' | 'lastVisit'>>(getInitialFormData());
-  const [isSaving, setIsSaving] = useState(false);
-  const { showToast } = useToast();
-  const modalRef = useRef<HTMLDivElement>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    cpf: '',
+    phone: '',
+    email: '',
+    birthDate: '',
+    status: 'Active' as 'Active' | 'Inactive' | 'Discharged',
+    medicalAlerts: '',
+    allergies: '',
+    consentGiven: false,
+    whatsappConsent: 'opt-out' as 'opt-in' | 'opt-out',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zip: '',
+    },
+    emergencyContact: {
+      name: '',
+      phone: '',
+    },
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    if (patientToEdit) {
+    if (patient) {
       setFormData({
-        ...patientToEdit,
-        birthDate: patientToEdit.birthDate
-          ? new Date(patientToEdit.birthDate).toISOString().split('T')[0]
-          : '',
-        allergies: patientToEdit.allergies || '',
-        medicalAlerts: patientToEdit.medicalAlerts || '',
+        name: patient.name || '',
+        cpf: patient.cpf || '',
+        phone: patient.phone || '',
+        email: patient.email || '',
+        birthDate: patient.birthDate ? new Date(patient.birthDate).toISOString().split('T')[0] : '',
+        status: patient.status || 'Active',
+        medicalAlerts: patient.medicalAlerts || '',
+        allergies: patient.allergies || '',
+        consentGiven: patient.consentGiven || false,
+        whatsappConsent: patient.whatsappConsent || 'opt-out',
+        address: {
+          street: patient.address?.street || '',
+          city: patient.address?.city || '',
+          state: patient.address?.state || '',
+          zip: patient.address?.zip || '',
+        },
+        emergencyContact: {
+          name: patient.emergencyContact?.name || '',
+          phone: patient.emergencyContact?.phone || '',
+        },
       });
     } else {
       // Reset form for new patient
-      setFormData(getInitialFormData());
+      setFormData({
+        name: '',
+        cpf: '',
+        phone: '',
+        email: '',
+        birthDate: '',
+        status: 'Active',
+        medicalAlerts: '',
+        allergies: '',
+        consentGiven: false,
+        whatsappConsent: 'opt-out',
+        address: {
+          street: '',
+          city: '',
+          state: '',
+          zip: '',
+        },
+        emergencyContact: {
+          name: '',
+          phone: '',
+        },
+      });
     }
-  }, [patientToEdit, isOpen]);
+    setErrors({});
+  }, [patient, isOpen]);
 
-  // Focus trap for accessibility
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Tab') {
-        const focusableElements = modalRef.current?.querySelectorAll(
-          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-        );
-        if (!focusableElements) return;
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
 
-        const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[
-          focusableElements.length - 1
-        ] as HTMLElement;
+    if (!formData.name.trim()) {
+      newErrors.name = 'Nome é obrigatório';
+    }
 
-        if (event.shiftKey) {
-          // Shift + Tab
-          if (document.activeElement === firstElement) {
-            lastElement.focus();
-            event.preventDefault();
-          }
-        } else {
-          // Tab
-          if (document.activeElement === lastElement) {
-            firstElement.focus();
-            event.preventDefault();
-          }
-        }
+    if (!formData.phone.trim()) {
+      newErrors.phone = 'Telefone é obrigatório';
+    }
+
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Email inválido';
+    }
+
+    if (formData.cpf && !/^\d{3}\.\d{3}\.\d{3}-\d{2}$/.test(formData.cpf)) {
+      newErrors.cpf = 'CPF deve estar no formato 000.000.000-00';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+
+    setLoading(true);
+    
+    try {
+      const patientData = {
+        ...formData,
+        birthDate: formData.birthDate ? new Date(formData.birthDate) : undefined,
+        registrationDate: patient?.registrationDate || new Date(),
+        lastVisit: patient?.lastVisit,
+        conditions: patient?.conditions || [],
+        surgeries: patient?.surgeries || [],
+        communicationLogs: patient?.communicationLogs || [],
+        trackedMetrics: patient?.trackedMetrics || [],
+        attachments: patient?.attachments || [],
+      };
+
+      let savedPatient: Patient;
+      
+      if (patient?.id) {
+        // Update existing patient
+        savedPatient = await patientService.updatePatient(patient.id, patientData);
+        toast.success('Paciente atualizado com sucesso!');
+      } else {
+        // Create new patient
+        savedPatient = await patientService.addPatient(patientData);
+        toast.success('Paciente cadastrado com sucesso!');
       }
-    };
+      
+      onSave(savedPatient);
+      onClose();
+    } catch (error) {
+      console.error('Erro ao salvar paciente:', error);
+      toast.error('Erro ao salvar paciente. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  const handleInputChange = (field: string, value: any) => {
+    if (field.includes('.')) {
+      const [parent, child] = field.split('.');
+      setFormData(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent as keyof typeof prev],
+          [child]: value,
+        },
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        [field]: value,
+      }));
+    }
+    
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors(prev => ({
+        ...prev,
+        [field]: '',
+      }));
+    }
+  };
+
+  const formatCPF = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    return numbers.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, '$1.$2.$3-$4');
+  };
+
+  const formatPhone = (value: string) => {
+    const numbers = value.replace(/\D/g, '');
+    if (numbers.length <= 10) {
+      return numbers.replace(/(\d{2})(\d{4})(\d{4})/, '($1) $2-$3');
+    }
+    return numbers.replace(/(\d{2})(\d{5})(\d{4})/, '($1) $2-$3');
+  };
 
   if (!isOpen) return null;
 
-  const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
-  ) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const handleNestedChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    category: 'address' | 'emergencyContact'
-  ) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [category]: {
-        ...prev[category],
-        [name]: value,
-      },
-    }));
-  };
-
-  const handleSaveClick = async () => {
-    if (!formData.name || !formData.cpf || !formData.email) {
-      showToast('Nome, CPF e Email são campos obrigatórios.', 'error');
-      return;
-    }
-    if (!formData.consentGiven) {
-      showToast('O consentimento LGPD é obrigatório.', 'error');
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      await onSave(formData);
-      showToast(
-        patientToEdit
-          ? 'Paciente atualizado com sucesso!'
-          : 'Paciente salvo com sucesso!',
-        'success'
-      );
-      onClose();
-    } catch (e) {
-      showToast('Falha ao salvar paciente. Tente novamente.', 'error');
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const title = patientToEdit
-    ? 'Editar Cadastro do Paciente'
-    : 'Adicionar Novo Paciente';
-
   return (
-    <div
-      className='fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4'
-      onClick={onClose}
-    >
-      <div
-        ref={modalRef}
-        className='bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col'
-        onClick={e => e.stopPropagation()}
-      >
-        <header className='flex items-center justify-between p-5 border-b border-slate-200'>
-          <h2 className='text-lg font-bold text-slate-800'>{title}</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] flex flex-col">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-sky-100 flex items-center justify-center">
+              <User className="w-5 h-5 text-sky-600" />
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">
+              {patient ? 'Editar Paciente' : 'Novo Paciente'}
+            </h2>
+          </div>
           <button
             onClick={onClose}
-            className='p-2 rounded-full hover:bg-slate-100'
+            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
           >
-            <X className='w-5 h-5 text-slate-600' />
+            <X className="w-5 h-5" />
           </button>
-        </header>
+        </div>
 
-        <main className='flex-1 overflow-y-auto p-6 space-y-6'>
-          <section>
-            <h3 className='text-md font-semibold text-sky-700 border-b pb-2 mb-4'>
-              Informações Pessoais
-            </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Nome Completo*
-                </label>
-                <input
-                  type='text'
-                  name='name'
-                  value={formData.name}
-                  onChange={handleChange}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  CPF*
-                </label>
-                <input
-                  type='text'
-                  name='cpf'
-                  value={formData.cpf}
-                  onChange={handleChange}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Email*
-                </label>
-                <input
-                  type='email'
-                  name='email'
-                  value={formData.email}
-                  onChange={handleChange}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Data de Nascimento
-                </label>
-                <input
-                  type='date'
-                  name='birthDate'
-                  value={formData.birthDate}
-                  onChange={handleChange}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div className='md:col-span-2'>
-                <label className='text-sm font-medium text-slate-600'>
-                  Telefone
-                </label>
-                <input
-                  type='tel'
-                  name='phone'
-                  value={formData.phone}
-                  onChange={handleChange}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className='text-md font-semibold text-sky-700 border-b pb-2 mt-4 mb-4'>
-              Informações de Saúde
-            </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Alergias Conhecidas
-                </label>
-                <textarea
-                  name='allergies'
-                  value={formData.allergies}
-                  onChange={handleChange}
-                  rows={2}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                  placeholder='Ex: Dipirona, látex...'
-                ></textarea>
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Alertas Médicos / Contraindicações
-                </label>
-                <textarea
-                  name='medicalAlerts'
-                  value={formData.medicalAlerts}
-                  onChange={handleChange}
-                  rows={2}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                  placeholder='Ex: Hipertensão, marca-passo...'
-                ></textarea>
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className='md:col-span-2 text-md font-semibold text-sky-700 border-b pb-2 mt-4 mb-4'>
-              Endereço
-            </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Rua
-                </label>
-                <input
-                  type='text'
-                  name='street'
-                  value={formData.address.street}
-                  onChange={e => handleNestedChange(e, 'address')}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Cidade
-                </label>
-                <input
-                  type='text'
-                  name='city'
-                  value={formData.address.city}
-                  onChange={e => handleNestedChange(e, 'address')}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Estado
-                </label>
-                <input
-                  type='text'
-                  name='state'
-                  value={formData.address.state}
-                  onChange={e => handleNestedChange(e, 'address')}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  CEP
-                </label>
-                <input
-                  type='text'
-                  name='zip'
-                  value={formData.address.zip}
-                  onChange={e => handleNestedChange(e, 'address')}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className='md:col-span-2 text-md font-semibold text-sky-700 border-b pb-2 mt-4 mb-4'>
-              Contato de Emergência
-            </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Nome
-                </label>
-                <input
-                  type='text'
-                  name='name'
-                  value={formData.emergencyContact.name}
-                  onChange={e => handleNestedChange(e, 'emergencyContact')}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Telefone
-                </label>
-                <input
-                  type='text'
-                  name='phone'
-                  value={formData.emergencyContact.phone}
-                  onChange={e => handleNestedChange(e, 'emergencyContact')}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg'
-                />
-              </div>
-            </div>
-          </section>
-
-          <section>
-            <h3 className='md:col-span-2 text-md font-semibold text-sky-700 border-b pb-2 mt-4 mb-4'>
-              Conformidade e Status
-            </h3>
-            <div className='grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4'>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Status do Paciente
-                </label>
-                <select
-                  name='status'
-                  value={formData.status}
-                  onChange={handleChange}
-                  className='mt-1 w-full p-2 border border-slate-300 rounded-lg bg-white'
-                >
-                  <option value='Active'>Ativo</option>
-                  <option value='Inactive'>Inativo</option>
-                  <option value='Discharged'>Alta</option>
-                </select>
-              </div>
-              <div>
-                <label className='text-sm font-medium text-slate-600'>
-                  Comunicação via WhatsApp
-                </label>
-                <div className='mt-2 flex gap-4'>
-                  <label className='flex items-center'>
-                    <input
-                      type='radio'
-                      name='whatsappConsent'
-                      value='opt-in'
-                      checked={formData.whatsappConsent === 'opt-in'}
-                      onChange={handleChange}
-                      className='h-4 w-4 text-sky-600 border-gray-300'
-                    />
-                    <span className='ml-2 text-sm'>Aceita (Opt-in)</span>
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+          <div className="p-6 space-y-8">
+            {/* Basic Information */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <User className="w-5 h-5" />
+                Informações Básicas
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome Completo *
                   </label>
-                  <label className='flex items-center'>
-                    <input
-                      type='radio'
-                      name='whatsappConsent'
-                      value='opt-out'
-                      checked={formData.whatsappConsent === 'opt-out'}
-                      onChange={handleChange}
-                      className='h-4 w-4 text-sky-600 border-gray-300'
-                    />
-                    <span className='ml-2 text-sm'>Não Aceita (Opt-out)</span>
-                  </label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange('name', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent ${
+                      errors.name ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="Digite o nome completo"
+                  />
+                  {errors.name && (
+                    <p className="text-red-600 text-sm mt-1">{errors.name}</p>
+                  )}
                 </div>
-              </div>
-              <div className='md:col-span-2 flex items-start space-x-3 mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg'>
-                <input
-                  type='checkbox'
-                  id='consentGiven'
-                  name='consentGiven'
-                  checked={formData.consentGiven}
-                  onChange={e =>
-                    setFormData(prev => ({
-                      ...prev,
-                      consentGiven: e.target.checked,
-                    }))
-                  }
-                  className='h-5 w-5 rounded border-gray-300 text-sky-600 focus:ring-sky-500 mt-1'
-                />
-                <div className='flex-1'>
-                  <label
-                    htmlFor='consentGiven'
-                    className='text-sm font-bold text-amber-900'
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    CPF
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.cpf}
+                    onChange={(e) => handleInputChange('cpf', formatCPF(e.target.value))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent ${
+                      errors.cpf ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="000.000.000-00"
+                    maxLength={14}
+                  />
+                  {errors.cpf && (
+                    <p className="text-red-600 text-sm mt-1">{errors.cpf}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Data de Nascimento
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.birthDate}
+                    onChange={(e) => handleInputChange('birthDate', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => handleInputChange('status', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
                   >
-                    Consentimento LGPD*
-                  </label>
-                  <p className='text-xs text-amber-800'>
-                    Eu confirmo que o paciente forneceu consentimento explícito
-                    para o armazenamento e processamento de seus dados pessoais
-                    e de saúde, conforme a Lei Geral de Proteção de Dados
-                    (LGPD).
-                  </p>
+                    <option value="Active">Ativo</option>
+                    <option value="Inactive">Inativo</option>
+                    <option value="Discharged">Alta</option>
+                  </select>
                 </div>
               </div>
             </div>
-          </section>
-        </main>
 
-        <footer className='flex justify-end items-center p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl'>
-          <div className='ml-auto'>
+            {/* Contact Information */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <Phone className="w-5 h-5" />
+                Contato
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Telefone *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.phone}
+                    onChange={(e) => handleInputChange('phone', formatPhone(e.target.value))}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent ${
+                      errors.phone ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="(11) 99999-9999"
+                    maxLength={15}
+                  />
+                  {errors.phone && (
+                    <p className="text-red-600 text-sm mt-1">{errors.phone}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => handleInputChange('email', e.target.value)}
+                    className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent ${
+                      errors.email ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                    placeholder="email@exemplo.com"
+                  />
+                  {errors.email && (
+                    <p className="text-red-600 text-sm mt-1">{errors.email}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Address */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <MapPin className="w-5 h-5" />
+                Endereço
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Logradouro
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address.street}
+                    onChange={(e) => handleInputChange('address.street', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    placeholder="Rua, número, complemento"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Cidade
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address.city}
+                    onChange={(e) => handleInputChange('address.city', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    placeholder="Cidade"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Estado
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address.state}
+                    onChange={(e) => handleInputChange('address.state', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    placeholder="Estado"
+                    maxLength={2}
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    CEP
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.address.zip}
+                    onChange={(e) => handleInputChange('address.zip', e.target.value.replace(/\D/g, ''))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    placeholder="00000-000"
+                    maxLength={8}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Emergency Contact */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                Contato de Emergência
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nome
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.emergencyContact.name}
+                    onChange={(e) => handleInputChange('emergencyContact.name', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    placeholder="Nome do contato de emergência"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Telefone
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.emergencyContact.phone}
+                    onChange={(e) => handleInputChange('emergencyContact.phone', formatPhone(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    placeholder="(11) 99999-9999"
+                    maxLength={15}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Medical Information */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4 flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
+                Informações Médicas
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Alertas Médicos
+                  </label>
+                  <textarea
+                    value={formData.medicalAlerts}
+                    onChange={(e) => handleInputChange('medicalAlerts', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Descreva alertas médicos importantes (ex: hipertensão, diabetes, etc.)"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Alergias
+                  </label>
+                  <textarea
+                    value={formData.allergies}
+                    onChange={(e) => handleInputChange('allergies', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-sky-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Liste alergias conhecidas (medicamentos, alimentos, etc.)"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Consents */}
+            <div>
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Consentimentos</h3>
+              
+              <div className="space-y-4">
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    id="consentGiven"
+                    checked={formData.consentGiven}
+                    onChange={(e) => handleInputChange('consentGiven', e.target.checked)}
+                    className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300 rounded"
+                  />
+                  <label htmlFor="consentGiven" className="ml-2 block text-sm text-gray-900">
+                    Consentimento para tratamento fisioterapêutico
+                  </label>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Consentimento WhatsApp
+                  </label>
+                  <div className="flex gap-4">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="whatsappConsent"
+                        value="opt-in"
+                        checked={formData.whatsappConsent === 'opt-in'}
+                        onChange={(e) => handleInputChange('whatsappConsent', e.target.value)}
+                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-900">Autorizado</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        name="whatsappConsent"
+                        value="opt-out"
+                        checked={formData.whatsappConsent === 'opt-out'}
+                        onChange={(e) => handleInputChange('whatsappConsent', e.target.value)}
+                        className="h-4 w-4 text-sky-600 focus:ring-sky-500 border-gray-300"
+                      />
+                      <span className="ml-2 text-sm text-gray-900">Não autorizado</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Footer */}
+          <div className="flex items-center justify-end gap-3 p-6 border-t bg-gray-50">
             <button
+              type="button"
               onClick={onClose}
-              className='px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 mr-2'
+              className="px-4 py-2 text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               Cancelar
             </button>
             <button
-              onClick={handleSaveClick}
-              disabled={isSaving}
-              className='px-4 py-2 text-sm font-medium text-white bg-sky-500 border border-transparent rounded-lg hover:bg-sky-600 flex items-center disabled:bg-sky-300'
+              type="submit"
+              disabled={loading}
+              className="px-4 py-2 bg-sky-500 text-white rounded-lg hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 transition-colors"
             >
-              <Save className='w-4 h-4 mr-2' />
-              {isSaving ? 'Salvando...' : 'Salvar'}
+              {loading ? (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Save className="w-4 h-4" />
+              )}
+              {loading ? 'Salvando...' : 'Salvar Paciente'}
             </button>
           </div>
-        </footer>
+        </form>
       </div>
     </div>
   );

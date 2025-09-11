@@ -57,8 +57,9 @@ model Patient {
   financialTransactions FinancialTransaction[]
   metricResults         MetricResult[]
   painPoints            PainPoint[]
-  payments              Payment[]
+  payments              Payment[]              
   receipts              Receipt[]
+  whatsappLogs          WhatsAppLog[]
 
   @@map("patients")
 }
@@ -798,4 +799,38 @@ enum CommunicationChannel {
   sms
   whatsapp
   push
+}
+
+model WhatsAppLog {
+  id                String   @id @default(cuid())
+  patientId         String   @map("patient_id")
+  message           String
+  messageType       String   @map("message_type") // manual, reminder, confirmation, etc
+  status            String   // sent, failed, delivered, read
+  whatsappMessageId String?  @map("whatsapp_message_id")
+  error             String?
+  sentAt            DateTime @map("sent_at")
+  deliveredAt       DateTime? @map("delivered_at")
+  readAt            DateTime? @map("read_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  patient           Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  @@index([patientId])
+  @@index([sentAt(sort: Desc)])
+  @@index([status])
+  @@map("whatsapp_logs")
+}
+
+model WhatsAppNotificationSettings {
+  id                     Int      @id @default(1)
+  appointmentReminder    Boolean  @default(true) @map("appointment_reminder")
+  appointmentConfirmation Boolean @default(true) @map("appointment_confirmation")
+  exerciseReminder       Boolean  @default(false) @map("exercise_reminder")
+  followUpReminder       Boolean  @default(false) @map("follow_up_reminder")
+  reminderHours          Int      @default(24) @map("reminder_hours")
+  followUpDays           Int      @default(7) @map("follow_up_days")
+  createdAt              DateTime @default(now()) @map("created_at")
+  updatedAt              DateTime @updatedAt @map("updated_at")
+
+  @@map("whatsapp_notification_settings")
 }

@@ -11,11 +11,14 @@ import {
 } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import PatientSearchInput from './agenda/PatientSearchInput';
+import ValidationAlert from './agenda/ValidationAlert';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import RecurrenceSelector from './RecurrenceSelector';
+import RecurrenceSelector from './agenda/RecurrenceSelector';
 import { findConflict } from '../services/scheduling/conflictDetection';
 import { generateRecurrences } from '../services/scheduling/recurrenceService';
+import { validateAppointment, ValidationResult } from '../services/schedulingRulesEngine';
+import { getAppointmentsByPatientId } from '../services/appointmentService';
 import { schedulingSettingsService } from '../services/schedulingSettingsService';
 
 interface AppointmentFormModalProps {
@@ -54,6 +57,8 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
     RecurrenceRule | undefined
   >(undefined);
   const [isTeleconsultaEnabled, setIsTeleconsultaEnabled] = useState(false);
+  const [validation, setValidation] = useState<ValidationResult | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   const { showToast } = useToast();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -130,9 +135,98 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose, isOpen]);
 
+  // Effect to handle escape key
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [onClose, isOpen]);
+
+  // Effect para validação em tempo real
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      validateCurrentAppointment();
+    }, 500); // Debounce de 500ms
+
+    return () => clearTimeout(timeoutId);
+  }, [selectedPatient, therapistId, slotTime, slotDate, duration, appointmentType]);
+
+  // Limpar validação quando modal fechar
+  useEffect(() => {
+    if (!isOpen) {
+      setValidation(null);
+    }
+  }, [isOpen]);
+
+  // Função para validar agendamento em tempo real
+  const validateCurrentAppointment = async () => {
+    if (!selectedPatient || !therapistId || !slotTime) {
+      setValidation(null);
+      return;
+    }
+
+    setIsValidating(true);
+
+    try {
+      // Buscar agendamentos do paciente para validação
+      const patientAppointments = await getAppointmentsByPatientId(selectedPatient.id);
+      
+      const startTime = new Date(slotDate);
+      const [hour, minute] = slotTime.split(':');
+      startTime.setHours(parseInt(hour), parseInt(minute), 0, 0);
+      const endTime = new Date(startTime.getTime() + duration * 60000);
+      
+      const appointmentData = {
+        id: appointmentToEdit?.id || '',
+        patientId: selectedPatient.id,
+        therapistId: therapistId,
+        startTime,
+        endTime,
+        status: 'scheduled' as AppointmentStatus,
+        type: appointmentType,
+        notes: notes || '',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      const selectedTherapist = therapists.find(t => t.id === therapistId);
+      if (!selectedTherapist) return;
+
+      const validationResult = await validateAppointment(
+        appointmentData,
+        selectedPatient,
+        selectedTherapist,
+        allAppointments,
+        patientAppointments
+      );
+
+      setValidation(validationResult);
+    } catch (error) {
+      console.error('Erro ao validar agendamento:', error);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
   const handleSaveClick = async () => {
     if (!selectedPatient) {
       showToast('Selecione um paciente para agendar.', 'error');
+      return;
+    }
+
+    // Validar antes de salvar
+    await validateCurrentAppointment();
+    
+    // Se há erros críticos, não permitir salvar
+    if (validation && !validation.isValid) {
+      showToast('Corrija os erros antes de salvar o agendamento', 'error');
       return;
     }
 
@@ -246,6 +340,9 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
             <PatientSearchInput
               onSelectPatient={setSelectedPatient}
               selectedPatient={selectedPatient}
+              placeholder="Buscar paciente por nome, telefone ou CPF..."
+              allowQuickAdd={true}
+              showRecentSearches={true}
             />
           </div>
 
@@ -314,7 +411,7 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
 
           {!appointmentToEdit?.seriesId && (
             <RecurrenceSelector
-              recurrenceRule={recurrenceRule}
+              value={recurrenceRule}
               onChange={setRecurrenceRule}
             />
           )}
@@ -331,6 +428,21 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
               placeholder='Observações sobre o atendimento...'
             />
           </div>
+
+          {/* Validações e Alertas */}
+          {(validation || isValidating) && (
+            <div>
+              {isValidating && (
+                <div className="flex items-center gap-2 p-3 bg-gray-50 border border-gray-200 rounded-md">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  <span className="text-sm text-gray-600">Validando agendamento...</span>
+                </div>
+              )}
+              {validation && !isValidating && (
+                <ValidationAlert validation={validation} />
+              )}
+            </div>
+          )}
         </div>
 
         <div className='flex items-center justify-end gap-3 px-4 py-3 bg-slate-50 rounded-b-lg border-t'>
@@ -342,11 +454,22 @@ const AppointmentFormModal: React.FC<AppointmentFormModalProps> = ({
           </button>
           <button
             onClick={handleSaveClick}
-            disabled={!selectedPatient || isSaving}
-            className='px-4 py-2 bg-sky-500 text-white rounded-md hover:bg-sky-600 disabled:opacity-50 disabled:cursor-not-allowed transition flex items-center text-sm'
+            disabled={isSaving || !selectedPatient || isValidating || (validation && !validation.isValid)}
+            className={`px-4 py-2 text-white rounded-md flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed transition ${
+              validation && !validation.isValid
+                ? 'bg-red-600 hover:bg-red-700'
+                : 'bg-sky-500 hover:bg-sky-600'
+            }`}
           >
             <Save className='w-4 h-4 mr-2' />
-            {isSaving ? 'Salvando...' : 'Confirmar Agendamento'}
+            {isSaving
+              ? 'Salvando...'
+              : isValidating
+              ? 'Validando...'
+              : validation && !validation.isValid
+              ? 'Corrija os erros'
+              : 'Confirmar Agendamento'
+            }
           </button>
         </div>
       </div>

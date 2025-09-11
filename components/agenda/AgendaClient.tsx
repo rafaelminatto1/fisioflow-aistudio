@@ -1,10 +1,9 @@
 // src/components/agenda/AgendaClient.tsx
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { format, addDays, startOfWeek, isSameDay, isToday } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { addDays, startOfWeek } from 'date-fns';
+import { Loader2 } from 'lucide-react';
 import { AnimatePresence } from 'framer-motion';
 import type { User as PrismaUser } from '@prisma/client';
 import {
@@ -13,29 +12,15 @@ import {
   Therapist,
 } from '@/types';
 import { useToast } from '../ui/use-toast';
-import AppointmentCard from './AppointmentCard';
 import AppointmentDetailModal from './AppointmentDetailModal';
+import CalendarView, { CalendarViewType } from './CalendarView';
 // import AppointmentFormModal from './AppointmentFormModal';
-import { cn } from '@/lib/utils';
 import {
   deleteAppointmentAction,
   deleteAppointmentSeriesAction,
 } from '../../lib/actions/appointment.actions';
 
-const START_HOUR = 7;
-const END_HOUR = 21;
-const SLOT_DURATION = 30;
-const PIXELS_PER_MINUTE = 2;
 
-const timeSlots = Array.from(
-  { length: (END_HOUR - START_HOUR) * (60 / SLOT_DURATION) },
-  (_, i) => {
-    const totalMinutes = START_HOUR * 60 + i * SLOT_DURATION;
-    const hour = Math.floor(totalMinutes / 60);
-    const minute = totalMinutes % 60;
-    return `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-  }
-);
 
 interface AgendaClientProps {
   initialAppointments: any[];
@@ -49,6 +34,7 @@ export default function AgendaClient({
   patients,
 }: AgendaClientProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewType, setViewType] = useState<CalendarViewType>('week');
   const [appointments, setAppointments] = useState<EnrichedAppointment[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -76,64 +62,74 @@ export default function AgendaClient({
   };
   */
 
-  // Modal states
-  // Temporariamente comentado para resolver erro de tipos
-  // const [appointmentToEdit, setAppointmentToEdit] =
-  //   useState<EnrichedAppointment | null>(null);
-  const [selectedAppointment, setSelectedAppointment] =
-    useState<EnrichedAppointment | null>(null);
-  // const [isFormOpen, setIsFormOpen] = useState(false);
-  // Temporariamente comentado para resolver erro de tipos
-  // const [initialFormData] = useState<
-  //   { date: Date; therapistId: string } | undefined
-  // >();
+  const [selectedAppointment, setSelectedAppointment] = useState<
+    EnrichedAppointment | undefined
+  >();
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const weekStart = useMemo(
-    () => startOfWeek(currentDate, { weekStartsOn: 1 }),
-    [currentDate]
-  );
-  const weekDays = useMemo(
-    () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
-    [weekStart]
-  );
+
 
   const parseAppointments = (apps: any[]): EnrichedAppointment[] => {
     return apps.map(app => ({
-      ...app,
+      id: app.id,
+      patientId: app.patientId,
+      therapistId: app.therapistId,
       startTime: new Date(app.startTime),
       endTime: new Date(app.endTime),
+      type: app.type,
+      status: app.status,
+      notes: app.notes,
+      isRecurring: app.isRecurring,
+      seriesId: app.seriesId,
+      patient: {
+        id: app.patient.id,
+        name: app.patient.name,
+        email: app.patient.email,
+        phone: app.patient.phone,
+      },
+      therapist: {
+        id: app.therapist.id,
+        name: app.therapist.name,
+        email: app.therapist.email,
+        specialization: app.therapist.specialization,
+        color: app.therapist.color,
+      },
     }));
   };
 
   useEffect(() => {
-    setAppointments(parseAppointments(initialAppointments));
-  }, [initialAppointments]);
+    if (initialAppointments) {
+      setAppointments(parseAppointments(initialAppointments));
+    } else {
+      fetchAppointments();
+    }
+  }, [initialAppointments, fetchAppointments]);
 
-  const fetchAppointmentsForWeek = useCallback(
-    async (date: Date) => {
-      setIsLoading(true);
-      const start = startOfWeek(date, { weekStartsOn: 1 });
-      const end = addDays(start, 7);
-      try {
-        const res = await fetch(
-          `/api/appointments?startDate=${start.toISOString()}&endDate=${end.toISOString()}`
-        );
-        if (!res.ok) throw new Error('Failed to fetch');
-        const data = await res.json();
-        setAppointments(parseAppointments(data));
-      } catch (error) {
-        toast({ title: 'Erro ao buscar agendamentos', variant: 'destructive' });
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [toast]
-  );
+  const fetchAppointments = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(
+        `/api/appointments?date=${currentDate.toISOString()}`
+      );
+      if (!response.ok) throw new Error('Failed to fetch appointments');
+      const data = await response.json();
+      setAppointments(parseAppointments(data));
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+      toast({
+        title: 'Erro',
+        description: 'Falha ao carregar agendamentos',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [currentDate, toast]);
 
   const changeWeek = (offset: number) => {
     const newDate = addDays(currentDate, offset * 7);
     setCurrentDate(newDate);
-    fetchAppointmentsForWeek(newDate);
+    fetchAppointments();
   };
 
   // Temporariamente comentado para resolver erro de tipos
@@ -154,232 +150,107 @@ export default function AgendaClient({
   };
   */
 
-  const handleDeleteAppointment = async (id: string, seriesId?: string) => {
-    const appToDelete = appointments.find(a => a.id === id);
-    if (!appToDelete) return false;
-
-    const confirmed = window.confirm(
-      seriesId
-        ? 'Excluir esta e todas as futuras ocorrências?'
-        : 'Tem certeza que deseja excluir este agendamento?'
-    );
-    if (!confirmed) return false;
-
-    const result = seriesId
-      ? await deleteAppointmentSeriesAction(seriesId, appToDelete.startTime)
-      : await deleteAppointmentAction(id);
-
-    if (result.success) {
-      toast({ title: 'Agendamento removido' });
-      fetchAppointmentsForWeek(currentDate);
-      setSelectedAppointment(null);
-      // setIsFormOpen(false); // Temporariamente comentado
-      return true;
+  const handleDeleteAppointment = async (
+    appointmentId: string,
+    deleteType: 'single' | 'series'
+  ) => {
+    try {
+      if (deleteType === 'series') {
+        await deleteAppointmentSeriesAction(appointmentId);
+      } else {
+        await deleteAppointmentAction(appointmentId);
+      }
+      
+      // Refresh appointments
+      fetchAppointments();
+      
+      toast({
+        title: 'Sucesso',
+        description: `Agendamento${deleteType === 'series' ? 's' : ''} excluído${deleteType === 'series' ? 's' : ''} com sucesso`,
+      });
+    } catch (error) {
+      toast({
+        title: 'Erro',
+        description: 'Falha ao excluir agendamento',
+        variant: 'destructive',
+      });
     }
-    toast({
-      title: result.message || 'Erro ao remover',
-      variant: 'destructive',
-    });
-    return false;
+  };
+
+  const handleAppointmentMove = async (appointmentId: string, newStartTime: Date, newTherapistId: string) => {
+    try {
+      // Encontrar o agendamento atual
+      const appointment = appointments.find(app => app.id === appointmentId);
+      if (!appointment) return;
+
+      // Calcular nova data de fim baseada na duração original
+      const duration = appointment.endTime.getTime() - appointment.startTime.getTime();
+      const newEndTime = new Date(newStartTime.getTime() + duration);
+
+      // Atualizar o agendamento
+      const updatedAppointment = {
+        ...appointment,
+        startTime: newStartTime,
+        endTime: newEndTime,
+        therapistId: newTherapistId
+      };
+
+      // Aqui você implementaria a chamada para a API
+      // await updateAppointment(appointmentId, updatedAppointment);
+      
+      // Por enquanto, apenas atualizamos localmente
+      setAppointments(prev => 
+        prev.map(app => app.id === appointmentId ? updatedAppointment : app)
+      );
+    } catch (error) {
+      console.error('Erro ao mover agendamento:', error);
+    }
+  };
+
+  const handleTimeSlotClick = (date: Date, therapistId: string) => {
+    // Abrir modal de novo agendamento com data e terapeuta pré-selecionados
+    setSelectedAppointment(null);
+    setIsFormModalOpen(true);
+    // Aqui você pode passar a data e therapistId para o modal
   };
 
   return (
-    <div className='flex-1 flex flex-col overflow-auto bg-white rounded-2xl shadow-sm mt-4'>
-      <div className='sticky top-0 bg-white z-20 flex items-center justify-between p-4 border-b'>
-        <h2 className='text-lg font-semibold text-slate-800'>
-          {format(weekStart, "d 'de' MMMM", { locale: ptBR })} -{' '}
-          {format(addDays(weekStart, 6), "d 'de' MMMM yyyy", { locale: ptBR })}
-        </h2>
-        <div className='flex items-center gap-2'>
-          <button
-            onClick={() => changeWeek(-1)}
-            className='p-2 rounded-lg hover:bg-slate-100'
-          >
-            <ChevronLeft size={20} />
-          </button>
-          <button
-            onClick={() => setCurrentDate(new Date())}
-            className='px-4 py-2 text-sm font-semibold bg-white border border-slate-300 rounded-lg hover:bg-slate-50'
-          >
-            Hoje
-          </button>
-          <button
-            onClick={() => changeWeek(1)}
-            className='p-2 rounded-lg hover:bg-slate-100'
-          >
-            <ChevronRight size={20} />
-          </button>
-          {/* Temporariamente comentado para resolver erro de tipos
-          <button
-            onClick={() => setIsFormOpen(true)}
-            className='ml-4 px-4 py-2 text-sm font-medium text-white bg-sky-500 rounded-lg hover:bg-sky-600 flex items-center shadow-sm'
-          >
-            <Plus size={16} className='mr-2' />
-            Agendar
-          </button>
-          */}
+    <div className="h-full flex flex-col bg-white">
+      {isLoading && (
+        <div className="absolute inset-0 bg-white/50 flex items-center justify-center z-50">
+          <Loader2 className="w-8 h-8 animate-spin" />
         </div>
-      </div>
+      )}
+      
+      <CalendarView
+        appointments={appointments}
+        therapists={therapists}
+        patients={patients}
+        currentDate={currentDate}
+        viewType={viewType}
+        onDateChange={setCurrentDate}
+        onViewTypeChange={setViewType}
+        onAppointmentClick={(appointment) => {
+          setSelectedAppointment(appointment);
+          setIsDetailModalOpen(true);
+        }}
+        onAppointmentMove={handleAppointmentMove}
+        onTimeSlotClick={handleTimeSlotClick}
+        onRefresh={fetchAppointments}
+      />
 
-      <div className='flex-1 flex flex-col overflow-auto'>
-        {/* Header */}
-        <div className='sticky top-[85px] bg-white z-10 grid grid-cols-[auto_1fr] shadow-sm'>
-          <div className='w-16 border-r'></div>
-          <div
-            className='grid'
-            style={{ gridTemplateColumns: `repeat(${therapists.length}, 1fr)` }}
-          >
-            {therapists.map(therapist => (
-              <div
-                key={therapist.id}
-                className='text-center py-2 border-r last:border-r-0'
-              >
-                <p className='font-semibold'>{therapist.name}</p>
-              </div>
-            ))}
-          </div>
-          <div className='w-16 border-r'></div>
-          <div
-            className='grid'
-            style={{ gridTemplateColumns: `repeat(${therapists.length}, 1fr)` }}
-          >
-            {therapists.map(therapist => (
-              <div
-                key={therapist.id}
-                className='grid grid-cols-7 border-r last:border-r-0'
-              >
-                {weekDays.map(day => (
-                  <div
-                    key={day.toISOString()}
-                    className={cn(
-                      'text-center border-r last:border-r-0 py-2',
-                      isToday(day) && 'bg-sky-50'
-                    )}
-                  >
-                    <p className='text-xs font-medium text-slate-500 uppercase'>
-                      {format(day, 'EEE', { locale: ptBR })}
-                    </p>
-                    <p
-                      className={cn(
-                        'text-2xl font-bold mt-1',
-                        isToday(day) ? 'text-sky-600' : 'text-slate-900'
-                      )}
-                    >
-                      {format(day, 'd')}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-        {/* Main Grid */}
-        <div className='flex-1 grid grid-cols-[auto_1fr] overflow-y-auto'>
-          {/* Time column */}
-          <div className='w-16 border-r'>
-            {timeSlots.map(time => (
-              <div
-                key={time}
-                className='h-12 text-right pr-2 text-xs text-slate-400 font-medium -mt-1.5 pt-1.5 border-t border-slate-200'
-              >
-                {time.endsWith('00') ? time : ''}
-              </div>
-            ))}
-          </div>
-          {/* Schedule columns */}
-          <div
-            className='grid relative'
-            style={{ gridTemplateColumns: `repeat(${therapists.length}, 1fr)` }}
-          >
-            {isLoading && (
-              <div className='absolute inset-0 bg-white/70 flex items-center justify-center z-20'>
-                <Loader2 className='w-8 h-8 animate-spin text-sky-500' />
-              </div>
-            )}
-            {therapists.map(therapist => (
-              <div
-                key={therapist.id}
-                className='grid grid-cols-7 border-r last:border-r-0'
-              >
-                {weekDays.map(day => (
-                  <div
-                    key={day.toISOString()}
-                    className='relative border-r last:border-r-0 h-full'
-                  >
-                    {timeSlots.map(time => (
-                      <div
-                        key={time}
-                        className='h-12 border-t border-slate-200'
-                      ></div>
-                    ))}
-                    {appointments
-                      .filter(
-                        app =>
-                          app.therapistId === therapist.id &&
-                          isSameDay(app.startTime, day)
-                      )
-                      .map(app => (
-                        <AppointmentCard
-                          key={app.id}
-                          appointment={app}
-                          startHour={START_HOUR}
-                          pixelsPerMinute={PIXELS_PER_MINUTE}
-                          onClick={() => setSelectedAppointment(app)}
-                        />
-                      ))}
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
+      {/* Modals */}
       <AnimatePresence>
-        {selectedAppointment && (
+        {selectedAppointment && isDetailModalOpen && (
           <AppointmentDetailModal
             appointment={selectedAppointment}
-            patient={patients.find(p => p.id === selectedAppointment.patientId)}
-            therapist={
-              therapists.find(t => t.id === selectedAppointment.therapistId)
-                ? convertToTherapist(
-                    therapists.find(
-                      t => t.id === selectedAppointment.therapistId
-                    )!
-                  )
-                : undefined
-            }
-            onClose={() => setSelectedAppointment(null)}
-            onEdit={() => {
-              setSelectedAppointment(null);
-              // setAppointmentToEdit(selectedAppointment); // Temporariamente comentado
-              // setIsFormOpen(true); // Temporariamente comentado
-            }}
-            onDelete={handleDeleteAppointment}
-          />
-        )}
-        {/* Temporariamente comentado para resolver erro de tipos
-        {isFormOpen && (
-          <AppointmentFormModal
-            isOpen={isFormOpen}
             onClose={() => {
-              setIsFormOpen(false);
-              setAppointmentToEdit(null);
+              setIsDetailModalOpen(false);
+              setSelectedAppointment(undefined);
             }}
-            onSave={handleSaveAppointment}
             onDelete={handleDeleteAppointment}
-            appointmentToEdit={
-              appointmentToEdit
-                ? convertToAppointment(appointmentToEdit)
-                : undefined
-            }
-            initialData={initialFormData}
-            patients={patients}
-            therapists={therapists.map(convertToTherapist)}
-            allAppointments={appointments}
           />
         )}
-        */}
       </AnimatePresence>
     </div>
   );

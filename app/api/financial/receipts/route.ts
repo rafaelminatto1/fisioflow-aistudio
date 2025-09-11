@@ -1,122 +1,102 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { auth } from '@/lib/auth';
-import prisma from '@/lib/prisma';
+import { getServerSession } from 'next-auth';
+import { authOptions } from '@/lib/auth';
+import { prisma } from '@/lib/prisma';
 
-const CreateReceiptSchema = z.object({
-  transactionId: z.string().min(1),
-  patientId: z.string().min(1),
-  amount: z.number().positive(),
-  description: z.string().min(1),
-  serviceDate: z.string().datetime(),
-  paymentMethod: z.enum(['cash', 'credit_card', 'debit_card', 'pix', 'bank_transfer', 'insurance']),
-  notes: z.string().optional(),
-  items: z.array(z.object({
-    description: z.string(),
-    quantity: z.number().min(1),
-    unitPrice: z.number().positive(),
-    total: z.number().positive(),
-  })).optional(),
-});
-
-const ReceiptQuerySchema = z.object({
-  page: z.string().optional().transform(val => val ? parseInt(val) : 1),
-  limit: z.string().optional().transform(val => val ? Math.min(parseInt(val) || 20, 100) : 20),
-  patientId: z.string().optional(),
-  startDate: z.string().datetime().optional(),
-  endDate: z.string().datetime().optional(),
-  receiptNumber: z.string().optional(),
-});
-
-/**
- * GET /api/financial/receipts - Listar recibos
- */
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
-    const filters = ReceiptQuerySchema.parse(Object.fromEntries(searchParams.entries()));
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
+    const search = searchParams.get('search');
+    const status = searchParams.get('status');
+    const startDate = searchParams.get('startDate');
+    const endDate = searchParams.get('endDate');
 
-    const where: any = {};
-    
-    if (filters.patientId) {
-      where.patientId = filters.patientId;
-    }
+    const skip = (page - 1) * limit;
 
-    if (filters.receiptNumber) {
-      where.receiptNumber = {
-        contains: filters.receiptNumber,
-        mode: 'insensitive'
-      };
-    }
+    // Construir filtros
+    const where: any = {
+      userId: session.user.id,
+    };
 
-    if (filters.startDate || filters.endDate) {
-      where.serviceDate = {};
-      if (filters.startDate) {
-        where.serviceDate.gte = new Date(filters.startDate);
-      }
-      if (filters.endDate) {
-        where.serviceDate.lte = new Date(filters.endDate);
-      }
-    }
-
-    const skip = (filters.page - 1) * filters.limit;
-
-    const [receipts, total] = await Promise.all([
-      prisma.receipt.findMany({
-        where,
-        orderBy: { createdAt: 'desc' },
-        skip,
-        take: filters.limit,
-        include: {
+    if (search) {
+      where.OR = [
+        { number: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+        { notes: { contains: search, mode: 'insensitive' } },
+        {
           patient: {
-            select: { 
-              id: true, 
-              name: true, 
-              cpf: true, 
-              email: true,
-              phone: true,
-              address: true
-            }
-          },
-          transaction: {
-            select: { id: true, type: true, category: true }
+            name: { contains: search, mode: 'insensitive' }
           }
         }
+      ];
+    }
+
+    if (status && status !== 'all') {
+      where.status = status;
+    }
+
+    if (startDate || endDate) {
+      where.issueDate = {};
+      if (startDate) {
+        where.issueDate.gte = new Date(startDate);
+      }
+      if (endDate) {
+        where.issueDate.lte = new Date(endDate);
+      }
+    }
+
+    // Buscar recibos
+    const [receipts, totalCount] = await Promise.all([
+      prisma.receipt.findMany({
+        where,
+        include: {
+          patient: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              phone: true
+            }
+          },
+          appointment: {
+            select: {
+              id: true,
+              service: true,
+              date: true
+            }
+          }
+        },
+        orderBy: {
+          issueDate: 'desc'
+        },
+        skip,
+        take: limit
       }),
       prisma.receipt.count({ where })
     ]);
 
-    const totalPages = Math.ceil(total / filters.limit);
+    // Calcular estatísticas
+    const stats = await calculateReceiptStats(session.user.id);
 
     return NextResponse.json({
       receipts,
+      stats,
       pagination: {
-        page: filters.page,
-        limit: filters.limit,
-        total,
-        pages: totalPages
+        page,
+        limit,
+        total: totalCount,
+        pages: Math.ceil(totalCount / limit)
       }
     });
-
   } catch (error) {
     console.error('Erro ao buscar recibos:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Parâmetros inválidos', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
@@ -124,47 +104,40 @@ export async function GET(request: NextRequest) {
   }
 }
 
-/**
- * POST /api/financial/receipts - Criar novo recibo
- */
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
-    
-    if (!session?.user) {
-      return NextResponse.json(
-        { error: 'Não autorizado' },
-        { status: 401 }
-      );
-    }
-
-    // Apenas admin e fisioterapeutas podem criar recibos
-    if (session.user.role !== 'Admin' && session.user.role !== 'Fisioterapeuta') {
-      return NextResponse.json(
-        { error: 'Permissão negada' },
-        { status: 403 }
-      );
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
 
     const body = await request.json();
-    const validatedData = CreateReceiptSchema.parse(body);
+    const {
+      patientId,
+      appointmentId,
+      amount,
+      description,
+      paymentMethod,
+      issueDate,
+      dueDate,
+      template = 'default',
+      notes
+    } = body;
 
-    // Verificar se transação existe
-    const transaction = await prisma.financialTransaction.findUnique({
-      where: { id: validatedData.transactionId },
-      include: { patient: true }
-    });
-
-    if (!transaction) {
+    // Validações
+    if (!patientId || !amount || !description || !paymentMethod || !issueDate) {
       return NextResponse.json(
-        { error: 'Transação não encontrada' },
-        { status: 404 }
+        { error: 'Campos obrigatórios: patientId, amount, description, paymentMethod, issueDate' },
+        { status: 400 }
       );
     }
 
-    // Verificar se paciente existe
-    const patient = await prisma.patient.findUnique({
-      where: { id: validatedData.patientId }
+    // Verificar se o paciente existe
+    const patient = await prisma.patient.findFirst({
+      where: {
+        id: patientId,
+        userId: session.user.id
+      }
     });
 
     if (!patient) {
@@ -174,71 +147,278 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar se já existe recibo para essa transação
-    const existingReceipt = await prisma.receipt.findUnique({
-      where: { transactionId: validatedData.transactionId }
-    });
+    // Verificar se o agendamento existe (se fornecido)
+    if (appointmentId) {
+      const appointment = await prisma.appointment.findFirst({
+        where: {
+          id: appointmentId,
+          userId: session.user.id
+        }
+      });
 
-    if (existingReceipt) {
-      return NextResponse.json(
-        { error: 'Recibo já existe para esta transação' },
-        { status: 409 }
-      );
+      if (!appointment) {
+        return NextResponse.json(
+          { error: 'Agendamento não encontrado' },
+          { status: 404 }
+        );
+      }
     }
 
-    // Gerar número do recibo
-    const receiptCount = await prisma.receipt.count();
-    const receiptNumber = `REC-${new Date().getFullYear()}-${String(receiptCount + 1).padStart(6, '0')}`;
+    // Gerar número sequencial do recibo
+    const receiptNumber = await generateReceiptNumber(session.user.id);
 
     // Criar recibo
     const receipt = await prisma.receipt.create({
       data: {
-        receiptNumber,
-        transactionId: validatedData.transactionId,
-        patientId: validatedData.patientId,
-        amount: validatedData.amount,
-        description: validatedData.description,
-        serviceDate: new Date(validatedData.serviceDate),
-        paymentMethod: validatedData.paymentMethod,
-        notes: validatedData.notes,
-        items: validatedData.items ? JSON.stringify(validatedData.items) : undefined,
-        issuedBy: session.user.id,
+        number: receiptNumber,
+        patientId,
+        appointmentId: appointmentId || null,
+        amount: parseFloat(amount),
+        description,
+        paymentMethod,
+        issueDate: new Date(issueDate),
+        dueDate: dueDate ? new Date(dueDate) : null,
+        status: 'ISSUED',
+        template,
+        notes: notes || null,
+        userId: session.user.id
       },
       include: {
         patient: {
-          select: { 
-            id: true, 
-            name: true, 
-            cpf: true, 
+          select: {
+            id: true,
+            name: true,
             email: true,
-            phone: true,
-            address: true
+            phone: true
           }
         },
-        transaction: {
-          select: { id: true, type: true, category: true }
-        },
-        issuer: {
-          select: { id: true, name: true, email: true }
+        appointment: {
+          select: {
+            id: true,
+            service: true,
+            date: true
+          }
         }
       }
     });
 
     return NextResponse.json(receipt, { status: 201 });
-
   } catch (error) {
     console.error('Erro ao criar recibo:', error);
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Dados inválidos', details: error.errors },
-        { status: 400 }
-      );
-    }
-
     return NextResponse.json(
       { error: 'Erro interno do servidor' },
       { status: 500 }
     );
   }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const {
+      id,
+      amount,
+      description,
+      paymentMethod,
+      issueDate,
+      dueDate,
+      status,
+      notes
+    } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID do recibo é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se o recibo existe e pertence ao usuário
+    const existingReceipt = await prisma.receipt.findFirst({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    });
+
+    if (!existingReceipt) {
+      return NextResponse.json(
+        { error: 'Recibo não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Preparar dados para atualização
+    const updateData: any = {};
+    
+    if (amount !== undefined) updateData.amount = parseFloat(amount);
+    if (description !== undefined) updateData.description = description;
+    if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
+    if (issueDate !== undefined) updateData.issueDate = new Date(issueDate);
+    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
+    if (status !== undefined) updateData.status = status;
+    if (notes !== undefined) updateData.notes = notes || null;
+
+    // Atualizar recibo
+    const receipt = await prisma.receipt.update({
+      where: { id },
+      data: updateData,
+      include: {
+        patient: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            phone: true
+          }
+        },
+        appointment: {
+          select: {
+            id: true,
+            service: true,
+            date: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(receipt);
+  } catch (error) {
+    console.error('Erro ao atualizar recibo:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { error: 'ID do recibo é obrigatório' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar se o recibo existe e pertence ao usuário
+    const existingReceipt = await prisma.receipt.findFirst({
+      where: {
+        id,
+        userId: session.user.id
+      }
+    });
+
+    if (!existingReceipt) {
+      return NextResponse.json(
+        { error: 'Recibo não encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Cancelar recibo ao invés de deletar
+    const receipt = await prisma.receipt.update({
+      where: { id },
+      data: { status: 'CANCELLED' }
+    });
+
+    return NextResponse.json({ message: 'Recibo cancelado com sucesso', receipt });
+  } catch (error) {
+    console.error('Erro ao cancelar recibo:', error);
+    return NextResponse.json(
+      { error: 'Erro interno do servidor' },
+      { status: 500 }
+    );
+  }
+}
+
+// Função auxiliar para gerar número sequencial do recibo
+async function generateReceiptNumber(userId: string): Promise<string> {
+  const currentYear = new Date().getFullYear();
+  const prefix = `REC-${currentYear}-`;
+
+  // Buscar o último recibo do ano
+  const lastReceipt = await prisma.receipt.findFirst({
+    where: {
+      userId,
+      number: {
+        startsWith: prefix
+      }
+    },
+    orderBy: {
+      number: 'desc'
+    }
+  });
+
+  let nextNumber = 1;
+  if (lastReceipt) {
+    const lastNumber = parseInt(lastReceipt.number.replace(prefix, ''));
+    nextNumber = lastNumber + 1;
+  }
+
+  return `${prefix}${nextNumber.toString().padStart(4, '0')}`;
+}
+
+// Função auxiliar para calcular estatísticas
+async function calculateReceiptStats(userId: string) {
+  const [totalStats, paidStats, pendingStats] = await Promise.all([
+    prisma.receipt.aggregate({
+      where: {
+        userId,
+        status: { not: 'CANCELLED' }
+      },
+      _count: {
+        id: true
+      },
+      _sum: {
+        amount: true
+      }
+    }),
+    prisma.receipt.aggregate({
+      where: {
+        userId,
+        status: 'PAID'
+      },
+      _count: {
+        id: true
+      },
+      _sum: {
+        amount: true
+      }
+    }),
+    prisma.receipt.aggregate({
+      where: {
+        userId,
+        status: { in: ['ISSUED', 'SENT'] }
+      },
+      _count: {
+        id: true
+      },
+      _sum: {
+        amount: true
+      }
+    })
+  ]);
+
+  return {
+    totalIssued: totalStats._count.id || 0,
+    totalAmount: totalStats._sum.amount || 0,
+    paidCount: paidStats._count.id || 0,
+    paidAmount: paidStats._sum.amount || 0,
+    pendingCount: pendingStats._count.id || 0,
+    pendingAmount: pendingStats._sum.amount || 0
+  };
 }

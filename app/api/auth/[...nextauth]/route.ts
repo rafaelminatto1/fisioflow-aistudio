@@ -1,4 +1,4 @@
-import { handlers } from '@/lib/auth';
+import { GET as authGET, POST as authPOST } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
 // Wrap handlers with error logging
@@ -22,9 +22,9 @@ async function handleRequest(request: NextRequest, handler: any) {
 }
 
 export async function GET(request: NextRequest) {
-  return handleRequest(request, handlers.GET);
+  return handleRequest(request, authGET);
 }
 
 export async function POST(request: NextRequest) {
-  return handleRequest(request, handlers.POST);
+  return handleRequest(request, authPOST);
 }
