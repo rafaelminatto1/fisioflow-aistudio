@@ -62,30 +62,4 @@ databases:
   size: basic-xs
   num_nodes: 1
 
-static_sites:
-- name: assets
-  source_dir: /public
-  github:
-    repo: your-github-username/fisioflow-aistudio-1
-    branch: main
-  output_dir: /public
-
-domains:
-- domain: fisioflow.com
-  type: PRIMARY
-  wildcard: false
-  zone: fisioflow.com
-
 region: nyc
-
-alerts:
-- rule: DEPLOYMENT_FAILED
-- rule: DOMAIN_FAILED
-- rule: CPU_UTILIZATION
-  value: 80
-- rule: MEM_UTILIZATION
-  value: 80
-- rule: RESTART_LOOP
-
-features:
-- buildpack-stack=ubuntu-18
