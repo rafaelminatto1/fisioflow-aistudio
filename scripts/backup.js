@@ -62,6 +62,11 @@ const colors = {
   cyan: '\x1b[36m'
 }
 
+/**
+ * Registra uma mensagem no console e em um arquivo de log.
+ * @param {string} message - A mensagem a ser registrada.
+ * @param {string} [color='reset'] - A cor a ser usada no console.
+ */
 function log(message, color = 'reset') {
   const timestamp = new Date().toISOString()
   console.log(`${colors[color]}[${timestamp}] ${message}${colors.reset}`)
@@ -71,7 +76,13 @@ function log(message, color = 'reset') {
   fs.appendFileSync(logFile, `[${timestamp}] ${message}\n`)
 }
 
-// Neon API functions
+/**
+ * Faz uma requisição para a API do Neon.
+ * @param {string} endpoint - O endpoint da API.
+ * @param {string} [method='GET'] - O método HTTP.
+ * @param {object} [data=null] - O corpo da requisição.
+ * @returns {Promise<any>} A resposta da API.
+ */
 async function makeNeonApiRequest(endpoint, method = 'GET', data = null) {
   return new Promise((resolve, reject) => {
     const options = {
@@ -112,6 +123,11 @@ async function makeNeonApiRequest(endpoint, method = 'GET', data = null) {
   })
 }
 
+/**
+ * Cria um snapshot de um branch do Neon.
+ * @param {string} branchId - O ID do branch.
+ * @returns {Promise<object>} O objeto do snapshot criado.
+ */
 async function createNeonSnapshot(branchId) {
   try {
     logInfo(`Creating Neon snapshot for branch ${branchId}`)
@@ -133,6 +149,11 @@ async function createNeonSnapshot(branchId) {
   }
 }
 
+/**
+ * Lista os snapshots de um branch do Neon.
+ * @param {string} branchId - O ID do branch.
+ * @returns {Promise<object[]>} Uma lista de snapshots.
+ */
 async function listNeonSnapshots(branchId) {
   try {
     const response = await makeNeonApiRequest(
@@ -145,6 +166,11 @@ async function listNeonSnapshots(branchId) {
   }
 }
 
+/**
+ * Exclui snapshots antigos de um branch do Neon com base na política de retenção.
+ * @param {string} branchId - O ID do branch.
+ * @returns {Promise<void>}
+ */
 async function deleteOldNeonSnapshots(branchId) {
   try {
     const snapshots = await listNeonSnapshots(branchId)
@@ -166,23 +192,44 @@ async function deleteOldNeonSnapshots(branchId) {
   }
 }
 
+/**
+ * Registra uma mensagem de sucesso.
+ * @param {string} message - A mensagem.
+ */
 function logSuccess(message) {
   log(`✅ ${message}`, 'green')
 }
 
+/**
+ * Registra uma mensagem de erro.
+ * @param {string} message - A mensagem.
+ */
 function logError(message) {
   log(`❌ ${message}`, 'red')
 }
 
+/**
+ * Registra uma mensagem de aviso.
+ * @param {string} message - A mensagem.
+ */
 function logWarning(message) {
   log(`⚠️  ${message}`, 'yellow')
 }
 
+/**
+ * Registra uma mensagem de informação.
+ * @param {string} message - A mensagem.
+ */
 function logInfo(message) {
   log(`ℹ️  ${message}`, 'blue')
 }
 
-// Execute command with error handling
+/**
+ * Executa um comando no shell com tratamento de erros.
+ * @param {string} command - O comando a ser executado.
+ * @param {object} [options={}] - Opções para `execSync`.
+ * @returns {string} O resultado do comando.
+ */
 function execCommand(command, options = {}) {
   try {
     logInfo(`Executing: ${command}`)
@@ -199,13 +246,19 @@ function execCommand(command, options = {}) {
   }
 }
 
-// Generate backup filename
+/**
+ * Gera um nome de arquivo para o backup com base no timestamp atual.
+ * @param {string} [prefix='fisioflow'] - O prefixo do nome do arquivo.
+ * @returns {string} O nome do arquivo de backup.
+ */
 function generateBackupFilename(prefix = 'fisioflow') {
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
   return `${prefix}-backup-${timestamp}.sql`
 }
 
-// Create backup directory
+/**
+ * Garante que o diretório de backup exista, criando-o se necessário.
+ */
 function ensureBackupDirectory() {
   if (!fs.existsSync(CONFIG.backupDir)) {
     fs.mkdirSync(CONFIG.backupDir, { recursive: true })
@@ -213,7 +266,11 @@ function ensureBackupDirectory() {
   }
 }
 
-// Parse database URL
+/**
+ * Extrai as informações de conexão de uma URL de banco de dados.
+ * @param {string} url - A URL do banco de dados.
+ * @returns {{host: string, port: number, database: string, username: string, password: string}} As informações de conexão.
+ */
 function parseDatabaseUrl(url) {
   const urlObj = new URL(url)
   return {
@@ -225,7 +282,10 @@ function parseDatabaseUrl(url) {
   }
 }
 
-// Create incremental backup using Neon snapshots
+/**
+ * Cria um backup incremental usando snapshots do Neon.
+ * @returns {Promise<object>} Informações sobre o backup incremental.
+ */
 async function createIncrementalBackup() {
   try {
     logInfo('Starting incremental backup using Neon snapshots')
@@ -265,7 +325,11 @@ async function createIncrementalBackup() {
   }
 }
 
-// Calculate file checksum
+/**
+ * Calcula o checksum de um arquivo usando o algoritmo definido na configuração.
+ * @param {string} filePath - O caminho para o arquivo.
+ * @returns {string} O checksum em formato hexadecimal.
+ */
 function calculateChecksum(filePath) {
   try {
     const fileBuffer = fs.readFileSync(filePath)
@@ -278,7 +342,12 @@ function calculateChecksum(filePath) {
   }
 }
 
-// Validate backup integrity
+/**
+ * Valida a integridade de um arquivo de backup, verificando sua existência,
+ * tamanho e calculando seu checksum.
+ * @param {string} backupPath - O caminho para o arquivo de backup.
+ * @returns {boolean} `true` se o backup for íntegro.
+ */
 function validateBackupIntegrity(backupPath) {
   try {
     if (!CONFIG.enableIntegrityCheck) {
@@ -311,7 +380,10 @@ function validateBackupIntegrity(backupPath) {
   }
 }
 
-// Create database backup
+/**
+ * Cria um backup completo do banco de dados usando pg_dump.
+ * @returns {Promise<object>} Informações sobre o backup completo.
+ */
 async function createBackup() {
   logInfo('🗄️  Starting database backup')
   
@@ -377,7 +449,11 @@ async function createBackup() {
   }
 }
 
-// Compress backup
+/**
+ * Comprime um arquivo de backup usando gzip.
+ * @param {string} backupPath - O caminho para o arquivo de backup.
+ * @returns {Promise<string>} O caminho para o arquivo comprimido.
+ */
 async function compressBackup(backupPath) {
   logInfo('🗜️  Compressing backup')
   
@@ -399,7 +475,11 @@ async function compressBackup(backupPath) {
   }
 }
 
-// Encrypt backup
+/**
+ * Criptografa um arquivo de backup usando AES-256-CBC.
+ * @param {string} backupPath - O caminho para o arquivo de backup.
+ * @returns {Promise<string>} O caminho para o arquivo criptografado.
+ */
 async function encryptBackup(backupPath) {
   if (!CONFIG.encryptionKey) {
     logWarning('No encryption key provided, skipping encryption')
@@ -438,7 +518,12 @@ async function encryptBackup(backupPath) {
   }
 }
 
-// Upload to S3
+/**
+ * Faz o upload de um arquivo de backup para um bucket S3.
+ * @param {string} backupPath - O caminho para o arquivo de backup.
+ * @param {object} backupInfo - Informações sobre o backup para adicionar como metadados.
+ * @returns {Promise<object|null>} Informações sobre o upload no S3 ou nulo se desabilitado.
+ */
 async function uploadToS3(backupPath, backupInfo) {
   if (!CONFIG.s3Config.enabled) {
     logInfo('S3 upload disabled')
@@ -487,7 +572,9 @@ async function uploadToS3(backupPath, backupInfo) {
   }
 }
 
-// Clean old backups
+/**
+ * Limpa backups locais antigos com base na política de retenção.
+ */
 function cleanOldBackups() {
   logInfo('🧹 Cleaning old backups')
   
@@ -517,7 +604,13 @@ function cleanOldBackups() {
   }
 }
 
-// Send notification
+/**
+ * Envia uma notificação sobre o status do backup para webhooks (genérico e Slack).
+ * @param {object} backupInfo - Informações sobre o backup.
+ * @param {object} [s3Info=null] - Informações sobre o upload no S3.
+ * @param {Error} [error=null] - O objeto de erro, se houver.
+ * @returns {Promise<void>}
+ */
 async function sendNotification(backupInfo, s3Info = null, error = null) {
   const notificationData = {
     timestamp: new Date().toISOString(),
@@ -587,7 +680,13 @@ async function sendNotification(backupInfo, s3Info = null, error = null) {
   }
 }
 
-// Main backup function
+/**
+ * Função principal que orquestra todo o processo de backup.
+ * @param {object} [options={}] - Opções para o processo de backup.
+ * @param {boolean} [options.incremental=false] - Se deve criar um backup incremental.
+ * @param {boolean} [options.force=false] - Se deve forçar o backup.
+ * @returns {Promise<{backupInfo: object, s3Info: object, error: Error}>} O resultado do processo de backup.
+ */
 async function performBackup(options = {}) {
   log('🚀 Starting FisioFlow database backup', 'magenta')
   
@@ -647,7 +746,9 @@ async function performBackup(options = {}) {
   return { backupInfo, s3Info, error }
 }
 
-// Schedule backup
+/**
+ * Agenda a execução periódica do backup usando node-cron.
+ */
 function scheduleBackup() {
   const cron = require('node-cron')
   

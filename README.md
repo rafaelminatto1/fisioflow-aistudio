@@ -93,6 +93,27 @@ npm run build
 npm start
 ```
 
+## 🏛️ Estrutura do Projeto
+
+O projeto segue a estrutura padrão do Next.js App Router, com algumas adições para organização.
+
+-   **`/app`**: Contém todas as rotas da aplicação, incluindo páginas e APIs.
+    -   **`/app/api`**: Rotas de API do backend.
+    -   **`/app/(auth)`**: Grupo de rotas para autenticação.
+    -   **`/app/(dashboard)`**: Grupo de rotas para o painel principal.
+-   **`/components`**: Componentes React reutilizáveis.
+    -   **`/components/ui`**: Componentes de UI genéricos (botões, inputs, etc.), baseados no `shadcn/ui`.
+    -   **`/components/auth`**: Componentes específicos para autenticação.
+-   **`/lib`**: Funções utilitárias, configurações e lógica principal.
+    -   **`/lib/actions`**: Server Actions do Next.js.
+    -   **`/lib/validations`**: Schemas de validação com Zod.
+-   **`/contexts`**: Contextos React para gerenciamento de estado global.
+-   **`/services`**: Lógica de negócio e comunicação com APIs externas.
+-   **`/prisma`**: Schema e migrações do banco de dados.
+-   **`/scripts`**: Scripts de manutenção e automação.
+
+Para mais detalhes sobre como contribuir, padrões de código e convenções, consulte nosso [Guia de Contribuição](CONTRIBUTING.md).
+
 ## 🔧 Ferramentas de Administração
 
 ### Scripts de Backup

@@ -1,3 +1,9 @@
+/**
+ * @component Sidebar
+ * @description Componente da barra lateral de navegação da aplicação.
+ * Exibe o logo e os links de navegação principais.
+ * @returns {React.ReactElement} A barra lateral de navegação.
+ */
 export default function Sidebar() {
   return (
     <div className="w-64 bg-gray-100 h-full">

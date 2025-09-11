@@ -108,6 +108,67 @@ export function PatientForm({ patient, onSubmit, isLoading = false }: PatientFor
 export function PatientForm(props: any) {
   // Implementação
 }
+
+### Padrões de Documentação (JSDoc)
+
+Usamos JSDoc para documentar nosso código. Por favor, siga as diretrizes abaixo ao documentar um novo código.
+
+#### Diretrizes Gerais
+
+*   Toda função, método e classe pública deve ter um docstring.
+*   Docstrings devem ser claros, concisos e escritos em português.
+*   Use Markdown para formatação dentro dos docstrings.
+
+#### Funções e Métodos
+
+```typescript
+/**
+ * Uma breve descrição do propósito da função.
+ *
+ * @param {tipoParam} nomeParam - Uma descrição do parâmetro.
+ * @returns {tipoRetorno} Uma descrição do valor de retorno.
+ */
+function nomeFuncao(nomeParam: tipoParam): tipoRetorno {
+  // ...
+}
+```
+
+#### Classes
+
+```typescript
+/**
+ * Uma breve descrição do propósito da classe.
+ */
+class NomeClasse {
+  // ...
+}
+```
+
+#### Componentes React
+
+```typescript
+import React from 'react';
+
+/**
+ * @interface ComponentNameProps
+ * @description As props para o componente ComponentName.
+ */
+export interface ComponentNameProps {
+  /** Uma descrição da prop. */
+  propName: string;
+}
+
+/**
+ * @description Uma breve descrição do propósito do componente.
+ * @param {ComponentNameProps} props - As props para o componente.
+ * @returns {React.ReactElement} O componente renderizado.
+ */
+const ComponentName: React.FC<ComponentNameProps> = ({ propName }) => {
+  return <div>{propName}</div>;
+};
+
+export default ComponentName;
+```
 ```
 
 ### Hooks Customizados

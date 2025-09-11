@@ -1,6 +1,10 @@
 // lib/simple-logger.ts - Edge Runtime Compatible Logger
 // Simple logger that works with Next.js Edge Runtime
 
+/**
+ * @interface LogEntry
+ * @description Estrutura de uma entrada de log para o SimpleLogger.
+ */
 interface LogEntry {
   timestamp: string;
   level: string;
@@ -8,6 +12,10 @@ interface LogEntry {
   metadata?: any;
 }
 
+/**
+ * @class SimpleLogger
+ * @description Um logger simples, compatível com o Edge Runtime do Next.js, que loga no console.
+ */
 export class SimpleLogger {
   private prefix: string;
 
@@ -26,14 +34,30 @@ export class SimpleLogger {
     return `[${this.prefix}] ${JSON.stringify(entry)}`;
   }
 
+  /**
+   * Registra uma mensagem de log com o nível 'info'.
+   * @param {string} message - A mensagem de log.
+   * @param {any} [metadata] - Dados adicionais.
+   */
   info(message: string, metadata?: any): void {
     console.log(this.formatLog('info', message, metadata));
   }
 
+  /**
+   * Registra uma mensagem de log com o nível 'warn'.
+   * @param {string} message - A mensagem de log.
+   * @param {any} [metadata] - Dados adicionais.
+   */
   warn(message: string, metadata?: any): void {
     console.warn(this.formatLog('warn', message, metadata));
   }
 
+  /**
+   * Registra uma mensagem de log com o nível 'error'.
+   * @param {string} message - A mensagem de log.
+   * @param {any} [error] - O objeto de erro.
+   * @param {any} [metadata] - Dados adicionais.
+   */
   error(message: string, error?: any, metadata?: any): void {
     const errorData =
       error instanceof Error
@@ -48,13 +72,21 @@ export class SimpleLogger {
     );
   }
 
+  /**
+   * Registra uma mensagem de log com o nível 'debug', apenas em ambiente de desenvolvimento.
+   * @param {string} message - A mensagem de log.
+   * @param {any} [metadata] - Dados adicionais.
+   */
   debug(message: string, metadata?: any): void {
     if (process.env.NODE_ENV === 'development') {
       console.debug(this.formatLog('debug', message, metadata));
     }
   }
 
-  // Métrica simple
+  /**
+   * Obtém métricas básicas (mock).
+   * @returns {object} Um objeto com métricas mock.
+   */
   getMetrics() {
     return {
       uptime: Date.now(),
@@ -64,7 +96,10 @@ export class SimpleLogger {
     };
   }
 
-  // Request middleware compatible
+  /**
+   * Cria um middleware de log para requisições.
+   * @returns {function} Uma função que, quando chamada com um objeto de requisição, retorna outra função para logar o final da requisição.
+   */
   createRequestMiddleware() {
     return (request: Request) => {
       const requestId = crypto.randomUUID();
@@ -97,7 +132,13 @@ export class SimpleLogger {
   }
 }
 
-// Performance measurement utility
+/**
+ * Mede e loga o tempo de execução de uma função assíncrona.
+ * @template T - O tipo de retorno da função.
+ * @param {string} label - Um rótulo para identificar a operação.
+ * @param {() => Promise<T>} fn - A função a ser medida.
+ * @returns {Promise<T>} O resultado da função.
+ */
 export async function measurePerformance<T>(
   label: string,
   fn: () => Promise<T>
@@ -119,7 +160,10 @@ export async function measurePerformance<T>(
   }
 }
 
-// Export singleton
+/**
+ * @constant edgeLogger
+ * @description Instância singleton do SimpleLogger.
+ */
 const edgeLogger = new SimpleLogger();
 export default edgeLogger;
 export const simpleLogger = edgeLogger;

@@ -11,6 +11,10 @@ import './responsive.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
+/**
+ * @constant metadata
+ * @description Metadados da aplicação para SEO e configuração da viewport.
+ */
 export const metadata: Metadata = {
   title: 'FisioFlow',
   description: 'Sistema de gestão para sua clínica de fisioterapia.',
@@ -27,6 +31,15 @@ export const metadata: Metadata = {
   ],
 };
 
+/**
+ * Layout raiz da aplicação.
+ * Envolve todas as páginas com os provedores de contexto necessários, como
+ * autenticação e tema, além de configurar o corpo do HTML e a fonte principal.
+ *
+ * @param {Readonly<{children: React.ReactNode}>} props - Propriedades do componente.
+ * @param {React.ReactNode} props.children - Os componentes filhos que serão renderizados dentro do layout.
+ * @returns {React.ReactElement} O componente de layout raiz.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{

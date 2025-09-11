@@ -11,6 +11,15 @@ import {
 import { sessionManager } from './session-cache';
 import edgeLogger from './edge-logger';
 
+/**
+ * @interface InvalidationRule
+ * @description Define uma regra para invalidação de cache.
+ * @property {string} trigger - O evento que dispara a invalidação (ex: 'patient:created').
+ * @property {string[]} targets - As chaves ou tags de cache a serem invalidadas.
+ * @property {number} [delay] - Atraso opcional em milissegundos antes da invalidação.
+ * @property {boolean} [cascade] - Se a invalidação deve ser cascateada para dados relacionados.
+ * @property {(data: any) => boolean} [condition] - Condição opcional para executar a regra.
+ */
 export interface InvalidationRule {
   trigger: string; // The event that triggers invalidation
   targets: string[]; // Cache keys/tags to invalidate
@@ -19,6 +28,16 @@ export interface InvalidationRule {
   condition?: (data: any) => boolean; // Optional condition to check
 }
 
+/**
+ * @interface InvalidationEvent
+ * @description Representa um evento que pode acionar a invalidação de cache.
+ * @property {string} type - O tipo de evento (ex: 'patient:updated').
+ * @property {string} entityType - O tipo da entidade relacionada ao evento (ex: 'Patient').
+ * @property {string} [entityId] - O ID da entidade.
+ * @property {string} [userId] - O ID do usuário que acionou o evento.
+ * @property {number} timestamp - O timestamp do evento.
+ * @property {Record<string, any>} [metadata] - Metadados adicionais sobre o evento.
+ */
 export interface InvalidationEvent {
   type: string;
   entityType: string;
@@ -28,6 +47,11 @@ export interface InvalidationEvent {
   metadata?: Record<string, any>;
 }
 
+/**
+ * @class CacheInvalidationManager
+ * @description Gerencia a lógica de invalidação de cache de forma inteligente e centralizada.
+ * Utiliza um sistema de regras e uma fila de eventos para processar as invalidações de forma assíncrona.
+ */
 export class CacheInvalidationManager {
   private rules: InvalidationRule[] = [];
   private eventQueue: InvalidationEvent[] = [];
@@ -39,7 +63,8 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Setup default invalidation rules for common scenarios
+   * Configura as regras de invalidação padrão para cenários comuns.
+   * @private
    */
   private setupDefaultRules(): void {
     // Patient-related invalidation rules
@@ -134,7 +159,9 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Add a custom invalidation rule
+   * Adiciona uma nova regra de invalidação de cache.
+   *
+   * @param {InvalidationRule} rule - A regra a ser adicionada.
    */
   addRule(rule: InvalidationRule): void {
     this.rules.push(rule);
@@ -145,7 +172,9 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Remove invalidation rules by trigger
+   * Remove regras de invalidação de cache com base no gatilho (trigger).
+   *
+   * @param {string} trigger - O gatilho das regras a serem removidas.
    */
   removeRule(trigger: string): void {
     const initialLength = this.rules.length;
@@ -161,7 +190,12 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Trigger cache invalidation for a specific event
+   * Dispara a invalidação de cache para um evento específico.
+   * Adiciona o evento à fila de processamento.
+   *
+   * @param {InvalidationEvent} event - O evento de invalidação.
+   * @returns {Promise<void>}
+   * @throws {Error} Se a invalidação falhar.
    */
   async invalidate(event: InvalidationEvent): Promise<void> {
     const startTime = Date.now();
@@ -188,7 +222,12 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Smart invalidation based on entity relationships
+   * Dispara uma invalidação de cache "inteligente" com base no tipo de entidade e operação.
+   *
+   * @param {string} entityType - O tipo da entidade (ex: 'Patient').
+   * @param {string} entityId - O ID da entidade.
+   * @param {string} operation - A operação realizada (ex: 'created', 'updated').
+   * @returns {Promise<void>}
    */
   async smartInvalidate(
     entityType: string,
@@ -206,7 +245,11 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Bulk invalidation for multiple entities
+   * Dispara a invalidação de cache em massa para múltiplos eventos.
+   *
+   * @param {InvalidationEvent[]} events - Um array de eventos de invalidação.
+   * @returns {Promise<void>}
+   * @throws {Error} Se a invalidação em massa falhar.
    */
   async bulkInvalidate(events: InvalidationEvent[]): Promise<void> {
     const startTime = Date.now();
@@ -229,7 +272,11 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate cache based on user context
+   * Invalida o cache com base no contexto de um usuário específico.
+   *
+   * @param {string} userId - O ID do usuário.
+   * @param {string[]} context - O contexto a ser invalidado (ex: ['profile', 'permissions']).
+   * @returns {Promise<void>}
    */
   async invalidateUserContext(
     userId: string,
@@ -247,7 +294,11 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Time-based cache invalidation (e.g., daily schedule changes)
+   * Agenda uma invalidação de cache para ser executada após um determinado atraso.
+   *
+   * @param {string} trigger - O gatilho do evento a ser disparado.
+   * @param {number} delay - O atraso em milissegundos.
+   * @returns {Promise<void>}
    */
   async scheduleInvalidation(trigger: string, delay: number): Promise<void> {
     setTimeout(async () => {
@@ -264,7 +315,8 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Process the event queue
+   * Processa a fila de eventos de invalidação.
+   * @private
    */
   private async processEventQueue(): Promise<void> {
     if (this.processing || this.eventQueue.length === 0) {
@@ -286,7 +338,9 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Process a single invalidation event
+   * Processa um único evento de invalidação, encontrando e executando as regras correspondentes.
+   * @param {InvalidationEvent} event - O evento a ser processado.
+   * @private
    */
   private async processEvent(event: InvalidationEvent): Promise<void> {
     const matchingRules = this.rules.filter(
@@ -320,7 +374,10 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Execute a specific invalidation rule
+   * Executa uma regra de invalidação específica.
+   * @param {InvalidationRule} rule - A regra a ser executada.
+   * @param {InvalidationEvent} event - O evento que acionou a regra.
+   * @private
    */
   private async executeRule(
     rule: InvalidationRule,
@@ -354,7 +411,11 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate a specific target (tag or key pattern)
+   * Invalida um alvo específico (tag ou padrão de chave).
+   * @param {string} target - O alvo a ser invalidado.
+   * @param {InvalidationEvent} event - O evento de invalidação.
+   * @param {boolean} [cascade] - Se a invalidação deve ser cascateada.
+   * @private
    */
   private async invalidateTarget(
     target: string,
@@ -381,7 +442,10 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate model cache
+   * Invalida o cache de um modelo de banco de dados específico.
+   * @param {string} modelName - O nome do modelo.
+   * @param {string} [entityId] - O ID da entidade a ser invalidada.
+   * @private
    */
   private async invalidateModelCache(
     modelName: string,
@@ -421,7 +485,10 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate cache by type and tag
+   * Invalida uma tag em um gerenciador de cache específico.
+   * @param {string} cacheType - O tipo de cache (ex: 'patients').
+   * @param {string} tag - A tag a ser invalidada.
+   * @private
    */
   private async invalidateCacheByType(
     cacheType: string,
@@ -458,7 +525,9 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Invalidate generic tag across all cache managers
+   * Invalida uma tag genérica em todos os gerenciadores de cache.
+   * @param {string} tag - A tag a ser invalidada.
+   * @private
    */
   private async invalidateGenericTag(tag: string): Promise<void> {
     await Promise.all([
@@ -473,7 +542,9 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Cascade invalidation to related entities
+   * Realiza a invalidação em cascata para entidades relacionadas.
+   * @param {InvalidationEvent} event - O evento que acionou a cascata.
+   * @private
    */
   private async cascadeInvalidation(event: InvalidationEvent): Promise<void> {
     if (!event.entityId) return;
@@ -510,7 +581,8 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Start the event processor (runs periodically)
+   * Inicia o processador de eventos da fila, que é executado periodicamente.
+   * @private
    */
   private startEventProcessor(): void {
     setInterval(async () => {
@@ -521,7 +593,9 @@ export class CacheInvalidationManager {
   }
 
   /**
-   * Get invalidation statistics
+   * Obtém estatísticas sobre o gerenciador de invalidação de cache.
+   *
+   * @returns {{rulesCount: number, queueSize: number, processing: boolean}} Um objeto com as estatísticas.
    */
   getStats(): {
     rulesCount: number;
@@ -536,10 +610,17 @@ export class CacheInvalidationManager {
   }
 }
 
-// Export singleton instance
+/**
+ * @constant cacheInvalidator
+ * @description Instância singleton do CacheInvalidationManager.
+ * Use esta instância para interagir com o sistema de invalidação de cache.
+ */
 export const cacheInvalidator = new CacheInvalidationManager();
 
-// Convenience functions for common invalidation scenarios
+/**
+ * @constant CacheInvalidation
+ * @description Objeto com funções de conveniência para cenários comuns de invalidação de cache.
+ */
 export const CacheInvalidation = {
   // Patient operations
   async patientCreated(patientId: string): Promise<void> {

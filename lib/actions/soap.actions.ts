@@ -15,6 +15,15 @@ const soapNoteSchema = z.object({
   painScale: z.number().min(0).max(10).optional(),
 });
 
+/**
+ * Salva uma nota SOAP para um paciente.
+ * A nota é associada à consulta mais recente do paciente.
+ * Executa verificação de autenticação, validação de dados e criação no banco de dados.
+ *
+ * @param {string} patientId - O ID do paciente para o qual a nota SOAP está sendo salva.
+ * @param {FormData} formData - Os dados do formulário contendo as informações da nota SOAP.
+ * @returns {Promise<{success: boolean, message: string, errors?: any}>} Um objeto indicando o sucesso ou falha da operação, com mensagens e erros de validação, se aplicável.
+ */
 export async function saveSoapNoteAction(
   patientId: string,
   formData: FormData

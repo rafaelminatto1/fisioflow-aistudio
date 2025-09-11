@@ -8,7 +8,13 @@ import bcrypt from 'bcryptjs';
 import redis from './redis';
 import { Role } from '@prisma/client';
 
-// Tipos para estender a sessão do NextAuth
+/**
+ * @interface ExtendedUser
+ * @description Estende a interface de usuário padrão do NextAuth para incluir propriedades personalizadas.
+ * @property {string} id - O ID do usuário.
+ * @property {Role} role - A função do usuário (ex: Admin, Fisioterapeuta).
+ * @property {string | undefined} avatarUrl - A URL do avatar do usuário.
+ */
 interface ExtendedUser {
   id: string;
   role: Role;
@@ -20,7 +26,11 @@ const MAX_ATTEMPTS = 5;
 const ATTEMPTS_WINDOW_SECONDS = 15 * 60; // 15 minutos
 
 /**
- * Opções de configuração para o NextAuth.js.
+ * @constant authOptions
+ * @description Objeto de configuração para o NextAuth.js.
+ * Define o adaptador Prisma, provedores de autenticação (Credentials), estratégia de sessão (JWT),
+ * callbacks para manipulação de token e sessão, e outras configurações.
+ * Inclui lógica de rate limiting para tentativas de login.
  */
 export const authOptions: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
@@ -31,6 +41,16 @@ export const authOptions: NextAuthConfig = {
         email: { label: 'Email', type: 'text' },
         password: { label: 'Password', type: 'password' },
       },
+      /**
+       * @function authorize
+       * @description Função de autorização para o provedor de credenciais.
+       * Valida as credenciais do usuário, verifica o rate limiting, compara a senha e retorna os dados do usuário se a autenticação for bem-sucedida.
+       *
+       * @param {Partial<Record<string, unknown>>} credentials - As credenciais fornecidas pelo usuário (email e senha).
+       * @param {Request} req - O objeto da requisição.
+       * @returns {Promise<any>} Os dados do usuário se a autorização for bem-sucedida.
+       * @throws {Error} Se as credenciais forem inválidas, o rate limit for excedido, ou o usuário/senha estiverem incorretos.
+       */
       async authorize(credentials, req) {
         if (
           !credentials?.email ||
@@ -96,6 +116,14 @@ export const authOptions: NextAuthConfig = {
     maxAge: 8 * 60 * 60, // 8 horas
   },
   callbacks: {
+    /**
+     * @callback jwt
+     * @description Callback para manipular o token JWT.
+     * Adiciona propriedades personalizadas (id, role, avatarUrl) ao token quando o usuário faz login.
+     *
+     * @param {{token: JWT, user?: User}} params - Os parâmetros do callback.
+     * @returns {Promise<JWT>} O token JWT modificado.
+     */
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
@@ -104,6 +132,14 @@ export const authOptions: NextAuthConfig = {
       }
       return token;
     },
+    /**
+     * @callback session
+     * @description Callback para manipular o objeto de sessão.
+     * Adiciona as propriedades personalizadas do token JWT (id, role, avatarUrl) ao objeto de sessão.
+     *
+     * @param {{session: Session, token: JWT}} params - Os parâmetros do callback.
+     * @returns {Promise<Session>} O objeto de sessão modificado.
+     */
     async session({ session, token }) {
       if (session.user) {
         const extendedUser = session.user as ExtendedUser;
@@ -126,7 +162,9 @@ const { auth, handlers, signIn, signOut } = NextAuth(authOptions);
 export { auth, handlers, signIn, signOut };
 
 /**
- * Helper para obter a sessão do usuário no lado do servidor.
+ * Obtém os dados do usuário da sessão atual no lado do servidor.
+ *
+ * @returns {Promise<ExtendedUser | undefined>} Os dados do usuário estendido, ou undefined se não houver sessão.
  */
 export const getCurrentUser = async () => {
   const session = await auth();

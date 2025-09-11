@@ -3,7 +3,11 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import winston from 'winston';
 
-// Configure Winston logger
+/**
+ * @constant logger
+ * @description Logger Winston configurado para registrar eventos da API.
+ * Os logs incluem timestamp e são formatados como JSON.
+ */
 const logger = winston.createLogger({
   level: 'info',
   format: winston.format.combine(
@@ -13,7 +17,11 @@ const logger = winston.createLogger({
   transports: [new winston.transports.Console()],
 });
 
-// --- Instância Axios Configurada ---
+/**
+ * @constant api
+ * @description Instância do Axios pré-configurada para comunicação com a API backend.
+ * Inclui baseURL, withCredentials e headers padrão.
+ */
 const api = axios.create({
   // Em um app Next.js, isso viria de process.env.NEXT_PUBLIC_API_URL
   // Para este projeto, vamos usar o valor de desenvolvimento padrão.
@@ -24,12 +32,21 @@ const api = axios.create({
   },
 });
 
-// --- Interceptor de Resposta para Retry e Tratamento de Erros ---
+/**
+ * @interceptor api.interceptors.response
+ * @description Interceptor de resposta do Axios para tratamento de erros e lógica de retry.
+ * Tenta novamente as requisições que falham por erros de rede ou de servidor (5xx)
+ * com uma estratégia de exponential backoff. Padroniza os erros antes de rejeitar a promise.
+ */
 
 const MAX_RETRIES = 3;
 const INITIAL_DELAY_MS = 200;
 
-// Estendendo a configuração do Axios para incluir a contagem de retries
+/**
+ * @interface RetryConfig
+ * @description Estende a configuração de requisição do Axios para incluir a contagem de retries.
+ * @property {number} [retries] - O número de tentativas de retry já executadas para a requisição.
+ */
 interface RetryConfig extends InternalAxiosRequestConfig {
   retries?: number;
 }
@@ -103,7 +120,10 @@ export interface Session {
 }
 
 /**
- * Verifica a saúde da API do Flask.
+ * Verifica a saúde da API backend.
+ *
+ * @returns {Promise<{status: string, service: string}>} Um objeto contendo o status do serviço.
+ * Em caso de falha, retorna um status de erro.
  */
 export const checkApiHealth = async (): Promise<{
   status: string;
@@ -119,7 +139,10 @@ export const checkApiHealth = async (): Promise<{
 };
 
 /**
- * Busca as sessões de mentoria.
+ * Busca a lista de sessões de mentoria da API.
+ *
+ * @returns {Promise<Session[]>} Uma promise que resolve para um array de sessões de mentoria.
+ * @throws {Error} Lança um erro padronizado se a requisição falhar após as tentativas de retry.
  */
 export const getMentoriaSessions = async (): Promise<Session[]> => {
   try {

@@ -46,7 +46,11 @@ const validateCPF = (cpf: string): boolean => {
   return true;
 };
 
-// Schema Zod para o formulário de Paciente
+/**
+ * @constant patientFormSchema
+ * @description Schema de validação Zod para o formulário de cadastro e edição de pacientes.
+ * Define as regras de validação para cada campo do formulário.
+ */
 export const patientFormSchema = z.object({
   // Etapa 1: Dados Pessoais
   name: z
@@ -81,4 +85,8 @@ export const patientFormSchema = z.object({
   whatsappConsent: z.enum(['opt_in', 'opt_out']),
 });
 
+/**
+ * @type PatientFormData
+ * @description Tipo inferido a partir do `patientFormSchema`, representando os dados do formulário do paciente.
+ */
 export type PatientFormData = z.infer<typeof patientFormSchema>;

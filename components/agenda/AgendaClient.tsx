@@ -41,12 +41,24 @@ const timeSlots = Array.from(
   }
 );
 
+/**
+ * @interface AgendaClientProps
+ * @description Propriedades para o componente AgendaClient.
+ */
 interface AgendaClientProps {
   initialAppointments: any[];
   therapists: PrismaUser[];
   patients: PatientSummary[];
 }
 
+/**
+ * @component AgendaClient
+ * @description Componente principal da agenda, responsável por renderizar a grade de horários,
+ * agendamentos, e gerenciar a interação do usuário (navegação de semana, seleção de agendamentos, etc.).
+ * Este é um Client Component ('use client').
+ * @param {AgendaClientProps} props - As propriedades do componente.
+ * @returns {React.ReactElement} O componente da agenda.
+ */
 export default function AgendaClient({
   initialAppointments,
   therapists,

@@ -1,7 +1,10 @@
 import winston from 'winston';
 import path from 'path';
 
-// Configuração de níveis de log personalizados
+/**
+ * @constant logLevels
+ * @description Níveis de log personalizados para o Winston.
+ */
 const logLevels = {
   error: 0,
   warn: 1,
@@ -10,7 +13,10 @@ const logLevels = {
   debug: 4,
 };
 
-// Cores para cada nível
+/**
+ * @constant logColors
+ * @description Cores personalizadas para cada nível de log no console.
+ */
 const logColors = {
   error: 'red',
   warn: 'yellow',
@@ -22,7 +28,10 @@ const logColors = {
 // Adicionar cores ao winston
 winston.addColors(logColors);
 
-// Formato personalizado para logs estruturados
+/**
+ * @constant logFormat
+ * @description Formato de log estruturado (JSON) para arquivos e console em produção.
+ */
 const logFormat = winston.format.combine(
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss:ms' }),
   winston.format.errors({ stack: true }),
@@ -44,7 +53,10 @@ const logFormat = winston.format.combine(
   })
 );
 
-// Formato para console (desenvolvimento)
+/**
+ * @constant consoleFormat
+ * @description Formato de log para o console em ambiente de desenvolvimento, com cores.
+ */
 const consoleFormat = winston.format.combine(
   winston.format.timestamp({ format: 'HH:mm:ss' }),
   winston.format.colorize({ all: true }),
@@ -57,7 +69,10 @@ const consoleFormat = winston.format.combine(
   })
 );
 
-// Configuração de transports
+/**
+ * @constant transports
+ * @description Array de transports do Winston, configurados dinamicamente com base no ambiente.
+ */
 const transports: winston.transport[] = [];
 
 // Console transport (sempre ativo em desenvolvimento)
@@ -102,7 +117,10 @@ if (process.env.NODE_ENV === 'production') {
   );
 }
 
-// Criar logger principal
+/**
+ * @constant logger
+ * @description Instância principal do logger Winston.
+ */
 const logger = winston.createLogger({
   level:
     process.env.LOG_LEVEL ||
@@ -113,7 +131,10 @@ const logger = winston.createLogger({
   exitOnError: false,
 });
 
-// Interfaces para logs estruturados
+/**
+ * @interface LogContext
+ * @description Contexto base para logs estruturados.
+ */
 interface LogContext {
   userId?: string;
   patientId?: string;
@@ -128,6 +149,10 @@ interface LogContext {
   [key: string]: any;
 }
 
+/**
+ * @interface DatabaseLogContext
+ * @description Contexto específico para logs de banco de dados.
+ */
 interface DatabaseLogContext extends LogContext {
   query?: string;
   duration?: number;
@@ -135,6 +160,10 @@ interface DatabaseLogContext extends LogContext {
   operation?: 'SELECT' | 'INSERT' | 'UPDATE' | 'DELETE';
 }
 
+/**
+ * @interface SecurityLogContext
+ * @description Contexto específico para logs de segurança.
+ */
 interface SecurityLogContext extends LogContext {
   event:
     | 'login'
@@ -145,7 +174,10 @@ interface SecurityLogContext extends LogContext {
   severity: 'low' | 'medium' | 'high' | 'critical';
 }
 
-// Classe Logger estruturado
+/**
+ * @class StructuredLogger
+ * @description Wrapper em torno do logger Winston para fornecer métodos de log estruturado.
+ */
 class StructuredLogger {
   private logger: winston.Logger;
 
@@ -230,10 +262,16 @@ class StructuredLogger {
   }
 }
 
-// Instância do logger estruturado
+/**
+ * @constant structuredLogger
+ * @description Instância singleton do StructuredLogger.
+ */
 const structuredLogger = new StructuredLogger(logger);
 
-// Middleware para logging de requisições HTTP
+/**
+ * Cria um middleware para logging de requisições HTTP (compatível com Express/Connect).
+ * @returns {(req: any, res: any, next: any) => void} A função de middleware.
+ */
 export function createHttpLogger() {
   return (req: any, res: any, next: any) => {
     const start = Date.now();
@@ -275,7 +313,11 @@ export function createHttpLogger() {
   };
 }
 
-// Função para criar child logger com contexto
+/**
+ * Cria um "child logger" com um contexto pré-definido.
+ * @param {LogContext} context - O contexto a ser adicionado a todos os logs criados pelo child logger.
+ * @returns {object} Um objeto com os métodos de log (info, warn, error, debug).
+ */
 export function createChildLogger(context: LogContext) {
   return {
     info: (message: string, additionalContext?: LogContext) =>
