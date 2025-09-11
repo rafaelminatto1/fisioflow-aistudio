@@ -1,51 +1,20 @@
 name: fisioflow
-region: nyc1
-ingress:
-  rules:
-  - component:
-      name: web
-    match:
-      path:
-        prefix: /
 services:
 - name: web
   source_dir: /
   github:
-    repo: rafaelminatto1/fisioflow-aistudio
+    repo: your-github-username/fisioflow-aistudio-1
     branch: main
-    deploy_on_push: true
-  dockerfile_path: Dockerfile
-  build_command: |
-    npm ci
-    npx prisma generate
-    npm run build
+  run_command: npm start
+  environment_slug: node-js
   instance_count: 1
-  instance_size_slug: professional-xs
+  instance_size_slug: basic-xxs
+  dockerfile_path: Dockerfile
   http_port: 3000
-  health_check:
-    http_path: /api/health
-    initial_delay_seconds: 60
-    period_seconds: 10
-    timeout_seconds: 5
-    success_threshold: 1
-    failure_threshold: 3
-  envs:
+  env:
   - key: NODE_ENV
-    scope: RUN_AND_BUILD_TIME
     value: production
-  - key: NEXT_TELEMETRY_DISABLED
-    scope: RUN_AND_BUILD_TIME
-    value: "1"
-  - key: PORT
-    scope: RUN_AND_BUILD_TIME
-    value: "3000"
   - key: DATABASE_URL
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-  - key: DIRECT_URL
-    scope: RUN_AND_BUILD_TIME
-    type: SECRET
-  - key: REDIS_URL
     scope: RUN_AND_BUILD_TIME
     type: SECRET
   - key: NEXTAUTH_SECRET
@@ -53,34 +22,70 @@ services:
     type: SECRET
   - key: NEXTAUTH_URL
     scope: RUN_AND_BUILD_TIME
-    type: SECRET
-  - key: ANTHROPIC_API_KEY
+    value: ${APP_URL}
+  - key: REDIS_URL
     scope: RUN_AND_BUILD_TIME
     type: SECRET
   - key: OPENAI_API_KEY
     scope: RUN_AND_BUILD_TIME
     type: SECRET
-  - key: GEMINI_API_KEY
+  - key: ANTHROPIC_API_KEY
     scope: RUN_AND_BUILD_TIME
     type: SECRET
-  - key: PRISMA_GENERATE_DATAPROXY
+  - key: GOOGLE_API_KEY
     scope: RUN_AND_BUILD_TIME
-    value: "true"
-  - key: SKIP_ENV_VALIDATION
+    type: SECRET
+  - key: STRIPE_SECRET_KEY
     scope: RUN_AND_BUILD_TIME
-    value: "true"
-  - key: LOG_LEVEL
+    type: SECRET
+  - key: STRIPE_PUBLISHABLE_KEY
     scope: RUN_AND_BUILD_TIME
-    value: "info"
-  - key: HEALTH_CHECK_ENABLED
+    type: SECRET
+  - key: WHATSAPP_TOKEN
     scope: RUN_AND_BUILD_TIME
-    value: "true"
+    type: SECRET
+  - key: WHATSAPP_VERIFY_TOKEN
+    scope: RUN_AND_BUILD_TIME
+    type: SECRET
+  health_check:
+    http_path: /api/health
+    initial_delay_seconds: 30
+    period_seconds: 10
+    timeout_seconds: 5
+    success_threshold: 1
+    failure_threshold: 3
+
 databases:
 - name: fisioflow-db
   engine: PG
   version: "14"
-  size: db-s-1vcpu-1gb
-- name: fisioflow-redis
-  engine: REDIS
-  version: "7"
-  size: db-s-1vcpu-1gb
+  size: basic-xs
+  num_nodes: 1
+
+static_sites:
+- name: assets
+  source_dir: /public
+  github:
+    repo: your-github-username/fisioflow-aistudio-1
+    branch: main
+  output_dir: /public
+
+domains:
+- domain: fisioflow.com
+  type: PRIMARY
+  wildcard: false
+  zone: fisioflow.com
+
+region: nyc
+
+alerts:
+- rule: DEPLOYMENT_FAILED
+- rule: DOMAIN_FAILED
+- rule: CPU_UTILIZATION
+  value: 80
+- rule: MEM_UTILIZATION
+  value: 80
+- rule: RESTART_LOOP
+
+features:
+- buildpack-stack=ubuntu-18
