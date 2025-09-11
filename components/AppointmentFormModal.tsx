@@ -1,13 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { X, Save, Calendar, Clock } from 'lucide-react';
-import {
-  Appointment,
-  Patient,
-  AppointmentStatus,
-  AppointmentType,
-  Therapist,
-  PatientSummary,
-  RecurrenceRule,
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { X, Calendar, Clock, User, DollarSign, FileText, AlertCircle } from 'lucide-react';
+import { useToast } from '@/contexts/ToastContext';
 } from '../types';
 import { useToast } from '../contexts/ToastContext';
 import PatientSearchInput from './agenda/PatientSearchInput';

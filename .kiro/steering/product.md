@@ -1,34 +1,52 @@
 # FisioFlow - Product Overview
 
-FisioFlow is a comprehensive clinic management system specifically designed for physiotherapy
-practices. The platform provides end-to-end management capabilities for healthcare professionals
-working in physical therapy.
+FisioFlow is a comprehensive physiotherapy clinic management system designed to surpass existing solutions like Vedius in functionality, performance, and cost-effectiveness.
 
-## Core Features
+## Core Value Proposition
 
-- **Patient Management**: Complete patient records, medical history, and progress tracking
-- **Appointment Scheduling**: Intelligent scheduling system with automated notifications
-- **Treatment Protocols**: Customizable treatment plans and progress monitoring
-- **Financial Management**: Payment tracking, billing, and financial reporting
-- **Analytics Dashboard**: Real-time metrics and advanced analytics
-- **WhatsApp Integration**: Automated patient communication and consent management
-- **SOAP Notes**: Clinical documentation following SOAP methodology
-- **Pain Mapping**: Interactive body mapping for pain point tracking
-- **Exercise Library**: Comprehensive exercise database with video content
+- **Superior Feature Set**: 25,000+ exercise library vs competitors' 15,000
+- **Performance**: 50% faster than existing solutions
+- **Cost Effective**: 12% cheaper pricing (R$ 69,90 vs R$ 79,90)
+- **Modern Interface**: 10x more modern UI/UX
+- **AI Integration**: Advanced analytics and predictive insights
 
 ## Target Users
 
-- **Physiotherapists**: Primary healthcare providers managing patient treatments
-- **Clinic Administrators**: Managing operations, scheduling, and financial aspects
-- **Patients**: Limited access for appointment booking and progress viewing
-- **Physical Educators**: Supporting rehabilitation programs
+- **Primary**: Physiotherapy clinics and private practitioners
+- **Secondary**: Physical education professionals
+- **Tertiary**: Patients (through mobile PWA)
 
-## Technical Architecture
+## Key Features
 
-The system is built as a modern web application with:
+### Core Management
+- Patient management with comprehensive medical records
+- Appointment scheduling with drag-and-drop calendar
+- Treatment protocols and exercise prescription
+- Financial management and billing
+- Communication center (WhatsApp, Email, SMS)
 
-- Multi-tenant architecture with Row Level Security (RLS)
-- Real-time data synchronization
-- Automated backup and recovery systems
+### Advanced Features
 - AI-powered analytics and insights
-- Mobile-responsive design for all devices
+- No-show prediction system
+- Exercise library with video demonstrations
+- Mobile PWA for patients
+- Real-time monitoring and alerts
+
+### Excluded Features
+- ❌ Telemedicine/teleconsultation (removed by business decision)
+- ❌ Video calling functionality
+- ❌ Online consultation features
+
+## Success Metrics
+
+- **Functionality**: Exceed Vedius in all core features
+- **Performance**: Lighthouse score > 90, load time < 2s
+- **Cost**: Maintain $20/month infrastructure vs $40/month alternatives
+- **User Experience**: Modern, accessible, mobile-first design
+
+## Business Model
+
+- SaaS subscription model
+- Competitive pricing strategy
+- Focus on Brazilian physiotherapy market
+- Emphasis on cost-effectiveness and superior functionality
