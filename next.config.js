@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { withSentryConfig } = require('@sentry/nextjs');
+
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
@@ -11,9 +13,28 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
+  // Performance optimizations for bundle size < 500KB
+  experimental: {
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts', 
+      'framer-motion',
+      '@radix-ui/react-dialog',
+      'date-fns'
+    ],
+    serverComponentsExternalPackages: ['@prisma/client'],
+  },
+
   // Compression and optimization
   compress: true,
   poweredByHeader: false,
+  
+  // Remove console.logs in production
+  compiler: {
+    removeConsole: process.env.NODE_ENV === 'production' ? {
+      exclude: ['error', 'warn']
+    } : false,
+  },
 
   // Simplified Image Configuration
   images: {
@@ -100,4 +121,17 @@ const nextConfig = {
   },
 };
 
-module.exports = nextConfig;
+// Sentry configuration for production monitoring
+const sentryWebpackPluginOptions = {
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  silent: process.env.NODE_ENV !== 'production',
+  widenClientFileUpload: true,
+  hideSourceMaps: true,
+  disableLogger: process.env.NODE_ENV !== 'production',
+};
+
+// Export with conditional Sentry configuration
+module.exports = process.env.NODE_ENV === 'production' && process.env.SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;

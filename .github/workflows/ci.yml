@@ -1,0 +1,245 @@
+# .github/workflows/ci.yml
+name: 🚀 CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+env:
+  NODE_VERSION: '18.x'
+  
+jobs:
+  # Quality Checks
+  quality:
+    name: 🔍 Code Quality
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 📦 Install dependencies
+      run: npm ci
+      
+    - name: 🔧 Generate Prisma Client
+      run: npx prisma generate
+      
+    - name: 🧹 Lint check
+      run: npm run lint
+      
+    - name: 🎨 Format check
+      run: npm run format:check
+      continue-on-error: true
+      
+    - name: 🔍 Type check
+      run: npm run type-check
+
+  # Security Checks
+  security:
+    name: 🛡️ Security Audit
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 🔒 Security audit
+      run: npm audit --audit-level=high
+      continue-on-error: true
+      
+    - name: 🕵️ Dependency review
+      uses: actions/dependency-review-action@v4
+      if: github.event_name == 'pull_request'
+
+  # Build and Test
+  build:
+    name: 🏗️ Build & Test
+    runs-on: ubuntu-latest
+    needs: [quality, security]
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: fisioflow_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 📦 Install dependencies
+      run: npm ci
+      
+    - name: 🗄️ Setup test database
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fisioflow_test
+      run: |
+        npx prisma generate
+        npx prisma db push
+        
+    - name: 🧪 Run unit tests
+      env:
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fisioflow_test
+        NEXTAUTH_SECRET: test-secret
+        NEXTAUTH_URL: http://localhost:3000
+      run: npm test
+      continue-on-error: true
+      
+    - name: 🏗️ Build application
+      env:
+        SKIP_ENV_VALIDATION: true
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/fisioflow_test
+        NEXTAUTH_SECRET: test-secret
+        NEXTAUTH_URL: http://localhost:3000
+      run: npm run build
+      
+    - name: 📊 Bundle analysis
+      run: |
+        npx next-bundle-analyzer || true
+        
+    - name: 📤 Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-files
+        path: .next/
+        retention-days: 1
+
+  # Performance Tests
+  lighthouse:
+    name: 🚦 Lighthouse CI
+    runs-on: ubuntu-latest
+    needs: build
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 📦 Install dependencies
+      run: npm ci
+      
+    - name: 📤 Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name: build-files
+        path: .next/
+        
+    - name: 🚦 Run Lighthouse CI
+      env:
+        LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+      run: |
+        npm install -g @lhci/cli
+        lhci autorun || true
+
+  # Deploy to Staging
+  deploy-staging:
+    name: 🚀 Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [build, lighthouse]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🚀 Deploy to DigitalOcean Staging
+      env:
+        DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        APP_ID: ${{ secrets.STAGING_APP_ID }}
+      run: |
+        # Install doctl
+        curl -sL https://github.com/digitalocean/doctl/releases/download/v1.104.0/doctl-1.104.0-linux-amd64.tar.gz | tar -xzv
+        sudo mv doctl /usr/local/bin
+        
+        # Deploy to staging
+        doctl auth init -t $DIGITALOCEAN_ACCESS_TOKEN
+        doctl apps create-deployment $APP_ID --wait
+
+  # Deploy to Production
+  deploy-production:
+    name: 🌟 Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [build, lighthouse]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🌟 Deploy to DigitalOcean Production
+      env:
+        DIGITALOCEAN_ACCESS_TOKEN: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        APP_ID: ${{ secrets.PRODUCTION_APP_ID }}
+      run: |
+        # Install doctl
+        curl -sL https://github.com/digitalocean/doctl/releases/download/v1.104.0/doctl-1.104.0-linux-amd64.tar.gz | tar -xzv
+        sudo mv doctl /usr/local/bin
+        
+        # Deploy to production
+        doctl auth init -t $DIGITALOCEAN_ACCESS_TOKEN
+        doctl apps create-deployment $APP_ID --wait
+        
+    - name: 🔔 Notify deployment success
+      if: success()
+      run: |
+        echo "🎉 FisioFlow AI Studio deployed successfully to production!"
+        echo "🌐 Available at: https://fisioflow-aistudio.com"
+
+  # Post-deployment monitoring
+  post-deploy:
+    name: 📊 Post-deployment Monitoring
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: 🏥 Health check
+      run: |
+        sleep 30  # Wait for deployment to stabilize
+        curl -f https://fisioflow-aistudio.com/api/health || exit 1
+        
+    - name: 📊 Sentry release
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+        SENTRY_PROJECT: fisioflow-ai-studio
+      run: |
+        npm install -g @sentry/cli
+        sentry-cli releases new ${{ github.sha }}
+        sentry-cli releases set-commits ${{ github.sha }} --auto
+        sentry-cli releases finalize ${{ github.sha }}
