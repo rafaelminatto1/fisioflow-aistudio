@@ -77,22 +77,17 @@ export default function Sidebar() {
 
   const topNavItems = [
     { href: '/dashboard', icon: LayoutGrid, label: 'Dashboard' },
-    { href: '/pacientes', icon: Users, label: 'Pacientes' },
-    { href: '/agendamentos', icon: Calendar, label: 'Agendamentos' },
-    { href: '/exercicios', icon: Dumbbell, label: 'Exercícios' },
-    { href: '/prescricoes', icon: FilePlus, label: 'Prescrições' },
-    { href: '/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
-    { href: '/ai-analytics', icon: BrainCircuit, label: 'IA Analytics' },
     {
       href: '/dashboard/clinical-analytics',
       icon: PieChart,
-      label: 'Clinical Analytics',
+      label: 'Dashboard Clínico',
     },
+    { href: '/dashboard/pacientes', icon: Users, label: 'Pacientes' },
+    { href: '/dashboard/agenda', icon: Calendar, label: 'Agenda' },
     // Add other routes as they are migrated
   ];
 
   const bottomNavItems = [
-    { href: '/financeiro', icon: DollarSign, label: 'Financeiro' },
     { href: '/dashboard/reports', icon: BarChart3, label: 'Relatórios' },
     {
       href: '/dashboard/audit-log',

@@ -1,14 +1,67 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { Plus, Search, Filter, Users, UserCheck, UserX, Calendar, Phone, Mail, Edit, Trash2, Eye } from 'lucide-react';
-import { Patient, PatientSummary } from '@/types';
-import { getPatients, deletePatient } from '@/services/patientService';
-import { useToast } from '@/contexts/ToastContext';
+import { useState, useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
+import { motion } from 'framer-motion';
+import {
+  Users,
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Eye,
+  Phone,
+  Mail,
+  Calendar,
+  MapPin,
+  AlertTriangle,
+  CheckCircle,
+  XCircle,
+  UserX,
+  UserCheck,
+} from 'lucide-react';
+import Sidebar from '@/components/Sidebar';
+import Header from '@/components/Header';
 import PatientFormModal from '@/components/PatientFormModal';
 import PatientDetailModal from '@/components/PatientDetailModal';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useToast } from '@/contexts/ToastContext';
+
+interface PatientSummary {
+  id: string;
+  name: string;
+  cpf?: string;
+  email?: string;
+  phone?: string;
+  birth_date?: Date | null;
+  age?: number;
+  status: 'Active' | 'Inactive' | 'Discharged';
+  totalAppointments?: number;
+  lastAppointment?: any;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Patient extends PatientSummary {
+  address?: any;
+  emergency_contact?: any;
+  allergies?: string;
+  medical_alerts?: string;
+  consent_given?: boolean;
+  whatsapp_consent?: 'opt_in' | 'opt_out';
+  appointments?: any[];
+  payments?: any[];
+  statistics?: {
+    totalAppointments?: number;
+    totalPayments?: number;
+    totalPaid?: number;
+    pendingPayments?: number;
+    nextAppointment?: any;
+    lastAppointment?: any;
+  };
+}
 
 interface PatientsPageState {
   patients: PatientSummary[];
@@ -22,78 +75,131 @@ interface PatientsPageState {
 }
 
 const PatientsPage: React.FC = () => {
-  const [state, setState] = useState<PatientsPageState>({
-    patients: [],
-    loading: true,
-    searchTerm: '',
-    statusFilter: 'All',
-    selectedPatient: null,
-    showFormModal: false,
-    showDetailModal: false,
-    editingPatient: null,
-  });
-
+  const { data: session } = useSession();
+  const router = useRouter();
   const { showToast } = useToast();
 
-  // Load patients
-  const loadPatients = async () => {
+  const [patients, setPatients] = useState<PatientSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'All' | 'Active' | 'Inactive' | 'Discharged'>('All');
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [showFormModal, setShowFormModal] = useState(false);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [editingPatient, setEditingPatient] = useState<Patient | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Load patients from API
+  const loadPatients = async (page = 1, search = '', status = '') => {
     try {
-      setState(prev => ({ ...prev, loading: true }));
-      const response = await getPatients({
-        searchTerm: state.searchTerm,
-        statusFilter: state.statusFilter === 'All' ? undefined : state.statusFilter,
+      setLoading(true);
+      const params = new URLSearchParams({
+        page: page.toString(),
+        limit: '10',
+        ...(search && { search }),
+        ...(status && status !== 'All' && { status }),
+        sortBy: 'name',
+        sortOrder: 'asc'
       });
-      setState(prev => ({ ...prev, patients: response.items, loading: false }));
+
+      const response = await fetch(`/api/patients?${params}`);
+      if (!response.ok) throw new Error('Failed to load patients');
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setPatients(data.data);
+        setTotalPages(data.pagination.totalPages);
+        setTotalCount(data.pagination.totalCount);
+        setCurrentPage(data.pagination.page);
+      } else {
+        throw new Error(data.error);
+      }
     } catch (error) {
       console.error('Error loading patients:', error);
       showToast('Erro ao carregar pacientes', 'error');
-      setState(prev => ({ ...prev, loading: false }));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Load patient details
+  const loadPatientDetails = async (patientId: string): Promise<Patient | null> => {
+    try {
+      const response = await fetch(`/api/patients/${patientId}`);
+      if (!response.ok) throw new Error('Failed to load patient details');
+      
+      const data = await response.json();
+      return data.success ? data.data : null;
+    } catch (error) {
+      console.error('Error loading patient details:', error);
+      return null;
     }
   };
 
   useEffect(() => {
-    loadPatients();
-  }, [state.searchTerm, state.statusFilter]);
+    if (session) {
+      loadPatients(1, searchTerm, statusFilter);
+    }
+  }, [session, searchTerm, statusFilter]);
 
-  // Filter patients based on search and status
-  const filteredPatients = state.patients.filter(patient => {
-    const matchesSearch = !state.searchTerm || 
-      patient.name.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-      patient.phone?.includes(state.searchTerm) ||
-      patient.cpf?.includes(state.searchTerm);
-    
-    const matchesStatus = state.statusFilter === 'All' || patient.status === state.statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
+  useEffect(() => {
+    if (!session) {
+      router.push('/auth/signin');
+    }
+  }, [session, router]);
+
+  // Filter patients for display
+  const filteredPatients = patients;
 
   // Get status counts
   const statusCounts = {
-    total: state.patients.length,
-    active: state.patients.filter(p => p.status === 'Active').length,
-    inactive: state.patients.filter(p => p.status === 'Inactive').length,
-    discharged: state.patients.filter(p => p.status === 'Discharged').length,
+    total: totalCount,
+    active: patients.filter(p => p.status === 'Active').length,
+    inactive: patients.filter(p => p.status === 'Inactive').length,
+    discharged: patients.filter(p => p.status === 'Discharged').length,
   };
 
   const handleNewPatient = () => {
-    setState(prev => ({ ...prev, showFormModal: true, editingPatient: null }));
+    setEditingPatient(null);
+    setShowFormModal(true);
   };
 
-  const handleEditPatient = (patient: Patient) => {
-    setState(prev => ({ ...prev, showFormModal: true, editingPatient: patient }));
+  const handleEditPatient = async (patient: PatientSummary) => {
+    const fullPatient = await loadPatientDetails(patient.id);
+    if (fullPatient) {
+      setEditingPatient(fullPatient);
+      setShowFormModal(true);
+    }
   };
 
-  const handleViewPatient = (patient: Patient) => {
-    setState(prev => ({ ...prev, selectedPatient: patient, showDetailModal: true }));
+  const handleViewPatient = async (patient: PatientSummary) => {
+    const fullPatient = await loadPatientDetails(patient.id);
+    if (fullPatient) {
+      setSelectedPatient(fullPatient);
+      setShowDetailModal(true);
+    }
   };
 
   const handleDeletePatient = async (patientId: string) => {
     if (!confirm('Tem certeza que deseja excluir este paciente?')) return;
     
     try {
-      await deletePatient(patientId);
-      showToast('Paciente excluído com sucesso', 'success');
-      loadPatients();
+      const response = await fetch(`/api/patients/${patientId}`, {
+        method: 'DELETE'
+      });
+
+      if (!response.ok) throw new Error('Failed to delete patient');
+      
+      const data = await response.json();
+      if (data.success) {
+        showToast('Paciente excluído com sucesso', 'success');
+        loadPatients(currentPage, searchTerm, statusFilter);
+      } else {
+        throw new Error(data.error);
+      }
     } catch (error) {
       console.error('Error deleting patient:', error);
       showToast('Erro ao excluir paciente', 'error');
@@ -101,8 +207,13 @@ const PatientsPage: React.FC = () => {
   };
 
   const handleFormSubmit = () => {
-    setState(prev => ({ ...prev, showFormModal: false, editingPatient: null }));
-    loadPatients();
+    setShowFormModal(false);
+    setEditingPatient(null);
+    loadPatients(currentPage, searchTerm, statusFilter);
+  };
+
+  const handlePageChange = (page: number) => {
+    loadPatients(page, searchTerm, statusFilter);
   };
 
   const getStatusColor = (status: string) => {
@@ -111,6 +222,15 @@ const PatientsPage: React.FC = () => {
       case 'Inactive': return 'bg-yellow-100 text-yellow-800';
       case 'Discharged': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'Active': return 'Ativo';
+      case 'Inactive': return 'Inativo';
+      case 'Discharged': return 'Alta';
+      default: return status;
     }
   };
 
@@ -123,250 +243,309 @@ const PatientsPage: React.FC = () => {
     }
   };
 
+  const formatDate = (date: Date | string) => {
+    if (!date) return 'N/A';
+    return new Date(date).toLocaleDateString('pt-BR');
+  };
+
+  if (!session) {
+    return <div>Carregando...</div>;
+  }
+
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Sidebar */}
-      <div className="w-80 bg-white border-r border-gray-200 p-6">
-        <h2 className="text-lg font-semibold text-gray-900 mb-6">Filters</h2>
-        
-        {/* Search */}
-        <div className="mb-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <input
-              type="text"
-              placeholder="Search"
-              value={state.searchTerm}
-              onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
-              className="w-full pl-10 pr-4 py-2 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500"
-            />
-          </div>
-        </div>
-
-        {/* Status Filter */}
-        <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-3">Status</label>
-          <select
-            value={state.statusFilter}
-            onChange={(e) => setState(prev => ({ ...prev, statusFilter: e.target.value as any }))}
-            className="w-full px-3 py-2 bg-gray-50 border-0 rounded-lg focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="All">All</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
-            <option value="Discharged">Discharged</option>
-          </select>
-        </div>
-
-        <button
-          onClick={() => {}}
-          className="w-full bg-blue-600 text-white py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"
-        >
-          Apply
-        </button>
-
-        {/* Patient List in Sidebar */}
-        <div className="mt-8">
-          <h3 className="text-sm font-medium text-gray-500 mb-4">Patient</h3>
-          <div className="space-y-3">
-            {filteredPatients.slice(0, 4).map((patient) => (
-              <div 
-                key={patient.id}
-                onClick={() => handleViewPatient(patient as Patient)}
-                className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-50 cursor-pointer"
-              >
-                <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                  <span className="text-sm font-medium text-blue-600">
-                    {patient.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">{patient.name}</p>
-                  <p className="text-xs text-gray-500">{patient.lastVisit ? format(new Date(patient.lastVisit), 'MM/dd/yyyy') : 'No visits'}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="flex-1 p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Patient Management</h1>
-          </div>
-          <div className="flex items-center space-x-3">
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-              <Edit className="w-5 h-5" />
-            </button>
-            <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-              <Trash2 className="w-5 h-5" />
-            </button>
-            <button
-              onClick={handleNewPatient}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              New Patient
-            </button>
-          </div>
-        </div>
-
-        {/* Patient Detail View */}
-        {state.selectedPatient ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Patient Info Card */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <div className="flex items-start justify-between mb-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center">
-                    <span className="text-xl font-semibold text-blue-600">
-                      {state.selectedPatient.name.charAt(0).toUpperCase()}
-                    </span>
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-semibold text-gray-900">{state.selectedPatient.name || 'John Smith'}</h2>
-                    <p className="text-gray-600">{state.selectedPatient.age || 56} yo • A{state.selectedPatient.age || 9} m</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Medical Info */}
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">Medical Info</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600">Diagnosis</p>
-                      <p className="font-medium text-gray-900">Rotator cuff injury</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600">Affected</p>
-                      <p className="font-medium text-gray-900">Right</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">Pain Level</p>
-                  <div className="flex items-center space-x-2">
-                    {[1, 2, 3, 4, 5, 6].map((level) => (
-                      <div
-                        key={level}
-                        className={`w-4 h-4 rounded-full ${
-                          level <= 5 ? 'bg-blue-500' : 'bg-gray-200'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-sm text-gray-600">Assigned Therapist</p>
-                  <p className="font-medium text-gray-900">S. Lee</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Appointments */}
-            <div className="bg-white rounded-xl border border-gray-200 p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Appointments</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-900">04/25/2024</span>
-                  <span className="text-gray-600">11:00 AM</span>
-                </div>
-                <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-900">04/22/2024</span>
-                  <span className="text-gray-600">09:00 AM</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          /* Patient Table */
-          <div className="bg-white rounded-xl border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <div className="grid grid-cols-4 gap-4 text-sm font-medium text-gray-700">
-                <div>Patient</div>
-                <div>Age</div>
-                <div>Last Visit</div>
-                <div>Actions</div>
-              </div>
-            </div>
-            <div className="divide-y divide-gray-200">
-              {filteredPatients.slice(0, 5).map((patient, index) => (
-                <div 
-                  key={patient.id}
-                  className={`p-6 grid grid-cols-4 gap-4 items-center hover:bg-gray-50 cursor-pointer ${
-                    index === 0 ? 'bg-blue-50' : ''
-                  }`}
-                  onClick={() => setState(prev => ({ ...prev, selectedPatient: patient as Patient }))}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                      <span className="text-sm font-medium text-gray-600">
-                        {patient.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <span className="font-medium text-gray-900">{patient.name}</span>
-                  </div>
-                  <div className="text-gray-900">{patient.age || Math.floor(Math.random() * 50) + 20}</div>
-                  <div className="text-gray-900">
-                    {patient.lastVisit ? format(new Date(patient.lastVisit), 'MM/dd/yyyy') : '03/19/2024'}
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleViewPatient(patient as Patient);
-                      }}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      View
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEditPatient(patient as Patient);
-                      }}
-                      className="text-gray-600 hover:text-gray-800 text-sm"
-                    >
-                      Edit
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
+    <div className="min-h-screen bg-gray-50">
+      <Sidebar />
       
-      {/* Modals */}
-      {state.showFormModal && (
-        <PatientFormModal
-          isOpen={state.showFormModal}
-          onClose={() => setState(prev => ({ ...prev, showFormModal: false, editingPatient: null }))}
-          onSubmit={handleFormSubmit}
-          patient={state.editingPatient}
-        />
-      )}
+      <div className="lg:pl-64">
+        <Header />
+        
+        <main className="p-6">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Gestão de Pacientes</h1>
+                <p className="mt-1 text-gray-600">Gerencie todos os seus pacientes</p>
+              </div>
+              <button
+                onClick={handleNewPatient}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                Novo Paciente
+              </button>
+            </div>
+          </div>
 
-      {state.showDetailModal && state.selectedPatient && (
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="bg-white p-6 rounded-xl border border-gray-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Users className="w-6 h-6 text-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total</p>
+                  <p className="text-2xl font-semibold text-gray-900">{statusCounts.total}</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+              className="bg-white p-6 rounded-xl border border-gray-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-100 rounded-lg">
+                  <UserCheck className="w-6 h-6 text-green-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Ativos</p>
+                  <p className="text-2xl font-semibold text-gray-900">{statusCounts.active}</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="bg-white p-6 rounded-xl border border-gray-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-100 rounded-lg">
+                  <UserX className="w-6 h-6 text-yellow-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Inativos</p>
+                  <p className="text-2xl font-semibold text-gray-900">{statusCounts.inactive}</p>
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white p-6 rounded-xl border border-gray-200"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gray-100 rounded-lg">
+                  <CheckCircle className="w-6 h-6 text-gray-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Alta</p>
+                  <p className="text-2xl font-semibold text-gray-900">{statusCounts.discharged}</p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+
+          {/* Filters and Search */}
+          <div className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <div className="flex flex-col md:flex-row gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome, CPF ou telefone..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value as any)}
+                  className="px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option value="All">Todos os status</option>
+                  <option value="Active">Ativos</option>
+                  <option value="Inactive">Inativos</option>
+                  <option value="Discharged">Alta</option>
+                </select>
+                <button className="p-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                  <Filter className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Patient Table */}
+          <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Carregando pacientes...</p>
+              </div>
+            ) : filteredPatients.length === 0 ? (
+              <div className="p-8 text-center">
+                <Users className="w-12 h-12 text-gray-300 mx-auto mb-4" />
+                <p className="text-gray-600">Nenhum paciente encontrado</p>
+                <button
+                  onClick={handleNewPatient}
+                  className="mt-4 text-blue-600 hover:text-blue-700 font-medium"
+                >
+                  Cadastrar primeiro paciente
+                </button>
+              </div>
+            ) : (
+              <>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Paciente
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Contato
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Última Visita
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Consultas
+                        </th>
+                        <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Ações
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {filteredPatients.map((patient, index) => (
+                        <motion.tr
+                          key={patient.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                <span className="text-sm font-medium text-blue-600">
+                                  {patient.name.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-gray-900">{patient.name}</div>
+                                <div className="text-sm text-gray-500">{patient.cpf || 'CPF não informado'}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center gap-2">
+                              {getStatusIcon(patient.status)}
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(patient.status)}`}>
+                                {getStatusText(patient.status)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{patient.phone || 'N/A'}</div>
+                            <div className="text-sm text-gray-500">{patient.email || 'Email não informado'}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {patient.lastAppointment ? formatDate(patient.lastAppointment.start_time) : 'Nunca'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm text-gray-900">{patient.totalAppointments || 0}</div>
+                            <div className="text-sm text-gray-500">consultas</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            <div className="flex items-center justify-end gap-2">
+                              <button
+                                onClick={() => handleViewPatient(patient)}
+                                className="text-blue-600 hover:text-blue-900 transition-colors"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleEditPatient(patient)}
+                                className="text-gray-600 hover:text-gray-900 transition-colors"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeletePatient(patient.id)}
+                                className="text-red-600 hover:text-red-900 transition-colors"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="bg-white px-6 py-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-gray-700">
+                        Página {currentPage} de {totalPages} • {totalCount} pacientes
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => handlePageChange(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Anterior
+                        </button>
+                        <button
+                          onClick={() => handlePageChange(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Próximo
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </main>
+      </div>
+
+      {/* Modals */}
+      <PatientFormModal
+        isOpen={showFormModal}
+        onClose={() => setShowFormModal(false)}
+        onSubmit={handleFormSubmit}
+        patient={editingPatient}
+      />
+
+      {selectedPatient && (
         <PatientDetailModal
-          isOpen={state.showDetailModal}
-          onClose={() => setState(prev => ({ ...prev, showDetailModal: false, selectedPatient: null }))}
-          patient={state.selectedPatient}
+          isOpen={showDetailModal}
+          onClose={() => {
+            setShowDetailModal(false);
+            setSelectedPatient(null);
+          }}
+          patient={selectedPatient}
           onEdit={(patient) => {
-            setState(prev => ({ 
-              ...prev, 
-              showDetailModal: false, 
-              showFormModal: true, 
-              editingPatient: patient,
-              selectedPatient: null 
-            }));
+            setSelectedPatient(null);
+            setShowDetailModal(false);
+            setEditingPatient(patient);
+            setShowFormModal(true);
           }}
         />
       )}
