@@ -1,4 +1,4 @@
-name: fisioflow
+name: fisioflow-aistudio
 services:
 - name: web
   source_dir: /
