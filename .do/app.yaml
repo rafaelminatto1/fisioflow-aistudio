@@ -3,7 +3,7 @@ services:
 - name: web
   source_dir: /
   github:
-    repo: your-github-username/fisioflow-aistudio-1
+    repo: rafaelminatto1/fisioflow-aistudio
     branch: main
   run_command: npm start
   instance_count: 1
