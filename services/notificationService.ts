@@ -1,162 +1,488 @@
-// services/notificationService.ts
-import { Notification, User, Role, AppointmentStatus } from '../types';
-import {
-  mockNotifications,
-  mockAppointments,
-  mockUsers,
-  mockPatients,
-} from '../data/mockData';
-import * as treatmentService from './treatmentService';
-import * as whatsappService from './whatsappService';
+import { NoShowPrediction } from './aiNoShowPredictionService'
+import { Appointment } from '@/types'
 
-let notifications: Notification[] = [...mockNotifications];
+export interface NotificationConfig {
+  enableCriticalAlerts: boolean
+  enableHighRiskAlerts: boolean
+  enableEmailNotifications: boolean
+  enableSMSNotifications: boolean
+  enableWhatsAppNotifications: boolean
+  criticalRiskThreshold: number
+  highRiskThreshold: number
+  notificationTiming: {
+    immediate: boolean
+    dayBefore: boolean
+    hoursBeforeAppointment: number[]
+  }
+}
 
-const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
+export interface NotificationTemplate {
+  id: string
+  type: 'email' | 'sms' | 'whatsapp' | 'push'
+  riskLevel: 'critical' | 'high' | 'medium'
+  template: string
+  subject?: string
+}
 
-export const generateRemindersIfNeeded = async (
-  user: User | null
-): Promise<void> => {
-  if (!user) return;
+export interface NotificationLog {
+  id: string
+  appointmentId: string
+  patientId: string
+  type: 'email' | 'sms' | 'whatsapp' | 'push'
+  riskLevel: string
+  sentAt: Date
+  status: 'sent' | 'failed' | 'pending'
+  response?: string
+}
 
-  const todayStr = new Date().toDateString();
+class NotificationService {
+  private config: NotificationConfig = {
+    enableCriticalAlerts: true,
+    enableHighRiskAlerts: true,
+    enableEmailNotifications: true,
+    enableSMSNotifications: false,
+    enableWhatsAppNotifications: false,
+    criticalRiskThreshold: 80,
+    highRiskThreshold: 60,
+    notificationTiming: {
+      immediate: true,
+      dayBefore: true,
+      hoursBeforeAppointment: [24, 4, 1]
+    }
+  }
 
-  // --- Therapist In-App and Patient WhatsApp Appointment Reminders ---
-  if (user.role === Role.Therapist || user.role === Role.Admin) {
-    const reminderKey = `appointment_reminder_sent_${user.id}_${todayStr}`;
-    if (sessionStorage.getItem(reminderKey)) return;
+  private templates: NotificationTemplate[] = [
+    {
+      id: 'critical-email',
+      type: 'email',
+      riskLevel: 'critical',
+      subject: 'URGENTE: Confirmação de Consulta Necessária',
+      template: `
+Olá {patientName},
 
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(now.getDate() + 1);
+Identificamos um alto risco de falta na sua consulta agendada para {appointmentDate} às {appointmentTime}.
 
-    const upcomingAppointments = mockAppointments.filter(app => {
-      const appDate = app.startTime;
-      return (
-        app.therapistId === user.id &&
-        (appDate.toDateString() === now.toDateString() ||
-          appDate.toDateString() === tomorrow.toDateString()) &&
-        app.status === AppointmentStatus.Scheduled
-      );
-    });
+Por favor, confirme sua presença o mais breve possível:
+- Telefone: {clinicPhone}
+- WhatsApp: {clinicWhatsApp}
+- Email: {clinicEmail}
 
-    // In-app reminders for therapists
-    upcomingAppointments.forEach(app => {
-      const reminderExists = notifications.some(
-        n =>
-          n.userId === user.id &&
-          n.type === 'appointment_reminder' &&
-          n.message.includes(app.patientName) &&
-          n.message.includes(
-            app.startTime.toLocaleTimeString('pt-BR', {
-              hour: '2-digit',
-              minute: '2-digit',
-            })
-          )
-      );
+Caso não possa comparecer, solicitamos reagendamento com antecedência.
 
-      if (!reminderExists) {
-        const when =
-          app.startTime.toDateString() === now.toDateString()
-            ? 'hoje'
-            : 'amanhã';
-        const newNotification: Notification = {
-          id: `notif_appt_${app.id}`,
-          userId: user.id,
-          message: `Lembrete: Consulta com ${app.patientName} ${when} às ${app.startTime.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}.`,
-          isRead: false,
-          createdAt: new Date(),
-          type: 'appointment_reminder',
-        };
-        notifications.unshift(newNotification);
+Atenciosamente,
+{clinicName}
+      `
+    },
+    {
+      id: 'critical-sms',
+      type: 'sms',
+      riskLevel: 'critical',
+      template: 'URGENTE: Confirme sua consulta de {appointmentDate} às {appointmentTime}. Ligue {clinicPhone} ou responda este SMS. {clinicName}'
+    },
+    {
+      id: 'high-email',
+      type: 'email',
+      riskLevel: 'high',
+      subject: 'Confirmação de Consulta - {appointmentDate}',
+      template: `
+Olá {patientName},
+
+Lembramos da sua consulta agendada para {appointmentDate} às {appointmentTime}.
+
+Por favor, confirme sua presença:
+- Telefone: {clinicPhone}
+- WhatsApp: {clinicWhatsApp}
+
+Caso precise reagendar, entre em contato conosco.
+
+Atenciosamente,
+{clinicName}
+      `
+    },
+    {
+      id: 'high-sms',
+      type: 'sms',
+      riskLevel: 'high',
+      template: 'Lembrete: Consulta {appointmentDate} às {appointmentTime}. Confirme ligando {clinicPhone}. {clinicName}'
+    }
+  ]
+
+  private notificationLogs: NotificationLog[] = []
+
+  /**
+   * Processa previsões e envia notificações automáticas
+   */
+  async processNotifications(
+    predictions: NoShowPrediction[],
+    appointments: Appointment[],
+    patientData: Record<string, any>
+  ): Promise<void> {
+    for (const prediction of predictions) {
+      const appointment = appointments.find(apt => apt.id === prediction.appointmentId)
+      if (!appointment) continue
+
+      const patient = patientData[appointment.patientId]
+      if (!patient) continue
+
+      // Verifica se deve enviar notificação
+      if (this.shouldSendNotification(prediction, appointment)) {
+        await this.sendNotificationForPrediction(prediction, appointment, patient)
       }
-    });
+    }
+  }
 
-    // WhatsApp reminders for patients (for today's appointments)
-    const todaysAppointmentsForWhatsapp = upcomingAppointments.filter(
-      app => app.startTime.toDateString() === todayStr && app.startTime > now
-    );
-    for (const app of todaysAppointmentsForWhatsapp) {
-      const patient = mockPatients.find(p => p.id === app.patientId);
-      if (patient) {
-        await whatsappService.sendAppointmentReminder(app, patient, 0);
+  /**
+   * Determina se deve enviar notificação baseado na configuração e risco
+   */
+  private shouldSendNotification(prediction: NoShowPrediction, appointment: Appointment): boolean {
+    const { riskScore, riskLevel } = prediction
+    const appointmentDate = new Date(appointment.date)
+    const now = new Date()
+    const hoursUntilAppointment = (appointmentDate.getTime() - now.getTime()) / (1000 * 60 * 60)
+
+    // Verifica se o nível de risco está habilitado
+    if (riskLevel === 'critical' && !this.config.enableCriticalAlerts) return false
+    if (riskLevel === 'high' && !this.config.enableHighRiskAlerts) return false
+    if (riskScore < this.config.highRiskThreshold) return false
+
+    // Verifica timing da notificação
+    if (this.config.notificationTiming.immediate && hoursUntilAppointment > 48) return true
+    if (this.config.notificationTiming.dayBefore && hoursUntilAppointment <= 24 && hoursUntilAppointment > 12) return true
+    
+    for (const hours of this.config.notificationTiming.hoursBeforeAppointment) {
+      if (Math.abs(hoursUntilAppointment - hours) < 0.5) return true
+    }
+
+    return false
+  }
+
+  /**
+   * Envia notificação para uma previsão específica
+   */
+  private async sendNotificationForPrediction(
+    prediction: NoShowPrediction,
+    appointment: Appointment,
+    patient: any
+  ): Promise<void> {
+    const templates = this.templates.filter(t => t.riskLevel === prediction.riskLevel)
+    
+    for (const template of templates) {
+      if (!this.isNotificationTypeEnabled(template.type)) continue
+      
+      try {
+        await this.sendNotification(template, prediction, appointment, patient)
+      } catch (error) {
+        console.error(`Erro ao enviar notificação ${template.type}:`, error)
       }
     }
+  }
 
-    if (upcomingAppointments.length > 0) {
-      sessionStorage.setItem(reminderKey, 'true');
+  /**
+   * Verifica se um tipo de notificação está habilitado
+   */
+  private isNotificationTypeEnabled(type: string): boolean {
+    switch (type) {
+      case 'email': return this.config.enableEmailNotifications
+      case 'sms': return this.config.enableSMSNotifications
+      case 'whatsapp': return this.config.enableWhatsAppNotifications
+      default: return false
     }
   }
 
-  // --- Patient In-App Exercise Reminders ---
-  if (user.role === Role.Patient && user.patientId) {
-    const reminderKey = `exercise_reminder_sent_${user.id}_${todayStr}`;
-    if (sessionStorage.getItem(reminderKey)) return;
+  /**
+   * Envia uma notificação específica
+   */
+  private async sendNotification(
+    template: NotificationTemplate,
+    prediction: NoShowPrediction,
+    appointment: Appointment,
+    patient: any
+  ): Promise<void> {
+    const message = this.formatTemplate(template.template, {
+      patientName: patient.name || 'Paciente',
+      appointmentDate: new Date(appointment.date).toLocaleDateString('pt-BR'),
+      appointmentTime: appointment.time,
+      clinicName: 'FisioFlow',
+      clinicPhone: '(11) 99999-9999',
+      clinicWhatsApp: '(11) 99999-9999',
+      clinicEmail: 'contato@fisioflow.com'
+    })
 
-    const plan = await treatmentService.getPlanByPatientId(user.patientId);
-    if (plan && plan.exercises && plan.exercises.length > 0) {
-      const newNotification: Notification = {
-        id: `notif_ex_${Date.now()}`,
-        userId: user.id,
-        message:
-          'Lembrete diário: Não se esqueça de fazer seus exercícios de hoje para acelerar sua recuperação!',
-        isRead: false,
-        createdAt: new Date(),
-        type: 'exercise_reminder',
-      };
-      notifications.unshift(newNotification);
-      sessionStorage.setItem(reminderKey, 'true');
+    const log: NotificationLog = {
+      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      appointmentId: appointment.id,
+      patientId: appointment.patientId,
+      type: template.type,
+      riskLevel: prediction.riskLevel,
+      sentAt: new Date(),
+      status: 'pending'
+    }
+
+    try {
+      // Simula envio da notificação
+      await this.simulateNotificationSend(template.type, message, patient)
+      log.status = 'sent'
+      log.response = 'Notificação enviada com sucesso'
+    } catch (error) {
+      log.status = 'failed'
+      log.response = error instanceof Error ? error.message : 'Erro desconhecido'
+    }
+
+    this.notificationLogs.push(log)
+  }
+
+  /**
+   * Simula o envio de notificação (substituir por integração real)
+   */
+  private async simulateNotificationSend(type: string, message: string, patient: any): Promise<void> {
+    // Simula delay de envio
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    console.log(`📧 Notificação ${type} enviada para ${patient.name}:`, message)
+    
+    // Aqui você integraria com serviços reais:
+    // - Email: SendGrid, AWS SES, etc.
+    // - SMS: Twilio, AWS SNS, etc.
+    // - WhatsApp: WhatsApp Business API
+  }
+
+  /**
+   * Formata template com variáveis
+   */
+  private formatTemplate(template: string, variables: Record<string, string>): string {
+    let formatted = template
+    for (const [key, value] of Object.entries(variables)) {
+      formatted = formatted.replace(new RegExp(`{${key}}`, 'g'), value)
+    }
+    return formatted
+  }
+
+  /**
+   * Obtém configuração atual
+   */
+  getConfig(): NotificationConfig {
+    return { ...this.config }
+  }
+
+  /**
+   * Atualiza configuração
+   */
+  updateConfig(newConfig: Partial<NotificationConfig>): void {
+    this.config = { ...this.config, ...newConfig }
+  }
+
+  /**
+   * Obtém logs de notificação
+   */
+  getNotificationLogs(appointmentId?: string): NotificationLog[] {
+    if (appointmentId) {
+      return this.notificationLogs.filter(log => log.appointmentId === appointmentId)
+    }
+    return [...this.notificationLogs]
+  }
+
+  /**
+   * Obtém estatísticas de notificações
+   */
+  getNotificationStats(): {
+    total: number
+    sent: number
+    failed: number
+    byType: Record<string, number>
+    byRiskLevel: Record<string, number>
+  } {
+    const logs = this.notificationLogs
+    const stats = {
+      total: logs.length,
+      sent: logs.filter(log => log.status === 'sent').length,
+      failed: logs.filter(log => log.status === 'failed').length,
+      byType: {} as Record<string, number>,
+      byRiskLevel: {} as Record<string, number>
+    }
+
+    logs.forEach(log => {
+      stats.byType[log.type] = (stats.byType[log.type] || 0) + 1
+      stats.byRiskLevel[log.riskLevel] = (stats.byRiskLevel[log.riskLevel] || 0) + 1
+    })
+
+    return stats
+  }
+
+  /**
+   * Limpa logs antigos (mais de 30 dias)
+   */
+  cleanOldLogs(): void {
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
+    this.notificationLogs = this.notificationLogs.filter(
+      log => log.sentAt > thirtyDaysAgo
+    )
+  }
+}
+
+export const notificationService = new NotificationService()
+export default notificationService
+    prediction: NoShowPrediction,
+    appointment: Appointment,
+    patient: any
+  ): Promise<void> {
+    const templates = this.templates.filter(t => t.riskLevel === prediction.riskLevel)
+    
+    for (const template of templates) {
+      if (!this.isNotificationTypeEnabled(template.type)) continue
+      
+      try {
+        await this.sendNotification(template, prediction, appointment, patient)
+      } catch (error) {
+        console.error(`Erro ao enviar notificação ${template.type}:`, error)
+      }
     }
   }
-};
 
-export const getNotifications = async (
-  userId: string
-): Promise<Notification[]> => {
-  await delay(300);
-  return [...notifications]
-    .filter(n => n.userId === userId)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
-};
-
-export const markAsRead = async (
-  notificationId: string,
-  userId: string
-): Promise<Notification | undefined> => {
-  await delay(100);
-  const notification = notifications.find(
-    n => n.id === notificationId && n.userId === userId
-  );
-  if (notification) {
-    notification.isRead = true;
+  /**
+   * Verifica se um tipo de notificação está habilitado
+   */
+  private isNotificationTypeEnabled(type: string): boolean {
+    switch (type) {
+      case 'email': return this.config.enableEmailNotifications
+      case 'sms': return this.config.enableSMSNotifications
+      case 'whatsapp': return this.config.enableWhatsAppNotifications
+      default: return false
+    }
   }
-  return notification;
-};
 
-export const markAllAsRead = async (
-  userId: string
-): Promise<Notification[]> => {
-  await delay(200);
-  const userNotifications = notifications.filter(n => n.userId === userId);
-  userNotifications.forEach(n => (n.isRead = true));
-  return userNotifications;
-};
+  /**
+   * Envia uma notificação específica
+   */
+  private async sendNotification(
+    template: NotificationTemplate,
+    prediction: NoShowPrediction,
+    appointment: Appointment,
+    patient: any
+  ): Promise<void> {
+    const message = this.formatTemplate(template.template, {
+      patientName: patient.name || 'Paciente',
+      appointmentDate: new Date(appointment.date).toLocaleDateString('pt-BR'),
+      appointmentTime: appointment.time,
+      clinicName: 'FisioFlow',
+      clinicPhone: '(11) 99999-9999',
+      clinicWhatsApp: '(11) 99999-9999',
+      clinicEmail: 'contato@fisioflow.com'
+    })
 
-export const sendBroadcast = async (
-  message: string,
-  targetGroup: Role
-): Promise<void> => {
-  await delay(500);
-  const targetUsers = mockUsers.filter(u => u.role === targetGroup);
+    const log: NotificationLog = {
+      id: `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      appointmentId: appointment.id,
+      patientId: appointment.patientId,
+      type: template.type,
+      riskLevel: prediction.riskLevel,
+      sentAt: new Date(),
+      status: 'pending'
+    }
 
-  targetUsers.forEach(user => {
-    const newNotification: Notification = {
-      id: `notif_${Date.now()}_${user.id}`,
-      userId: user.id,
-      message: `Comunicado: ${message}`,
-      isRead: false,
-      createdAt: new Date(),
-      type: 'announcement',
-    };
-    notifications.unshift(newNotification);
-  });
-};
+    try {
+      // Simula envio da notificação
+      await this.simulateNotificationSend(template.type, message, patient)
+      log.status = 'sent'
+      log.response = 'Notificação enviada com sucesso'
+    } catch (error) {
+      log.status = 'failed'
+      log.response = error instanceof Error ? error.message : 'Erro desconhecido'
+    }
+
+    this.notificationLogs.push(log)
+  }
+
+  /**
+   * Simula o envio de notificação (substituir por integração real)
+   */
+  private async simulateNotificationSend(type: string, message: string, patient: any): Promise<void> {
+    // Simula delay de envio
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    console.log(`📧 Notificação ${type} enviada para ${patient.name}:`, message)
+    
+    // Aqui você integraria com serviços reais:
+    // - Email: SendGrid, AWS SES, etc.
+    // - SMS: Twilio, AWS SNS, etc.
+    // - WhatsApp: WhatsApp Business API
+  }
+
+  /**
+   * Formata template com variáveis
+   */
+  private formatTemplate(template: string, variables: Record<string, string>): string {
+    let formatted = template
+    for (const [key, value] of Object.entries(variables)) {
+      formatted = formatted.replace(new RegExp(`{${key}}`, 'g'), value)
+    }
+    return formatted
+  }
+
+  /**
+   * Obtém configuração atual
+   */
+  getConfig(): NotificationConfig {
+    return { ...this.config }
+  }
+
+  /**
+   * Atualiza configuração
+   */
+  updateConfig(newConfig: Partial<NotificationConfig>): void {
+    this.config = { ...this.config, ...newConfig }
+  }
+
+  /**
+   * Obtém logs de notificação
+   */
+  getNotificationLogs(appointmentId?: string): NotificationLog[] {
+    if (appointmentId) {
+      return this.notificationLogs.filter(log => log.appointmentId === appointmentId)
+    }
+    return [...this.notificationLogs]
+  }
+
+  /**
+   * Obtém estatísticas de notificações
+   */
+  getNotificationStats(): {
+    total: number
+    sent: number
+    failed: number
+    byType: Record<string, number>
+    byRiskLevel: Record<string, number>
+  } {
+    const logs = this.notificationLogs
+    const stats = {
+      total: logs.length,
+      sent: logs.filter(log => log.status === 'sent').length,
+      failed: logs.filter(log => log.status === 'failed').length,
+      byType: {} as Record<string, number>,
+      byRiskLevel: {} as Record<string, number>
+    }
+
+    logs.forEach(log => {
+      stats.byType[log.type] = (stats.byType[log.type] || 0) + 1
+      stats.byRiskLevel[log.riskLevel] = (stats.byRiskLevel[log.riskLevel] || 0) + 1
+    })
+
+    return stats
+  }
+
+  /**
+   * Limpa logs antigos (mais de 30 dias)
+   */
+  cleanOldLogs(): void {
+    const thirtyDaysAgo = new Date()
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
+    
+    this.notificationLogs = this.notificationLogs.filter(
+      log => log.sentAt > thirtyDaysAgo
+    )
+  }
+}
+
+export const notificationService = new NotificationService()
+export default notificationService

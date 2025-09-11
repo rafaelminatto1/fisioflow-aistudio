@@ -343,8 +343,7 @@ const PatientsPage: React.FC = () => {
           </div>
         )}
       </div>
-    </div>
-
+      
       {/* Modals */}
       {state.showFormModal && (
         <PatientFormModal
