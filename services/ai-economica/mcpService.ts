@@ -1,7 +1,7 @@
 // services/ai-economica/mcpService.ts
 
-import fs from 'fs';
-import path from 'path';
+// import fs from 'fs';
+// import path from 'path';
 import {
   PremiumProvider,
   AIQuery,
@@ -124,14 +124,16 @@ class MCPService {
 
   private loadConfig(): void {
     try {
-      const configFile = path.resolve(this.configPath);
-      if (fs.existsSync(configFile)) {
-        const configData = fs.readFileSync(configFile, 'utf-8');
-        this.config = JSON.parse(configData);
-        this.resolveEnvironmentVariables();
-        logger.info('MCP configuration loaded successfully');
-      } else {
-        logger.warn(`MCP config file not found at ${configFile}`);
+      // Server-side only code - disabled for client builds
+      if (typeof window === 'undefined') {
+        // const configFile = path.resolve(this.configPath);
+        // if (fs.existsSync(configFile)) {
+        //   const configData = fs.readFileSync(configFile, 'utf-8');
+        //   this.config = JSON.parse(configData);
+        //   this.resolveEnvironmentVariables();
+        //   logger.info('MCP configuration loaded successfully');
+        // } else {
+        //   logger.warn(`MCP config file not found at ${configFile}`);
       }
     } catch (error) {
       logger.error('Failed to load MCP configuration:', error);

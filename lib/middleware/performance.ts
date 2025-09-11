@@ -163,9 +163,12 @@ export function createHealthCheckHandler() {
         const { duration: dbDuration } = await measureExecutionTime(
           'database.ping',
           async () => {
-            // Real database ping using Prisma
-            const prisma = await import('@/lib/prisma').then(m => m.default);
-            await prisma.$queryRaw`SELECT 1`;
+            // Real database ping using improved health check
+            const { checkDatabaseConnection } = await import('@/lib/prisma');
+            const isHealthy = await checkDatabaseConnection();
+            if (!isHealthy) {
+              throw new Error('Database connection failed');
+            }
             return true;
           }
         );
@@ -175,10 +178,11 @@ export function createHealthCheckHandler() {
           responseTime: dbDuration,
         };
       } catch (error: any) {
+        console.error('Database health check failed:', error);
         checks.database = {
           status: 'unhealthy',
           responseTime: 0,
-          error: error.message,
+          error: error.message || 'Database connection failed',
         } as any;
       }
 
