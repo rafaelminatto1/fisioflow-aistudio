@@ -9,8 +9,12 @@ const CACHE_KEY_PREFIX = 'patients_list:';
 const CACHE_TTL_SECONDS = 5 * 60; // 5 minutos
 
 /**
- * GET: Rota para buscar pacientes com paginação e filtros.
- * Utiliza cache com Redis para otimizar performance.
+ * Handler para a rota GET /api/pacientes.
+ * Busca uma lista paginada de pacientes, com suporte para busca e filtro por status.
+ * Implementa cache em Redis para otimizar requisições repetidas.
+ *
+ * @param {NextRequest} request - O objeto de requisição do Next.js.
+ * @returns {Promise<NextResponse>} Uma resposta JSON contendo a lista de pacientes e o próximo cursor para paginação.
  */
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -88,8 +92,12 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * POST: Rota para criar um novo paciente.
- * Invalida o cache após a criação.
+ * Handler para a rota POST /api/pacientes.
+ * Cria um novo paciente no banco de dados com base nos dados fornecidos.
+ * Valida os dados de entrada usando o `patientFormSchema`.
+ *
+ * @param {NextRequest} request - O objeto de requisição do Next.js, contendo os dados do paciente no corpo.
+ * @returns {Promise<NextResponse>} Uma resposta JSON com os dados do paciente criado e status 201, ou um erro de validação/servidor.
  */
 export async function POST(request: NextRequest) {
   try {

@@ -1,6 +1,10 @@
 // lib/security.ts
 import { NextResponse } from 'next/server';
 
+/**
+ * @interface SecurityConfig
+ * @description Configurações de segurança para a aplicação.
+ */
 export interface SecurityConfig {
   rateLimiting: {
     windowMs: number;
@@ -11,6 +15,10 @@ export interface SecurityConfig {
   enableHelmet: boolean;
 }
 
+/**
+ * @constant defaultConfig
+ * @description Configurações de segurança padrão.
+ */
 const defaultConfig: SecurityConfig = {
   rateLimiting: {
     windowMs: 15 * 60 * 1000, // 15 minutes
@@ -25,9 +33,17 @@ const defaultConfig: SecurityConfig = {
   enableHelmet: true,
 };
 
-// Rate limiting store (in-memory for development)
+/**
+ * @constant rateLimitStore
+ * @description Armazenamento em memória para o rate limiting (adequado para desenvolvimento).
+ */
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 
+/**
+ * Adiciona cabeçalhos de segurança a uma resposta HTTP.
+ * @param {NextResponse} response - O objeto de resposta do Next.js.
+ * @returns {NextResponse} A resposta com os cabeçalhos de segurança adicionados.
+ */
 export function addSecurityHeaders(response: NextResponse): NextResponse {
   // Security headers
   response.headers.set('X-Content-Type-Options', 'nosniff');
@@ -56,6 +72,12 @@ export function addSecurityHeaders(response: NextResponse): NextResponse {
   return response;
 }
 
+/**
+ * Verifica se um cliente excedeu o limite de requisições.
+ * @param {string} clientId - Um identificador único para o cliente (ex: endereço IP).
+ * @param {SecurityConfig} [config=defaultConfig] - As configurações de segurança a serem usadas.
+ * @returns {{ allowed: boolean; resetTime?: number }} Um objeto indicando se a requisição é permitida.
+ */
 export function checkRateLimit(
   clientId: string,
   config: SecurityConfig = defaultConfig
@@ -91,6 +113,11 @@ export function checkRateLimit(
   return { allowed: true };
 }
 
+/**
+ * Sanitiza uma string de entrada, removendo caracteres potencialmente perigosos.
+ * @param {string} input - A string a ser sanitizada.
+ * @returns {string} A string sanitizada.
+ */
 export function sanitizeInput(input: string): string {
   return input
     .replace(/[<>]/g, '') // Remove potential HTML tags
@@ -99,6 +126,11 @@ export function sanitizeInput(input: string): string {
     .trim();
 }
 
+/**
+ * Valida uma chave de API.
+ * @param {string | null} apiKey - A chave de API a ser validada.
+ * @returns {boolean} `true` se a chave de API for válida.
+ */
 export function validateApiKey(apiKey: string | null): boolean {
   if (!apiKey) return false;
 
@@ -106,10 +138,20 @@ export function validateApiKey(apiKey: string | null): boolean {
   return apiKey.length >= 20 && /^[a-zA-Z0-9_-]+$/.test(apiKey);
 }
 
+/**
+ * Gera um token CSRF simples.
+ * @returns {string} O token CSRF gerado.
+ */
 export function generateCSRFToken(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+/**
+ * Valida um token CSRF.
+ * @param {string} token - O token recebido na requisição.
+ * @param {string} sessionToken - O token armazenado na sessão.
+ * @returns {boolean} `true` se o token for válido.
+ */
 export function validateCSRFToken(
   token: string,
   sessionToken: string

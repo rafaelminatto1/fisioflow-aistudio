@@ -6,6 +6,15 @@ import { gzipSync, gunzipSync } from 'zlib';
 
 const COMPRESSION_THRESHOLD = 1024; // 1KB
 
+/**
+ * @interface CacheOptions
+ * @description Opções para operações de cache.
+ * @property {number} [ttl] - Tempo de vida (Time to live) em segundos.
+ * @property {string[]} [tags] - Tags de cache para invalidação em grupo.
+ * @property {'memory' | 'redis' | 'both'} [layer] - Estratégia de camada de cache.
+ * @property {boolean} [compress] - Se deve comprimir valores grandes.
+ * @property {'json' | 'msgpack'} [serialize] - Método de serialização.
+ */
 export interface CacheOptions {
   ttl?: number; // Time to live in seconds
   tags?: string[]; // Cache tags for invalidation
@@ -14,6 +23,19 @@ export interface CacheOptions {
   serialize?: 'json' | 'msgpack'; // Serialization method
 }
 
+/**
+ * @interface CacheMetrics
+ * @description Métricas de desempenho do cache.
+ * @property {number} hits - Número de acertos no cache.
+ * @property {number} misses - Número de falhas no cache.
+ * @property {number} hitRate - Taxa de acertos (em porcentagem).
+ * @property {number} memoryHits - Número de acertos no cache de memória.
+ * @property {number} redisHits - Número de acertos no cache Redis.
+ * @property {number} operations - Número total de operações de cache.
+ * @property {number} errors - Número de erros ocorridos.
+ * @property {number} avgResponseTime - Tempo médio de resposta das operações (em ms).
+ * @property {number} totalSize - Tamanho total do cache de memória (em bytes).
+ */
 export interface CacheMetrics {
   hits: number;
   misses: number;
@@ -26,12 +48,24 @@ export interface CacheMetrics {
   totalSize: number;
 }
 
+/**
+ * @interface CacheKey
+ * @description Representa uma chave de cache estruturada.
+ * @property {string} key - A chave principal.
+ * @property {string} [hash] - Hash opcional para versionamento ou complexidade.
+ * @property {string} [version] - Versão opcional da chave.
+ */
 export interface CacheKey {
   key: string;
   hash?: string;
   version?: string;
 }
 
+/**
+ * @class CacheManager
+ * @description Gerenciador de cache de múltiplas camadas (memória e Redis) com recursos avançados.
+ * Suporta tags, compressão, serialização, e estratégias de cache como 'remember' e 'rememberForever'.
+ */
 export class CacheManager {
   private prefix: string;
   private memoryCache: Map<
@@ -60,14 +94,34 @@ export class CacheManager {
     setInterval(() => this.cleanupMemoryCache(), 60000);
   }
 
+  /**
+   * Gera a chave de cache final com o prefixo da instância.
+   * @param {string} key - A chave base.
+   * @returns {string} A chave com prefixo.
+   * @private
+   */
   private getKey(key: string): string {
     return `${this.prefix}:${key}`;
   }
 
+  /**
+   * Gera a chave para uma tag de cache.
+   * @param {string} tag - A tag.
+   * @returns {string} A chave da tag.
+   * @private
+   */
   private getTagKey(tag: string): string {
     return `${this.prefix}:tag:${tag}`;
   }
 
+  /**
+   * Obtém um valor do cache.
+   *
+   * @template T - O tipo do valor a ser obtido.
+   * @param {string} key - A chave do item no cache.
+   * @param {Partial<CacheOptions>} [options={}] - Opções para a operação de get.
+   * @returns {Promise<T | null>} O valor do cache ou nulo se não encontrado.
+   */
   async get<T>(
     key: string,
     options: Partial<CacheOptions> = {}
@@ -113,6 +167,15 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Define um valor no cache.
+   *
+   * @template T - O tipo do valor a ser definido.
+   * @param {string} key - A chave do item no cache.
+   * @param {T} value - O valor a ser armazenado.
+   * @param {CacheOptions} [options={}] - Opções para a operação de set.
+   * @returns {Promise<void>}
+   */
   async set<T>(
     key: string,
     value: T,
@@ -151,6 +214,12 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Remove um item do cache.
+   *
+   * @param {string} key - A chave do item a ser removido.
+   * @returns {Promise<void>}
+   */
   async del(key: string): Promise<void> {
     const startTime = Date.now();
     this.metrics.operations++;
@@ -169,6 +238,12 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Invalida todos os itens de cache associados a uma tag.
+   *
+   * @param {string} tag - A tag a ser invalidada.
+   * @returns {Promise<void>}
+   */
   async invalidateTag(tag: string): Promise<void> {
     const startTime = Date.now();
     this.metrics.operations++;
@@ -196,6 +271,11 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Limpa todo o cache gerenciado por esta instância (com base no prefixo).
+   *
+   * @returns {Promise<void>}
+   */
   async clear(): Promise<void> {
     const startTime = Date.now();
     this.metrics.operations++;
@@ -228,6 +308,16 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Obtém um item do cache. Se não existir, executa o callback para gerar o valor,
+   * armazena no cache e o retorna.
+   *
+   * @template T - O tipo do valor.
+   * @param {string} key - A chave do item.
+   * @param {() => Promise<T>} callback - A função que gera o valor se não estiver em cache.
+   * @param {CacheOptions} [options={}] - Opções de cache.
+   * @returns {Promise<T>} O valor (do cache ou recém-gerado).
+   */
   async remember<T>(
     key: string,
     callback: () => Promise<T>,
@@ -240,6 +330,18 @@ export class CacheManager {
     return result;
   }
 
+  /**
+   * Obtém um item do cache que "nunca" expira, com lógica de atualização em background.
+   * Se o item não existir, ele é gerado e armazenado. Se existir mas estiver "velho" (stale),
+   * o valor antigo é retornado enquanto um novo valor é gerado em background.
+   *
+   * @template T - O tipo do valor.
+   * @param {string} key - A chave do item.
+   * @param {() => Promise<T>} callback - A função que gera o valor.
+   * @param {number} [refreshInterval=3600] - O intervalo em segundos para considerar o dado "velho".
+   * @param {CacheOptions} [options={}] - Opções de cache.
+   * @returns {Promise<T>} O valor (do cache ou recém-gerado).
+   */
   async rememberForever<T>(
     key: string,
     callback: () => Promise<T>,
@@ -293,6 +395,13 @@ export class CacheManager {
     return cached as T; // We know cached is not null here because needsRefresh is false
   }
 
+  /**
+   * Obtém um item do cache de memória.
+   * @template T - O tipo do valor.
+   * @param {string} key - A chave do item.
+   * @returns {T | null} O valor ou nulo se não encontrado ou expirado.
+   * @private
+   */
   private getFromMemory<T>(key: string): T | null {
     const item = this.memoryCache.get(key);
     if (!item) return null;
@@ -304,6 +413,14 @@ export class CacheManager {
     return item.value;
   }
 
+  /**
+   * Define um item no cache de memória.
+   * @template T - O tipo do valor.
+   * @param {string} key - A chave do item.
+   * @param {T} value - O valor a ser armazenado.
+   * @param {number} [ttl] - O tempo de vida em segundos.
+   * @private
+   */
   private setInMemory<T>(key: string, value: T, ttl?: number): void {
     const serialized = JSON.stringify(value);
     const size = new Blob([serialized]).size;
@@ -315,6 +432,11 @@ export class CacheManager {
     this.currentMemorySize += size;
   }
 
+  /**
+   * Remove itens do cache de memória para liberar espaço (política LRU com base na expiração).
+   * @param {number} neededSize - O espaço necessário a ser liberado.
+   * @private
+   */
   private evictMemoryCache(neededSize: number): void {
     const entries = Array.from(this.memoryCache.entries());
     entries.sort((a, b) => (a[1].expiry || Infinity) - (b[1].expiry || Infinity));
@@ -328,6 +450,10 @@ export class CacheManager {
     edgeLogger.info('Memory cache evicted', { freedSpace, neededSize });
   }
 
+  /**
+   * Limpa itens expirados do cache de memória.
+   * @private
+   */
   private cleanupMemoryCache(): void {
     const now = Date.now();
     let cleanedSize = 0;
@@ -345,6 +471,14 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Serializa um valor para ser armazenado no cache.
+   * @param {any} value - O valor a ser serializado.
+   * @param {'json' | 'msgpack'} [method='msgpack'] - O método de serialização.
+   * @param {boolean} [compress=true] - Se deve comprimir o valor.
+   * @returns {Buffer} O valor serializado como um Buffer.
+   * @private
+   */
   private serialize(value: any, method: 'json' | 'msgpack' = 'msgpack', compress = true): Buffer {
     let data: Uint8Array;
     if (method === 'json') {
@@ -359,6 +493,13 @@ export class CacheManager {
     return Buffer.concat([Buffer.from([header]), finalData]);
   }
 
+  /**
+   * Deserializa um valor do cache.
+   * @template T - O tipo do valor.
+   * @param {Buffer} buffer - O buffer a ser deserializado.
+   * @returns {T} O valor deserializado.
+   * @private
+   */
   private deserialize<T>(buffer: Buffer): T {
     const header = buffer[0];
     const method = (header & 1) === 1 ? 'json' : 'msgpack';
@@ -374,6 +515,11 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Atualiza as métricas de desempenho do cache.
+   * @param {number} responseTime - O tempo de resposta da última operação.
+   * @private
+   */
   private updateMetrics(responseTime: number): void {
     this.responseTimes.push(responseTime);
     if (this.responseTimes.length > 1000) {
@@ -385,10 +531,20 @@ export class CacheManager {
     this.metrics.totalSize = this.currentMemorySize;
   }
 
+  /**
+   * Obtém as métricas de desempenho atuais do cache.
+   *
+   * @returns {CacheMetrics} Um objeto com as métricas.
+   */
   getMetrics(): CacheMetrics {
     return { ...this.metrics };
   }
 
+  /**
+   * Obtém as estatísticas do servidor Redis.
+   *
+   * @returns {Promise<string | null>} As informações do Redis ou nulo em caso de erro.
+   */
   async getRedisStats() {
     try {
       return await redis.info();
@@ -398,16 +554,35 @@ export class CacheManager {
     }
   }
 
+  /**
+   * Obtém múltiplos itens do cache de uma vez.
+   *
+   * @template T - O tipo dos valores.
+   * @param {string[]} keys - Um array de chaves a serem obtidas.
+   * @param {Partial<CacheOptions>} [options={}] - Opções de cache.
+   * @returns {Promise<(T | null)[]>} Um array com os valores ou nulos.
+   */
   async mget<T>(keys: string[], options: Partial<CacheOptions> = {}): Promise<(T | null)[]> {
     return Promise.all(keys.map(key => this.get<T>(key, options)));
   }
 
+  /**
+   * Define múltiplos itens no cache de uma vez.
+   *
+   * @template T - O tipo dos valores.
+   * @param {Array<{key: string, value: T}>} entries - Um array de pares chave-valor.
+   * @param {CacheOptions} [options={}] - Opções de cache.
+   * @returns {Promise<void>}
+   */
   async mset<T>(entries: Array<{ key: string; value: T }>, options: CacheOptions = {}): Promise<void> {
     await Promise.all(entries.map(entry => this.set(entry.key, entry.value, options)));
   }
 }
 
-// Pre-configured cache managers for different data types - Enhanced
+/**
+ * @description Gerenciadores de cache pré-configurados para diferentes tipos de dados.
+ * Cada gerenciador tem seu próprio prefixo e limite de tamanho de memória.
+ */
 export const patientCache = new CacheManager('patients', 50 * 1024 * 1024);
 export const appointmentCache = new CacheManager('appointments', 30 * 1024 * 1024);
 export const reportCache = new CacheManager('reports', 100 * 1024 * 1024);
@@ -416,7 +591,10 @@ export const sessionCache = new CacheManager('sessions', 20 * 1024 * 1024);
 export const queryCache = new CacheManager('queries', 150 * 1024 * 1024);
 export const cache = new CacheManager('default', 100 * 1024 * 1024);
 
-// Cache warming and preloading utilities
+/**
+ * @class CacheWarmer
+ * @description Classe com utilitários para aquecer (pré-carregar) o cache e obter estatísticas.
+ */
 export class CacheWarmer {
   static async warmPatientCache(): Promise<void> {
     edgeLogger.info('Starting patient cache warming');
@@ -438,7 +616,10 @@ export class CacheWarmer {
   }
 }
 
-// Smart cache invalidation patterns
+/**
+ * @constant CachePatterns
+ * @description Objeto com funções para gerar chaves e tags de cache padronizadas.
+ */
 export const CachePatterns = {
   patient: (id: string) => ({ key: `patient:${id}`, tags: ['patients', `patient:${id}`] }),
   patientAppointments: (patientId: string) => ({ key: `patient:${patientId}:appointments`, tags: ['appointments', 'patients', `patient:${patientId}`] }),

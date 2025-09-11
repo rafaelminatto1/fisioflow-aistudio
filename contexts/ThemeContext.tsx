@@ -4,14 +4,29 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
+/**
+ * @interface ThemeContextType
+ * @description Define a forma do contexto de tema.
+ */
 interface ThemeContextType {
   theme: Theme;
   setTheme: (theme: Theme) => void;
   actualTheme: 'light' | 'dark';
 }
 
+/**
+ * @constant ThemeContext
+ * @description Contexto React para gerenciar o tema da aplicação (claro, escuro, sistema).
+ */
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+/**
+ * @component ThemeProvider
+ * @description Provedor de contexto que gerencia o estado do tema, aplica as classes CSS
+ * correspondentes e persiste a preferência do usuário no localStorage.
+ * @param {{ children: React.ReactNode }} props - Propriedades do componente.
+ * @returns {React.ReactElement} O provedor de contexto de tema.
+ */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('system');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('light');
@@ -79,6 +94,12 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * @hook useTheme
+ * @description Hook customizado para acessar o contexto de tema.
+ * @returns {ThemeContextType} O estado e as funções do contexto de tema.
+ * @throws {Error} Se o hook for usado fora de um `ThemeProvider`.
+ */
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (context === undefined) {
@@ -87,7 +108,12 @@ export function useTheme() {
   return context;
 }
 
-// Theme toggle hook
+/**
+ * @hook useThemeToggle
+ * @description Hook customizado que fornece uma lógica para alternar entre os temas.
+ * @returns {{theme: Theme, actualTheme: 'light' | 'dark', setTheme: (theme: Theme) => void, toggleTheme: () => void, cycleTheme: () => void}}
+ * Um objeto com o estado do tema e funções para alterná-lo.
+ */
 export function useThemeToggle() {
   const { theme, setTheme, actualTheme } = useTheme();
   

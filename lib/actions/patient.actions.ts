@@ -9,8 +9,11 @@ import { Role } from '@prisma/client';
 import { patientCache, CachePatterns } from '@/lib/cache';
 
 /**
- * Helper function to check for authorized roles.
- * @param allowedRoles - An array of roles that are allowed to perform the action.
+ * Verifica se o usuário atual tem uma das funções permitidas.
+ * Lança um erro se o usuário não estiver autenticado ou não tiver a permissão necessária.
+ *
+ * @param {Role[]} allowedRoles - Um array de funções que têm permissão para executar a ação.
+ * @throws {Error} Se o usuário não estiver autenticado ou não tiver a permissão necessária.
  */
 async function authorize(allowedRoles: Role[]) {
   const user = await getCurrentUser();
@@ -25,8 +28,10 @@ async function authorize(allowedRoles: Role[]) {
 
 /**
  * Cria um novo paciente no banco de dados.
- * Esta é uma Server Action, executada no servidor.
- * @param data - Os dados do formulário do paciente.
+ * Executa verificação de permissão, validação de dados, criação no banco de dados e invalidação de cache.
+ *
+ * @param {PatientFormData} data - Os dados do formulário do paciente a ser criado.
+ * @throws {Error} Se o usuário não tiver permissão, os dados forem inválidos ou ocorrer um erro no banco de dados.
  */
 export async function createPatient(data: PatientFormData) {
   // 0. Verificação de permissão
@@ -72,8 +77,11 @@ export async function createPatient(data: PatientFormData) {
 
 /**
  * Atualiza um paciente existente no banco de dados.
- * @param id - O ID do paciente a ser atualizado.
- * @param data - Os dados do formulário do paciente.
+ * Executa verificação de permissão, validação de dados, atualização no banco de dados e invalidação de cache.
+ *
+ * @param {string} id - O ID do paciente a ser atualizado.
+ * @param {PatientFormData} data - Os dados do formulário do paciente a serem atualizados.
+ * @throws {Error} Se o usuário não tiver permissão, os dados forem inválidos ou ocorrer um erro no banco de dados.
  */
 export async function updatePatient(id: string, data: PatientFormData) {
   // 0. Verificação de permissão

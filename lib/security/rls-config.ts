@@ -1,7 +1,10 @@
 import { PrismaClient } from '@prisma/client';
 import { prisma } from '../prisma';
 
-// Types for security policies
+/**
+ * @interface SecurityPolicy
+ * @description Representa uma política de segurança (Row Level Security) do banco de dados.
+ */
 export interface SecurityPolicy {
   name: string;
   table: string;
@@ -10,6 +13,10 @@ export interface SecurityPolicy {
   description: string;
 }
 
+/**
+ * @interface AuditLogEntry
+ * @description Representa uma entrada no log de auditoria de segurança.
+ */
 export interface AuditLogEntry {
   id: string;
   userId?: string;
@@ -22,6 +29,10 @@ export interface AuditLogEntry {
   createdAt: Date;
 }
 
+/**
+ * @interface SecurityMetrics
+ * @description Agrega métricas de segurança do sistema.
+ */
 export interface SecurityMetrics {
   totalPolicies: number;
   activePolicies: number;
@@ -31,6 +42,10 @@ export interface SecurityMetrics {
   lastSecurityCheck: Date;
 }
 
+/**
+ * @class RLSSecurityManager
+ * @description Gerencia a segurança em nível de linha (RLS), logs de auditoria e permissões.
+ */
 export class RLSSecurityManager {
   private prisma: PrismaClient;
 
@@ -39,7 +54,8 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Get all security policies
+   * Busca todas as políticas de segurança (RLS) ativas no banco de dados.
+   * @returns {Promise<SecurityPolicy[]>} Uma lista de políticas de segurança.
    */
   async getSecurityPolicies(): Promise<SecurityPolicy[]> {
     try {
@@ -72,7 +88,8 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Check if RLS is enabled for all tables
+   * Verifica o status do RLS (ativado/desativado) para cada tabela no schema 'public'.
+   * @returns {Promise<Record<string, boolean>>} Um objeto mapeando nomes de tabela para seu status de RLS.
    */
   async checkRLSStatus(): Promise<Record<string, boolean>> {
     try {
@@ -100,7 +117,9 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Get recent audit log entries
+   * Busca as entradas mais recentes do log de auditoria de segurança.
+   * @param {number} [limit=100] - O número máximo de entradas a serem retornadas.
+   * @returns {Promise<AuditLogEntry[]>} Uma lista de entradas de log de auditoria.
    */
   async getAuditLogs(limit: number = 100): Promise<AuditLogEntry[]> {
     try {
@@ -138,7 +157,13 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Log a security event
+   * Registra um evento de segurança no log de auditoria.
+   * @param {string} action - A ação que está sendo registrada (ex: 'LOGIN_FAILED').
+   * @param {string} [tableName] - A tabela associada ao evento.
+   * @param {string} [recordId] - O ID do registro associado ao evento.
+   * @param {Record<string, any>} [metadata] - Metadados adicionais.
+   * @param {Request} [request] - O objeto da requisição HTTP para extrair IP e User-Agent.
+   * @returns {Promise<void>}
    */
   async logSecurityEvent(
     action: string,
@@ -180,7 +205,8 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Get security metrics
+   * Coleta e retorna um resumo das principais métricas de segurança.
+   * @returns {Promise<SecurityMetrics>} Um objeto com as métricas de segurança.
    */
   async getSecurityMetrics(): Promise<SecurityMetrics> {
     try {
@@ -215,7 +241,9 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Get audit log count
+   * Conta o número total de entradas no log de auditoria.
+   * @private
+   * @returns {Promise<number>} O número total de logs de auditoria.
    */
   private async getAuditLogCount(): Promise<number> {
     try {
@@ -230,7 +258,9 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Get policy violation count (failed access attempts)
+   * Conta o número de violações de política (tentativas de acesso negado) nas últimas 24 horas.
+   * @private
+   * @returns {Promise<number>} O número de violações de política.
    */
   private async getPolicyViolationCount(): Promise<number> {
     try {
@@ -249,7 +279,12 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Validate user permissions for a specific operation
+   * Valida se um usuário tem permissão para executar uma operação específica em um recurso.
+   * @param {string} userId - O ID do usuário.
+   * @param {string} operation - A operação a ser validada (ex: 'SELECT', 'UPDATE').
+   * @param {string} tableName - O nome da tabela do recurso.
+   * @param {string} [recordId] - O ID do registro específico, se aplicável.
+   * @returns {Promise<boolean>} `true` se o usuário tiver permissão, `false` caso contrário.
    */
   async validateUserPermission(
     userId: string,
@@ -307,7 +342,14 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Check specific permission based on role and context
+   * Verifica permissões específicas com base na role do usuário e no contexto da operação.
+   * @private
+   * @param {string} userId - O ID do usuário.
+   * @param {string} role - A role do usuário.
+   * @param {string} operation - A operação.
+   * @param {string} tableName - O nome da tabela.
+   * @param {string} [recordId] - O ID do registro.
+   * @returns {Promise<boolean>} `true` se a permissão for concedida.
    */
   private async checkSpecificPermission(
     userId: string,
@@ -365,7 +407,9 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Enable RLS for a specific table
+   * Ativa o Row Level Security para uma tabela específica.
+   * @param {string} tableName - O nome da tabela.
+   * @returns {Promise<boolean>} `true` se a operação for bem-sucedida.
    */
   async enableRLSForTable(tableName: string): Promise<boolean> {
     try {
@@ -385,7 +429,9 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Disable RLS for a specific table (use with caution)
+   * Desativa o Row Level Security para uma tabela específica (usar com extrema cautela).
+   * @param {string} tableName - O nome da tabela.
+   * @returns {Promise<boolean>} `true` se a operação for bem-sucedida.
    */
   async disableRLSForTable(tableName: string): Promise<boolean> {
     try {
@@ -406,7 +452,9 @@ export class RLSSecurityManager {
   }
 
   /**
-   * Clear old audit logs (retention policy)
+   * Limpa os logs de auditoria antigos com base em uma política de retenção.
+   * @param {number} [days=30] - O número de dias de logs a serem mantidos.
+   * @returns {Promise<number>} O número de registros de log excluídos.
    */
   async clearOldAuditLogs(days: number = 30): Promise<number> {
     try {
@@ -430,10 +478,16 @@ export class RLSSecurityManager {
   }
 }
 
-// Export singleton instance
+/**
+ * @constant rlsSecurityManager
+ * @description Instância singleton do RLSSecurityManager.
+ */
 export const rlsSecurityManager = new RLSSecurityManager();
 
-// Export utility functions
+/**
+ * @constant securityUtils
+ * @description Objeto com funções utilitárias de segurança.
+ */
 export const securityUtils = {
   /**
    * Check if user has admin role

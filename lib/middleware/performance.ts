@@ -8,6 +8,19 @@ const logger = {
   warn: (message: string, meta?: any) => console.warn(`[WARN] ${message}`, meta ? JSON.stringify(meta) : '')
 };
 
+/**
+ * @interface PerformanceMetrics
+ * @description Estrutura para armazenar métricas de desempenho de uma requisição.
+ * @property {number} startTime - Timestamp do início da requisição.
+ * @property {number} endTime - Timestamp do fim da requisição.
+ * @property {number} duration - Duração total da requisição em milissegundos.
+ * @property {NodeJS.MemoryUsage} memoryUsage - Uso de memória ao final da requisição.
+ * @property {number} statusCode - Código de status da resposta HTTP.
+ * @property {string} method - Método HTTP da requisição.
+ * @property {string} url - URL da requisição.
+ * @property {string} [userAgent] - User agent do cliente.
+ * @property {string} [ip] - Endereço IP do cliente.
+ */
 export interface PerformanceMetrics {
   startTime: number;
   endTime: number;
@@ -20,7 +33,13 @@ export interface PerformanceMetrics {
   ip?: string;
 }
 
-// Performance monitoring middleware for API routes
+/**
+ * Middleware de alta ordem (HOC) para monitorar o desempenho de um handler de rota da API Next.js.
+ * Mede o tempo de execução, o uso de memória e loga as informações.
+ *
+ * @param {(req: NextRequest) => Promise<NextResponse>} handler - O handler da rota da API a ser envolvido.
+ * @returns {(req: NextRequest) => Promise<NextResponse>} O handler envolvido com monitoramento de desempenho.
+ */
 export function withPerformanceMonitoring(
   handler: (req: NextRequest) => Promise<NextResponse>
 ) {
@@ -101,7 +120,15 @@ export function withPerformanceMonitoring(
   };
 }
 
-// Database query performance tracking
+/**
+ * Rastreia o tempo de execução de uma operação de banco de dados.
+ *
+ * @template T - O tipo de retorno da operação.
+ * @param {string} operation - O nome da operação (ex: 'findUserById').
+ * @param {() => Promise<T>} query - A função que executa a query no banco de dados.
+ * @param {Record<string, any>} [context] - Contexto adicional para o log.
+ * @returns {Promise<T>} O resultado da operação de banco de dados.
+ */
 export async function trackDatabaseOperation<T>(
   operation: string,
   query: () => Promise<T>,
@@ -115,7 +142,14 @@ export async function trackDatabaseOperation<T>(
   return result;
 }
 
-// Utility to measure function execution time
+/**
+ * Utilitário para medir o tempo de execução de qualquer função (síncrona ou assíncrona).
+ *
+ * @template T - O tipo de retorno da função.
+ * @param {string} operation - O nome da operação para identificação.
+ * @param {() => Promise<T> | T} fn - A função a ser medida.
+ * @returns {Promise<{ result: T; duration: number }>} Um objeto com o resultado e a duração da execução.
+ */
 export async function measureExecutionTime<T>(
   operation: string,
   fn: () => Promise<T> | T
@@ -127,7 +161,11 @@ export async function measureExecutionTime<T>(
   return { result, duration };
 }
 
-// Health check with performance metrics
+/**
+ * Cria um handler de rota para health check que inclui métricas de desempenho.
+ *
+ * @returns {(req: NextRequest) => Promise<NextResponse>} O handler da rota de health check.
+ */
 export function createHealthCheckHandler() {
   return withPerformanceMonitoring(async (req: NextRequest) => {
     const healthData = await measureExecutionTime('health.check', async () => {

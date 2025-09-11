@@ -1,8 +1,8 @@
 /**
- * FisioFlow Theme Configuration
- * Configurações centralizadas do tema para fisioterapia
+ * @constant fisioTheme
+ * @description Objeto de configuração centralizado para o tema da aplicação FisioFlow.
+ * Inclui cores, espaçamentos, bordas, sombras e animações.
  */
-
 export const fisioTheme = {
   colors: {
     // Cores principais da fisioterapia
@@ -75,7 +75,11 @@ export const fisioTheme = {
   }
 };
 
-// Utilitários para usar as cores do tema
+/**
+ * Utilitário para obter um valor de cor do tema a partir de um caminho de string.
+ * @param {string} path - O caminho para a cor no objeto de tema (ex: 'primary.green').
+ * @returns {string} O valor da cor ou uma string vazia se não for encontrada.
+ */
 export const getThemeColor = (path: string) => {
   const keys = path.split('.');
   let value: any = fisioTheme.colors;
@@ -87,7 +91,11 @@ export const getThemeColor = (path: string) => {
   return value || '';
 };
 
-// Classes CSS utilitárias para o tema
+/**
+ * @constant themeClasses
+ * @description Mapeamento de classes utilitárias do Tailwind CSS para as cores do tema.
+ * Facilita o uso consistente do tema em componentes React.
+ */
 export const themeClasses = {
   // Backgrounds com cores do tema
   bg: {

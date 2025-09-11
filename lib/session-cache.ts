@@ -3,6 +3,10 @@ import { sessionCache } from './cache';
 import edgeLogger from './edge-logger';
 import crypto from 'crypto';
 
+/**
+ * @interface SessionData
+ * @description Representa os dados armazenados em uma sessão de usuário.
+ */
 export interface SessionData {
   userId: string;
   email: string;
@@ -13,6 +17,10 @@ export interface SessionData {
   metadata?: Record<string, any>;
 }
 
+/**
+ * @interface SessionOptions
+ * @description Opções para a criação e gerenciamento de sessões.
+ */
 export interface SessionOptions {
   maxAge?: number; // Session TTL in seconds (default: 24 hours)
   secure?: boolean; // HTTPS only
@@ -20,6 +28,10 @@ export interface SessionOptions {
   rolling?: boolean; // Extend session on activity
 }
 
+/**
+ * @class DistributedSessionManager
+ * @description Gerencia sessões de usuário distribuídas usando um cache (Redis).
+ */
 export class DistributedSessionManager {
   private defaultOptions: SessionOptions = {
     maxAge: 24 * 60 * 60, // 24 hours
@@ -32,7 +44,11 @@ export class DistributedSessionManager {
   private userSessionPrefix = 'user_sessions';
 
   /**
-   * Create a new session
+   * Cria uma nova sessão para um usuário.
+   * @param {SessionData} sessionData - Os dados a serem armazenados na sessão.
+   * @param {SessionOptions} [options={}] - Opções para esta sessão específica.
+   * @returns {Promise<string>} O ID da sessão criada.
+   * @throws {Error} Se a criação da sessão falhar.
    */
   async createSession(
     sessionData: SessionData,
@@ -77,7 +93,9 @@ export class DistributedSessionManager {
   }
 
   /**
-   * Get session data
+   * Obtém os dados de uma sessão a partir de seu ID.
+   * @param {string} sessionId - O ID da sessão a ser obtida.
+   * @returns {Promise<SessionData | null>} Os dados da sessão ou nulo se não encontrada ou expirada.
    */
   async getSession(sessionId: string): Promise<SessionData | null> {
     try {
@@ -106,7 +124,10 @@ export class DistributedSessionManager {
   }
 
   /**
-   * Update session activity
+   * Atualiza a data de última atividade de uma sessão (rolling session) e, opcionalmente, atualiza seus dados.
+   * @param {string} sessionId - O ID da sessão a ser atualizada.
+   * @param {Partial<SessionData>} [updateData] - Dados parciais para atualizar na sessão.
+   * @returns {Promise<boolean>} `true` se a sessão foi atualizada com sucesso.
    */
   async touchSession(
     sessionId: string,
@@ -140,7 +161,9 @@ export class DistributedSessionManager {
   }
 
   /**
-   * Destroy a specific session
+   * Destrói uma sessão específica.
+   * @param {string} sessionId - O ID da sessão a ser destruída.
+   * @returns {Promise<boolean>} `true` se a sessão foi destruída com sucesso.
    */
   async destroySession(sessionId: string): Promise<boolean> {
     try {
@@ -166,7 +189,9 @@ export class DistributedSessionManager {
   }
 
   /**
-   * Destroy all sessions for a user
+   * Destrói todas as sessões ativas de um usuário.
+   * @param {string} userId - O ID do usuário.
+   * @returns {Promise<number>} O número de sessões destruídas.
    */
   async destroyUserSessions(userId: string): Promise<number> {
     try {
@@ -195,7 +220,9 @@ export class DistributedSessionManager {
   }
 
   /**
-   * Get all active sessions for a user
+   * Obtém todos os IDs de sessão ativos para um usuário.
+   * @param {string} userId - O ID do usuário.
+   * @returns {Promise<string[]>} Um array com os IDs das sessões ativas.
    */
   async getUserSessions(userId: string): Promise<string[]> {
     try {
@@ -236,7 +263,8 @@ export class DistributedSessionManager {
   }
 
   /**
-   * Get session statistics
+   * Obtém estatísticas sobre as sessões (implementação simplificada).
+   * @returns {Promise<object>} Um objeto com estatísticas de cache.
    */
   async getSessionStats(): Promise<{
     totalSessions: number;
@@ -268,7 +296,8 @@ export class DistributedSessionManager {
   }
 
   /**
-   * Cleanup expired sessions (should be called periodically)
+   * Limpa sessões expiradas (implementação simplificada, a ser chamada periodicamente).
+   * @returns {Promise<number>} O número de sessões limpas.
    */
   async cleanupExpiredSessions(): Promise<number> {
     const cleanedCount = 0;
@@ -287,10 +316,23 @@ export class DistributedSessionManager {
 
   // Private methods
 
+  /**
+   * Gera um ID de sessão único e seguro.
+   * @private
+   * @returns {string} O ID da sessão.
+   */
   private generateSessionId(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
+  /**
+   * Adiciona um ID de sessão à lista de sessões de um usuário.
+   * @private
+   * @param {string} userId - O ID do usuário.
+   * @param {string} sessionId - O ID da sessão.
+   * @param {number} ttl - O tempo de vida da entrada.
+   * @returns {Promise<void>}
+   */
   private async addUserSession(
     userId: string,
     sessionId: string,
@@ -321,6 +363,13 @@ export class DistributedSessionManager {
     );
   }
 
+  /**
+   * Remove um ID de sessão da lista de sessões de um usuário.
+   * @private
+   * @param {string} userId - O ID do usuário.
+   * @param {string} sessionId - O ID da sessão a ser removida.
+   * @returns {Promise<void>}
+   */
   private async removeUserSession(
     userId: string,
     sessionId: string
@@ -344,13 +393,21 @@ export class DistributedSessionManager {
   }
 }
 
-// Export singleton instance
+/**
+ * @constant sessionManager
+ * @description Instância singleton do DistributedSessionManager.
+ */
 export const sessionManager = new DistributedSessionManager();
 
-// Session middleware utilities
+/**
+ * @class SessionMiddleware
+ * @description Classe com utilitários para manipular sessões em middlewares HTTP.
+ */
 export class SessionMiddleware {
   /**
-   * Extract session from request headers
+   * Extrai o ID da sessão do cabeçalho de cookies de uma requisição.
+   * @param {Request} request - O objeto da requisição.
+   * @returns {string | null} O ID da sessão ou nulo se não encontrado.
    */
   static getSessionIdFromRequest(request: Request): string | null {
     const cookieHeader = request.headers.get('cookie');
@@ -361,7 +418,10 @@ export class SessionMiddleware {
   }
 
   /**
-   * Create session cookie
+   * Cria uma string de cookie de sessão para ser enviada ao cliente.
+   * @param {string} sessionId - O ID da sessão.
+   * @param {SessionOptions} [options={}] - Opções para o cookie.
+   * @returns {string} A string do cabeçalho 'Set-Cookie'.
    */
   static createSessionCookie(
     sessionId: string,
@@ -388,7 +448,8 @@ export class SessionMiddleware {
   }
 
   /**
-   * Clear session cookie
+   * Cria uma string de cookie para limpar a sessão no cliente.
+   * @returns {string} A string do cabeçalho 'Set-Cookie' para limpar o cookie.
    */
   static clearSessionCookie(): string {
     return 'session=; Max-Age=0; Path=/';

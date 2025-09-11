@@ -4,6 +4,11 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * @constant buttonVariants
+ * @description Variantes de estilo para o componente Button, usando `class-variance-authority`.
+ * Define os estilos para diferentes variantes (aparência), tamanhos, e estados.
+ */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
@@ -34,12 +39,26 @@ const buttonVariants = cva(
   }
 )
 
+/**
+ * @interface ButtonProps
+ * @description Propriedades para o componente Button.
+ * Estende as propriedades de um botão HTML padrão e as variantes de estilo.
+ * @property {boolean} [asChild=false] - Se `true`, renderiza o componente como um filho direto,
+ * permitindo a composição com outros componentes.
+ */
 export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
 }
 
+/**
+ * @component Button
+ * @description Um componente de botão reutilizável com variantes de estilo.
+ * @param {ButtonProps} props - As propriedades do componente.
+ * @param {React.Ref<HTMLButtonElement>} ref - A ref para o elemento do botão.
+ * @returns {React.ReactElement} O componente de botão.
+ */
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button"
