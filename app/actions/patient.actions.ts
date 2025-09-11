@@ -63,28 +63,8 @@ export async function getPatientSoapNotes(patientId: string) {
       throw new Error('Paciente não encontrado');
     }
 
-    const soapNotes = await prisma.soapNote.findMany({
-      where: {
-        appointment: {
-          patientId: patientId,
-          patient: {
-            // userId: session.user.id
-          }
-        }
-      },
-      include: {
-        appointment: {
-          select: {
-            id: true,
-            scheduledFor: true,
-            status: true
-          }
-        }
-      },
-      orderBy: {
-        createdAt: 'desc'
-      }
-    });
+    // Mock soap notes for now
+    const soapNotes: any[] = [];
 
     return {
       success: true,

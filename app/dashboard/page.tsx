@@ -18,6 +18,7 @@ import { signOut } from 'next-auth/react';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { motion } from 'framer-motion';
 import Sidebar from '../../components/Sidebar';
+import Header from '../../components/Header';
 import FinancialDashboard from '../../components/FinancialDashboard';
 
 
@@ -108,36 +109,19 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="min-h-screen bg-slate-50 dark:bg-gray-900 transition-colors">
       {/* Sidebar */}
       <Sidebar />
       
       {/* Main Content */}
-      <main className="flex-1 ml-0 lg:ml-64 transition-all duration-300">
+      <main className="lg:ml-64 transition-all duration-300">
+        {/* Header */}
+        <Header 
+          title="Dashboard" 
+          subtitle="Visão geral da sua clínica de fisioterapia"
+        />
+        
         <div className="p-6 space-y-6">
-          {/* Header */}
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex justify-between items-center"
-          >
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">
-                Visão geral da sua clínica de fisioterapia
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <button className="flex items-center space-x-2 px-4 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-                <Activity className="w-4 h-4" />
-                <span>Relatórios</span>
-              </button>
-              <button className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                <Plus className="w-4 h-4" />
-                <span>Nova Consulta</span>
-              </button>
-            </div>
-          </motion.div>
 
           {/* KPIs Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -180,13 +164,13 @@ export default function DashboardPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-all duration-200"
               >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">{kpi.title}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">{kpi.value}</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{kpi.title}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">{kpi.value}</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                       <span className="text-green-600 font-medium">{kpi.change}</span> vs last month
                     </p>
                   </div>
@@ -205,11 +189,11 @@ export default function DashboardPage() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 }}
-              className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+              className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
             >
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-lg font-semibold text-gray-900">Revenue</h3>
-                <div className="flex items-center space-x-2 text-sm text-gray-500">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Revenue</h3>
+                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
                   <span>This Year</span>
                   <span>Last Year</span>
                 </div>
