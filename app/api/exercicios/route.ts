@@ -51,10 +51,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Count total exercises for pagination
-    const totalExercises = await prisma.exercise.count({ where });
+    const totalExercises = await prisma.exercises.count({ where });
 
     // Fetch exercises
-    const exercises = await prisma.exercise.findMany({
+    const exercises = await prisma.exercises.findMany({
       where,
       skip,
       take: limit,
@@ -64,18 +64,18 @@ export async function GET(request: NextRequest) {
         description: true,
         category: true,
         subcategory: true,
-        bodyParts: true,
+        body_parts: true,
         difficulty: true,
         equipment: true,
         instructions: true,
-        videoUrl: true,
-        thumbnailUrl: true,
+        video_url: true,
+        thumbnail_url: true,
         duration: true,
         indications: true,
         contraindications: true,
         modifications: true,
-        createdAt: true,
-        updatedAt: true
+        created_at: true,
+        updated_at: true
       },
       orderBy: [
         { name: 'asc' }
@@ -83,7 +83,7 @@ export async function GET(request: NextRequest) {
     });
 
     // Get categories and equipment for filters
-    const categories = await prisma.exercise.groupBy({
+    const categories = await prisma.exercises.groupBy({
       by: ['category'],
       where: { status: 'approved' },
       _count: {
@@ -91,7 +91,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const allEquipment = await prisma.exercise.findMany({
+    const allEquipment = await prisma.exercises.findMany({
       where: { status: 'approved' },
       select: { equipment: true }
     });
@@ -109,13 +109,13 @@ export async function GET(request: NextRequest) {
       .sort((a, b) => b.count - a.count);
 
     // Get body parts
-    const allBodyParts = await prisma.exercise.findMany({
+    const allBodyParts = await prisma.exercises.findMany({
       where: { status: 'approved' },
-      select: { bodyParts: true }
+      select: { body_parts: true }
     });
 
     const bodyPartsCount = allBodyParts
-      .flatMap(ex => ex.bodyParts)
+      .flatMap(ex => ex.body_parts)
       .reduce((acc, bp) => {
         acc[bp] = (acc[bp] || 0) + 1;
         return acc;
@@ -152,11 +152,11 @@ export async function GET(request: NextRequest) {
       summary: {
         total: totalExercises,
         byDifficulty: {
-          1: exercises.filter(e => e.difficulty === 1).length,
-          2: exercises.filter(e => e.difficulty === 2).length,
-          3: exercises.filter(e => e.difficulty === 3).length,
-          4: exercises.filter(e => e.difficulty === 4).length,
-          5: exercises.filter(e => e.difficulty === 5).length
+          1: exercises.filter(e => Number(e.difficulty) === 1).length,
+          2: exercises.filter(e => Number(e.difficulty) === 2).length,
+          3: exercises.filter(e => Number(e.difficulty) === 3).length,
+          4: exercises.filter(e => Number(e.difficulty) === 4).length,
+          5: exercises.filter(e => Number(e.difficulty) === 5).length
         }
       }
     });
@@ -210,24 +210,26 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new exercise
-    const newExercise = await prisma.exercise.create({
+    const newExercise = await prisma.exercises.create({
       data: {
+        id: `ex_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: name.trim(),
         description: description?.trim() || null,
         category: category.trim(),
         subcategory: subcategory?.trim() || null,
-        bodyParts: Array.isArray(bodyParts) ? bodyParts : [bodyParts],
-        difficulty: parseInt(difficulty),
+        body_parts: Array.isArray(bodyParts) ? bodyParts : [bodyParts],
+        difficulty: difficulty.toString(),
         equipment: Array.isArray(equipment) ? equipment : (equipment ? [equipment] : []),
         instructions: Array.isArray(instructions) ? instructions : (instructions ? [instructions] : []),
-        videoUrl: videoUrl?.trim() || null,
-        thumbnailUrl: thumbnailUrl?.trim() || null,
+        video_url: videoUrl?.trim() || null,
+        thumbnail_url: thumbnailUrl?.trim() || null,
         duration: duration ? parseInt(duration) : null,
         indications: Array.isArray(indications) ? indications : (indications ? [indications] : []),
         contraindications: Array.isArray(contraindications) ? contraindications : (contraindications ? [contraindications] : []),
         modifications: modifications || null,
-        authorId: authorId || null,
-        status: 'pending_approval' // New exercises need approval
+        author_id: authorId || null,
+        status: 'pending_approval', // New exercises need approval
+        updated_at: new Date()
       }
     });
 

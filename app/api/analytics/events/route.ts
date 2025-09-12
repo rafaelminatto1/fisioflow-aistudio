@@ -33,7 +33,8 @@ export async function POST(request: NextRequest) {
 
     // Processar eventos em batch
     const processedEvents = events.map(event => ({
-      eventType: event.name, // Use name as eventType
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      event_type: event.name, // Use name as event_type
       category: AnalyticsEventCategory.USER_ACTION, // Default category
       properties: {
         ...event.properties || {},
@@ -42,12 +43,12 @@ export async function POST(request: NextRequest) {
         ip: getClientIP(request),
         originalTimestamp: event.timestamp
       },
-      userId: event.userId || session?.user?.id || null,
-      sessionId: event.sessionId,
+      user_id: event.userId || session?.user?.id || null,
+      session_id: event.sessionId,
     }))
 
     // Salvar no banco de dados
-    await prisma.analyticsEvent.createMany({
+    await prisma.analytics_events.createMany({
       data: processedEvents,
       skipDuplicates: true
     })
@@ -93,32 +94,32 @@ export async function GET(request: NextRequest) {
 
     const where: any = {}
     
-    if (eventType) where.eventType = eventType
-    if (userId) where.userId = userId
+    if (eventType) where.event_type = eventType
+    if (userId) where.user_id = userId
     if (category) where.category = category
     if (startDate || endDate) {
-      where.createdAt = {}
-      if (startDate) where.createdAt.gte = new Date(startDate)
-      if (endDate) where.createdAt.lte = new Date(endDate)
+      where.created_at = {}
+      if (startDate) where.created_at.gte = new Date(startDate)
+      if (endDate) where.created_at.lte = new Date(endDate)
     }
 
     const [events, total] = await Promise.all([
-      prisma.analyticsEvent.findMany({
+      prisma.analytics_events.findMany({
         where,
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
         select: {
           id: true,
-          eventType: true,
+          event_type: true,
           category: true,
           properties: true,
-          userId: true,
-          sessionId: true,
-          createdAt: true
+          user_id: true,
+          session_id: true,
+          created_at: true
         }
       }),
-      prisma.analyticsEvent.count({ where })
+      prisma.analytics_events.count({ where })
     ])
 
     return NextResponse.json({

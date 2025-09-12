@@ -11,7 +11,7 @@ const createAppointmentSchema = z.object({
   type: z.enum(['Avaliacao', 'Sessao', 'Retorno', 'Pilates', 'Urgente', 'Teleconsulta']),
   status: z.enum(['Agendado', 'Realizado', 'Concluido', 'Cancelado', 'Faltou']).default('Agendado'),
   value: z.number().positive().optional(),
-  payment_status: z.enum(['pending', 'confirmed', 'failed']).default('pending'),
+  payment_status: z.enum(['paid', 'pending']).default('pending'),
   observations: z.string().optional(),
   series_id: z.string().optional(),
   session_number: z.number().int().positive().optional(),
@@ -124,9 +124,9 @@ export async function GET(request: NextRequest) {
         assessment_results: {
           select: {
             id: true,
-            created_at: true,
+            evaluated_at: true,
           },
-          orderBy: { created_at: 'desc' },
+          orderBy: { evaluated_at: 'desc' },
           take: 1,
         },
       },

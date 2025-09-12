@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     };
 
     // For day view, include time slots
-    let timeSlots = [];
+    let timeSlots: any[] = [];
     if (view === 'day') {
       timeSlots = generateTimeSlots(date);
       

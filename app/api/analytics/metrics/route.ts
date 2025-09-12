@@ -71,13 +71,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Salvar métrica customizada
-    await prisma.customMetric.create({
+    await prisma.custom_metrics.create({
       data: {
+        id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         name: metric,
         value: parseFloat(value),
         category: type, // Use type as category
         tags: properties,
-        createdBy: session.user.id
+        created_by: session.user.id,
+        updated_at: new Date()
       }
     })
 

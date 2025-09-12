@@ -37,15 +37,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Get patient data with appointment history
-    const patient = await prisma.patient.findUnique({
+    const patient = await prisma.patients.findUnique({
       where: { id: patientId },
       include: {
         appointments: {
-          orderBy: { startTime: 'desc' },
+          orderBy: { start_time: 'desc' },
           take: 50, // Last 50 appointments for analysis
         },
-        communicationLogs: {
-          orderBy: { createdAt: 'desc' },
+        communication_logs: {
+          orderBy: { created_at: 'desc' },
           take: 20, // Recent communications
         },
       },

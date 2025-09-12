@@ -72,9 +72,9 @@ async function getOverviewData(startDate: Date, endDate: Date) {
   // Buscar dados atuais usando campos que existem no schema
   const [totalPatients, totalAppointments] = await Promise.all([
     // Total de pacientes
-    prisma.patient.count({
+    prisma.patients.count({
       where: {
-        createdAt: {
+        created_at: {
           gte: startDate,
           lte: endDate
         }
@@ -82,9 +82,9 @@ async function getOverviewData(startDate: Date, endDate: Date) {
     }),
     
     // Total de consultas usando startTime ao invés de date
-    prisma.appointment.count({
+    prisma.appointments.count({
       where: {
-        startTime: {
+        start_time: {
           gte: startDate,
           lte: endDate
         }
@@ -97,20 +97,20 @@ async function getOverviewData(startDate: Date, endDate: Date) {
   const previousPeriodEnd = startDate
 
   const [previousPatients, previousAppointments] = await Promise.all([
-    prisma.patient.count({
+    prisma.patients.count({
       where: {
-        createdAt: {
+        created_at: {
           gte: previousPeriodStart,
-          lt: previousPeriodEnd
+          lte: previousPeriodEnd
         }
       }
     }),
     
-    prisma.appointment.count({
+    prisma.appointments.count({
       where: {
-        startTime: {
+        start_time: {
           gte: previousPeriodStart,
-          lt: previousPeriodEnd
+          lte: previousPeriodEnd
         }
       }
     })
@@ -148,10 +148,10 @@ async function getOverviewData(startDate: Date, endDate: Date) {
 
 async function getChartData(startDate: Date, endDate: Date, days: number) {
   // Buscar consultas por status usando campos disponíveis
-  const appointments = await prisma.appointment.groupBy({
+  const appointments = await prisma.appointments.groupBy({
     by: ['status'],
     where: {
-      startTime: {
+      start_time: {
         gte: startDate,
         lte: endDate
       }
@@ -168,9 +168,9 @@ async function getChartData(startDate: Date, endDate: Date, days: number) {
     const dayStart = startOfDay(date)
     const dayEnd = endOfDay(date)
     
-    const count = await prisma.appointment.count({
+    const count = await prisma.appointments.count({
       where: {
-        startTime: {
+        start_time: {
           gte: dayStart,
           lte: dayEnd
         }
@@ -202,18 +202,18 @@ async function getRealTimeData() {
   const todayEnd = endOfDay(today)
 
   const [todayAppointments, todayPatients] = await Promise.all([
-    prisma.appointment.count({
+    prisma.appointments.count({
       where: {
-        startTime: {
+        start_time: {
           gte: todayStart,
           lte: todayEnd
         }
       }
     }),
     
-    prisma.patient.count({
+    prisma.patients.count({
       where: {
-        createdAt: {
+        created_at: {
           gte: todayStart,
           lte: todayEnd
         }

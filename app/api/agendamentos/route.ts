@@ -42,65 +42,65 @@ export async function GET(request: NextRequest) {
     }
 
     // Count total appointments
-    const totalAppointments = await prisma.appointment.count({ where });
+    const totalAppointments = await prisma.appointments.count({ where });
 
     // Fetch appointments with related data
-    const appointments = await prisma.appointment.findMany({
+    const appointments = await prisma.appointments.findMany({
       where,
       skip,
       take: limit,
       include: {
-        patient: {
+        patients: {
           select: {
             id: true,
             name: true,
             phone: true,
             email: true,
-            whatsappConsent: true
+            whatsapp_consent: true
           }
         },
-        therapist: {
+        users: {
           select: {
             id: true,
             name: true,
             email: true
           }
         },
-        soapNotes: {
-          orderBy: { createdAt: 'desc' },
+        soap_notes: {
+          orderBy: { created_at: 'desc' },
           take: 1
         }
       },
       orderBy: [
-        { startTime: 'asc' }
+        { start_time: 'asc' }
       ]
     });
 
     // Calculate additional metrics
     const enrichedAppointments = appointments.map(appointment => {
-      const duration = Math.round((appointment.endTime.getTime() - appointment.startTime.getTime()) / (1000 * 60)); // duration in minutes
+      const duration = Math.round((appointment.end_time.getTime() - appointment.start_time.getTime()) / (1000 * 60)); // duration in minutes
       
       return {
         id: appointment.id,
-        patientId: appointment.patientId,
-        therapistId: appointment.therapistId,
-        startTime: appointment.startTime,
-        endTime: appointment.endTime,
+        patientId: appointment.patient_id,
+        therapistId: appointment.therapist_id,
+        startTime: appointment.start_time,
+        endTime: appointment.end_time,
         type: appointment.type,
         status: appointment.status,
         value: appointment.value,
-        paymentStatus: appointment.paymentStatus,
+        paymentStatus: appointment.payment_status,
         observations: appointment.observations,
-        seriesId: appointment.seriesId,
-        sessionNumber: appointment.sessionNumber,
-        totalSessions: appointment.totalSessions,
+        seriesId: appointment.series_id,
+        sessionNumber: appointment.session_number,
+        totalSessions: appointment.total_sessions,
         duration,
         
         // Related data
-        patient: appointment.patient,
-        therapist: appointment.therapist,
-        hasSoapNotes: appointment.soapNotes.length > 0,
-        latestSoapNote: appointment.soapNotes[0] || null
+        patient: appointment.patients,
+        therapist: appointment.users,
+        hasSoapNotes: appointment.soap_notes.length > 0,
+        latestSoapNote: appointment.soap_notes[0] || null
       };
     });
 
@@ -170,7 +170,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if patient exists
-    const patient = await prisma.patient.findUnique({
+    const patient = await prisma.patients.findUnique({
       where: { id: patientId }
     });
 
@@ -182,7 +182,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if therapist exists
-    const therapist = await prisma.user.findUnique({
+    const therapist = await prisma.users.findUnique({
       where: { id: therapistId }
     });
 
@@ -194,27 +194,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for conflicting appointments
-    const conflictingAppointment = await prisma.appointment.findFirst({
+    const conflictingAppointment = await prisma.appointments.findFirst({
       where: {
-        therapistId,
+        therapist_id: therapistId,
         status: { not: 'Cancelado' },
         OR: [
           {
-            startTime: {
+            start_time: {
               gte: new Date(startTime),
               lt: new Date(endTime)
             }
           },
           {
-            endTime: {
+            end_time: {
               gt: new Date(startTime),
               lte: new Date(endTime)
             }
           },
           {
             AND: [
-              { startTime: { lte: new Date(startTime) } },
-              { endTime: { gte: new Date(endTime) } }
+              { start_time: { lte: new Date(startTime) } },
+              { end_time: { gte: new Date(endTime) } }
             ]
           }
         ]
@@ -229,31 +229,32 @@ export async function POST(request: NextRequest) {
     }
 
     // Create new appointment
-    const newAppointment = await prisma.appointment.create({
+    const newAppointment = await prisma.appointments.create({
       data: {
-        patientId,
-        therapistId,
-        startTime: new Date(startTime),
-        endTime: new Date(endTime),
+        id: crypto.randomUUID(),
+        patient_id: patientId,
+        therapist_id: therapistId,
+        start_time: new Date(startTime),
+        end_time: new Date(endTime),
         type,
         status: 'Agendado',
         value: value ? parseFloat(value) : null,
         observations: observations?.trim() || null,
-        seriesId: seriesId || null,
-        sessionNumber: sessionNumber ? parseInt(sessionNumber) : null,
-        totalSessions: totalSessions ? parseInt(totalSessions) : null
+        series_id: seriesId || null,
+        session_number: sessionNumber ? parseInt(sessionNumber) : null,
+        total_sessions: totalSessions ? parseInt(totalSessions) : null
       },
       include: {
-        patient: {
+        patients: {
           select: {
             id: true,
             name: true,
             phone: true,
             email: true,
-            whatsappConsent: true
+            whatsapp_consent: true
           }
         },
-        therapist: {
+        users: {
           select: {
             id: true,
             name: true,
@@ -264,9 +265,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Update patient's last visit
-    await prisma.patient.update({
+    await prisma.patients.update({
       where: { id: patientId },
-      data: { lastVisit: new Date(startTime) }
+      data: { last_visit: new Date(startTime) }
     });
 
     return NextResponse.json({

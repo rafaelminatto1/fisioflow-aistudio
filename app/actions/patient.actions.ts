@@ -98,27 +98,27 @@ export async function getPatientAssessments(patientId: string) {
       throw new Error('Paciente não encontrado');
     }
 
-    const assessments = await prisma.assessmentResult.findMany({
+    const assessments = await prisma.assessment_results.findMany({
       where: {
-        patientId: patientId,
-        patient: {
+        patient_id: patientId,
+        patients: {
           // userId: session.user.id
         }
       },
       include: {
-        assessment: {
+        standardized_assessments: {
           select: {
             id: true,
             name: true,
             description: true,
             category: true,
             type: true,
-            scoringRules: true
+            scoring_rules: true
           }
         }
       },
       orderBy: {
-        evaluatedAt: 'desc'
+        evaluated_at: 'desc'
       }
     });
 
@@ -163,14 +163,12 @@ export async function updatePatient(patientId: string, data: Partial<Patient>) {
         email: data.email,
         phone: data.phone,
         cpf: data.cpf,
-        birthDate: data.birthDate,
-        gender: data.gender,
+        birth_date: data.birthDate,
         address: data.address,
-        emergencyContact: data.emergencyContact,
-        medicalAlerts: data.medicalAlerts,
-        consentGiven: data.consentGiven,
-        consentDate: data.consentDate,
-        updatedAt: new Date()
+        emergency_contact: data.emergencyContact,
+        medical_alerts: data.medicalAlerts,
+        consent_given: data.consentGiven,
+        updated_at: new Date()
       }
     });
 
@@ -210,14 +208,14 @@ export async function deletePatient(patientId: string) {
     }
 
     // Verificar se há consultas agendadas futuras
-    const futureAppointments = await prisma.appointment.count({
+    const futureAppointments = await prisma.appointments.count({
       where: {
-        patientId: patientId,
-        scheduledFor: {
+        patient_id: patientId,
+        start_time: {
           gte: new Date()
         },
         status: {
-          in: ['SCHEDULED', 'CONFIRMED']
+          in: ['Agendado', 'Realizado']
         }
       }
     });
@@ -267,37 +265,37 @@ export async function getPatientStats(patientId: string) {
     }
 
     const [totalAppointments, completedAppointments, soapNotesCount, assessmentsCount] = await Promise.all([
-      prisma.appointment.count({
+      prisma.appointments.count({
         where: {
-          patientId: patientId,
-          patient: {
+          patient_id: patientId,
+          patients: {
             // userId: session.user.id
           }
         }
       }),
-      prisma.appointment.count({
+      prisma.appointments.count({
         where: {
-          patientId: patientId,
-          status: 'COMPLETED',
-          patient: {
+          patient_id: patientId,
+          status: 'Concluido',
+          patients: {
             // userId: session.user.id
           }
         }
       }),
-      prisma.soapNote.count({
+      prisma.soap_notes.count({
         where: {
-          appointment: {
-            patientId: patientId,
-            patient: {
+          appointments: {
+            patient_id: patientId,
+            patients: {
               // userId: session.user.id
             }
           }
         }
       }),
-      prisma.assessmentResult.count({
+      prisma.assessment_results.count({
         where: {
-          patientId: patientId,
-          patient: {
+          patient_id: patientId,
+          patients: {
             // userId: session.user.id
           }
         }

@@ -16,21 +16,21 @@ export async function GET(request: NextRequest) {
       totalTherapists,
       totalExercises
     ] = await Promise.all([
-      prisma.patient.count({ where: { status: 'Active' } }),
-      prisma.appointment.count(),
-      prisma.user.count({ where: { role: 'Fisioterapeuta' } }),
-      prisma.exercise.count({ where: { status: 'approved' } })
+      prisma.patients.count({ where: { status: 'Active' } }),
+      prisma.appointments.count(),
+      prisma.users.count({ where: { role: 'Fisioterapeuta' } }),
+      prisma.exercises.count({ where: { status: 'approved' } })
     ]);
 
     // Get period-specific metrics
-    const periodAppointments = await prisma.appointment.findMany({
+    const periodAppointments = await prisma.appointments.findMany({
       where: {
-        startTime: {
+        start_time: {
           gte: startDate
         }
       },
       include: {
-        patient: {
+        patients: {
           select: { name: true }
         }
       }
@@ -38,18 +38,18 @@ export async function GET(request: NextRequest) {
 
     // Calculate revenue
     const totalRevenue = periodAppointments
-      .filter(app => app.value && app.paymentStatus === 'paid')
+      .filter(app => app.value && app.payment_status === 'paid')
       .reduce((sum, app) => sum + Number(app.value), 0);
 
     // Get financial transactions
-    const transactions = await prisma.financialTransaction.findMany({
+    const transactions = await prisma.financial_transactions.findMany({
       where: {
         date: {
           gte: startDate
         }
       },
       include: {
-        patient: {
+        patients: {
           select: { name: true }
         }
       },
@@ -83,37 +83,37 @@ export async function GET(request: NextRequest) {
       previousAppointments,
       previousRevenue
     ] = await Promise.all([
-      prisma.patient.count({
+      prisma.patients.count({
         where: {
-          createdAt: {
+          created_at: {
             gte: previousPeriodStart,
             lt: startDate
           }
         }
       }),
-      prisma.appointment.count({
+      prisma.appointments.count({
         where: {
-          startTime: {
+          start_time: {
             gte: previousPeriodStart,
             lt: startDate
           }
         }
       }),
-      prisma.appointment.findMany({
+      prisma.appointments.findMany({
         where: {
-          startTime: {
+          start_time: {
             gte: previousPeriodStart,
             lt: startDate
           },
-          paymentStatus: 'paid'
+          payment_status: 'paid'
         },
         select: { value: true }
       }).then(apps => apps.reduce((sum, app) => sum + Number(app.value || 0), 0))
     ]);
 
-    const currentPatients = await prisma.patient.count({
+    const currentPatients = await prisma.patients.count({
       where: {
-        createdAt: {
+        created_at: {
           gte: startDate
         }
       }
@@ -129,30 +129,24 @@ export async function GET(request: NextRequest) {
     const revenueGrowth = previousRevenue === 0 ? 100 :
       ((totalRevenue - previousRevenue) / previousRevenue) * 100;
 
-    // Recent activities
-    const recentAppointments = await prisma.appointment.findMany({
-      take: 10,
-      orderBy: { createdAt: 'desc' },
-      include: {
-        patient: {
-          select: { name: true }
-        },
-        therapist: {
-          select: { name: true }
+    // Get recent activities
+    const recentActivities = await Promise.all([
+      prisma.appointments.findMany({
+        take: 5,
+        orderBy: { created_at: 'desc' },
+        include: {
+          patients: { select: { name: true } },
+          users: { select: { name: true } }
         }
-      }
-    });
+      }),
+      prisma.patients.findMany({
+        take: 5,
+        orderBy: { created_at: 'desc' },
+        select: { id: true, name: true, created_at: true }
+      })
+    ]);
 
-    const recentPatients = await prisma.patient.findMany({
-      take: 5,
-      orderBy: { createdAt: 'desc' },
-      select: {
-        id: true,
-        name: true,
-        phone: true,
-        createdAt: true
-      }
-    });
+    const [recentAppointments, recentPatients] = recentActivities;
 
     // Daily revenue chart data (last 30 days)
     const dailyRevenue = [];
@@ -164,13 +158,13 @@ export async function GET(request: NextRequest) {
       const nextDate = new Date(date);
       nextDate.setDate(nextDate.getDate() + 1);
 
-      const dayAppointments = await prisma.appointment.findMany({
+      const dayAppointments = await prisma.appointments.findMany({
         where: {
-          startTime: {
+          start_time: {
             gte: date,
             lt: nextDate
           },
-          paymentStatus: 'paid'
+          payment_status: 'paid'
         },
         select: { value: true }
       });
@@ -185,10 +179,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Payment method distribution
-    const paymentMethods = await prisma.appointment.groupBy({
-      by: ['paymentStatus'],
+    const paymentMethods = await prisma.appointments.groupBy({
+      by: ['payment_status'],
       where: {
-        startTime: {
+        start_time: {
           gte: startDate
         },
         value: {
@@ -196,7 +190,7 @@ export async function GET(request: NextRequest) {
         }
       },
       _count: {
-        paymentStatus: true
+        payment_status: true
       },
       _sum: {
         value: true
@@ -238,18 +232,18 @@ export async function GET(request: NextRequest) {
         expenses,
         netProfit: income - expenses,
         paymentMethods: paymentMethods.map(pm => ({
-          method: pm.paymentStatus,
-          count: pm._count.paymentStatus,
+          method: pm.payment_status,
+          count: pm._count.payment_status,
           total: Number(pm._sum.value || 0)
         }))
       },
 
       charts: {
         dailyRevenue,
-        appointmentTypes: await prisma.appointment.groupBy({
+        appointmentTypes: await prisma.appointments.groupBy({
           by: ['type'],
           where: {
-            startTime: {
+            start_time: {
               gte: startDate
             }
           },
@@ -262,11 +256,11 @@ export async function GET(request: NextRequest) {
       recent: {
         appointments: recentAppointments.map(app => ({
           id: app.id,
-          patientName: app.patient.name,
-          therapistName: app.therapist.name,
+          patientName: app.patients.name,
+          therapistName: app.users.name,
           type: app.type,
           status: app.status,
-          startTime: app.startTime,
+          startTime: app.start_time,
           value: app.value
         })),
         patients: recentPatients

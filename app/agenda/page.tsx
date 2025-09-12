@@ -119,7 +119,7 @@ export default function AgendaPage() {
       <Sidebar />
       
       <div className="lg:pl-64">
-        <Header />
+        <Header title="Agenda" />
         
         <main className="p-6">
           {/* Header */}

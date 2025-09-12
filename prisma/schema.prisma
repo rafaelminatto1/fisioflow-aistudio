@@ -253,10 +253,10 @@ model exercises {
   id                           String                         @id
   name                         String
   description                  String?
-  category                     String
+  category                     String?
   subcategory                  String?
   body_parts                   String[]
-  difficulty                   Int                            @db.SmallInt
+  difficulty                   String?
   equipment                    String[]
   instructions                 String[]
   video_url                    String?
@@ -267,9 +267,53 @@ model exercises {
   modifications                Json?
   status                       ExerciseStatus                 @default(pending_approval)
   author_id                    String?
+  therapeutic_goals            String?
+  ai_categorized               Boolean                        @default(false)
+  ai_confidence                Float?
+  ai_categorized_at            DateTime?
   created_at                   DateTime                       @default(now())
   updated_at                   DateTime
+  exercise_approvals           exercise_approvals[]
+  exercise_media               exercise_media[]
   treatment_protocol_exercises treatment_protocol_exercises[]
+
+  @@index([category])
+  @@index([ai_categorized])
+  @@index([status])
+}
+
+model exercise_approvals {
+  id           String                @id
+  exercise_id  String
+  status       ExerciseApprovalStatus @default(pending)
+  ai_analysis  String?
+  reviewer_id  String?
+  submitted_by String
+  submitted_at DateTime              @default(now())
+  reviewed_at  DateTime?
+  comments     String?
+  metadata     Json?
+  exercises    exercises             @relation(fields: [exercise_id], references: [id], onDelete: Cascade)
+  reviewer     users?                @relation(fields: [reviewer_id], references: [id])
+
+  @@index([exercise_id])
+  @@index([status])
+  @@index([submitted_at])
+}
+
+model exercise_media {
+  id          String    @id
+  exercise_id String
+  type        MediaType
+  url         String
+  filename    String?
+  quality     String?
+  is_primary  Boolean   @default(false)
+  created_at  DateTime  @default(now())
+  exercises   exercises @relation(fields: [exercise_id], references: [id], onDelete: Cascade)
+
+  @@index([exercise_id])
+  @@index([type])
 }
 
 model financial_transactions {
@@ -400,6 +444,7 @@ model patients {
   payments               payments[]
   receipts               receipts[]
   whatsapp_logs          whatsapp_logs[]
+  telemedicine_sessions  telemedicine_sessions[]
 }
 
 model payments {
@@ -568,11 +613,16 @@ model users {
   custom_metrics         custom_metrics[]
   event_registrations    event_registrations[]
   events                 events[]
+  exercise_approvals     exercise_approvals[]
   financial_transactions financial_transactions[]
   inventory_logs         inventory_logs[]
   professional_payouts   professional_payouts[]
   receipts               receipts[]
   session_metrics        session_metrics[]
+  telemedicine_therapist telemedicine_sessions[] @relation("TelemedicineTherapist")
+  telemedicine_participants telemedicine_participants[] @relation("TelemedicineParticipant")
+  telemedicine_chat_messages telemedicine_chat_messages[] @relation("TelemedicineChatSender")
+  telemedicine_device_tests telemedicine_device_tests[] @relation("TelemedicineDeviceTest")
 }
 
 model whatsapp_logs {
@@ -790,4 +840,180 @@ enum Role {
 enum WhatsAppConsent {
   opt_in
   opt_out
+}
+
+enum ExerciseApprovalStatus {
+  pending
+  approved
+  rejected
+  needs_revision
+}
+
+enum MediaType {
+  image
+  video
+  thumbnail
+  document
+}
+
+model telemedicine_sessions {
+  id                  String                      @id
+  patient_id          String
+  therapist_id        String
+  session_type        TelemedicineSessionType
+  status              TelemedicineSessionStatus   @default(scheduled)
+  scheduled_start     DateTime
+  actual_start        DateTime?
+  actual_end          DateTime?
+  duration_minutes    Int
+  room_id             String                      @unique
+  notes               String?
+  session_notes       String?
+  patient_feedback    String?
+  technical_issues    String[]
+  recording_url       String?
+  connection_quality  ConnectionQuality?
+  requires_recording  Boolean                     @default(false)
+  emergency_session   Boolean                     @default(false)
+  created_at          DateTime                    @default(now())
+  updated_at          DateTime
+  patient             patients                    @relation(fields: [patient_id], references: [id], onDelete: Cascade)
+  therapist           users                       @relation("TelemedicineTherapist", fields: [therapist_id], references: [id], onDelete: Cascade)
+  participants        telemedicine_participants[]
+  chat_messages       telemedicine_chat_messages[]
+  session_recordings  telemedicine_recordings[]
+
+  @@index([patient_id])
+  @@index([therapist_id])
+  @@index([scheduled_start])
+  @@index([status])
+}
+
+model telemedicine_participants {
+  id          String                  @id
+  session_id  String
+  user_id     String
+  user_type   TelemedicineUserType
+  joined_at   DateTime                @default(now())
+  left_at     DateTime?
+  device_info Json?
+  session     telemedicine_sessions   @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  user        users                   @relation("TelemedicineParticipant", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id])
+  @@index([user_id])
+}
+
+model telemedicine_chat_messages {
+  id          String                @id
+  session_id  String
+  sender_id   String
+  sender_type TelemedicineUserType
+  message     String
+  message_type MessageType          @default(text)
+  metadata    Json?
+  sent_at     DateTime              @default(now())
+  read_at     DateTime?
+  session     telemedicine_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade)
+  sender      users                 @relation("TelemedicineChatSender", fields: [sender_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id, sent_at])
+  @@index([sender_id])
+}
+
+model telemedicine_recordings {
+  id              String                @id
+  session_id      String
+  recording_url   String
+  duration_seconds Int
+  file_size_bytes BigInt?
+  recording_type  RecordingType         @default(full_session)
+  started_at      DateTime
+  ended_at        DateTime
+  processed_at    DateTime?
+  status          RecordingStatus       @default(processing)
+  metadata        Json?
+  created_at      DateTime              @default(now())
+  session         telemedicine_sessions @relation(fields: [session_id], references: [id], onDelete: Cascade)
+
+  @@index([session_id])
+  @@index([status])
+}
+
+model telemedicine_device_tests {
+  id              String   @id
+  user_id         String
+  test_type       TestType
+  camera_working  Boolean?
+  mic_working     Boolean?
+  speakers_working Boolean?
+  bandwidth_mbps  Float?
+  latency_ms      Int?
+  browser_info    Json?
+  test_results    Json?
+  tested_at       DateTime @default(now())
+  user            users    @relation("TelemedicineDeviceTest", fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([user_id, tested_at])
+}
+
+enum TelemedicineSessionType {
+  consultation
+  follow_up
+  exercise_guidance
+  assessment
+  emergency
+}
+
+enum TelemedicineSessionStatus {
+  scheduled
+  starting
+  active
+  paused
+  completed
+  cancelled
+  no_show
+  technical_failure
+}
+
+enum TelemedicineUserType {
+  patient
+  therapist
+  observer
+}
+
+enum ConnectionQuality {
+  excellent
+  good
+  fair
+  poor
+}
+
+enum MessageType {
+  text
+  image
+  file
+  system
+  exercise_share
+  screen_share
+}
+
+enum RecordingType {
+  full_session
+  screen_only
+  audio_only
+  highlights
+}
+
+enum RecordingStatus {
+  processing
+  completed
+  failed
+  archived
+}
+
+enum TestType {
+  pre_session
+  troubleshooting
+  routine_check
 }

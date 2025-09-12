@@ -32,22 +32,20 @@ export async function POST(request: NextRequest) {
     }
 
     // Get patient information
-    const patient = await prisma.patient.findUnique({
+    const patient = await prisma.patients.findUnique({
       where: { id: patientId },
       include: {
         appointments: {
-          orderBy: { startTime: 'desc' },
+          orderBy: { start_time: 'desc' },
           take: 10,
           include: {
-            soapNotes: true,
+            soap_notes: true,
           },
         },
-        assessmentResults: {
-          orderBy: { evaluatedAt: 'desc' },
+        assessment_results: {
+          orderBy: { evaluated_at: 'desc' },
           take: 5,
-          include: {
-            assessment: true,
-          },
+
         },
       },
     });
@@ -60,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Find matching pathology and protocols
-    const pathology = await prisma.pathology.findFirst({
+    const pathology = await prisma.pathologies.findFirst({
       where: {
         name: {
           contains: pathologyName,
@@ -68,12 +66,12 @@ export async function POST(request: NextRequest) {
         },
       },
       include: {
-        protocols: {
-          where: { isActive: true },
+        treatment_protocols: {
+          where: { is_active: true },
           include: {
-            exercises: {
+            treatment_protocol_exercises: {
               include: {
-                exercise: true,
+                exercises: true,
               },
               orderBy: { order: 'asc' },
             },
@@ -82,7 +80,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    if (!pathology || pathology.protocols.length === 0) {
+    if (!pathology || pathology.treatment_protocols.length === 0) {
       // If no specific protocols found, use AI to generate suggestions
       const aiSuggestion = await generateAISuggestion({
         pathologyName,
@@ -100,7 +98,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Analyze and rank existing protocols
-    const suggestions = await analyzeProtocols(pathology.protocols, {
+    const suggestions = await analyzeProtocols(pathology.treatment_protocols, {
       patient,
       symptoms: symptoms || [],
       patientAge,
@@ -141,13 +139,13 @@ async function analyzeProtocols(protocols: any[], context: any): Promise<Protoco
       confidenceScore,
       reasoning,
       adaptations,
-      exercises: protocol.exercises?.map((pe: any) => ({
-        exerciseId: pe.exercise.id,
-        exerciseName: pe.exercise.name,
+      exercises: protocol.treatment_protocol_exercises?.map((pe: any) => ({
+        exerciseId: pe.exercises.id,
+        exerciseName: pe.exercises.name,
         order: pe.order,
         sets: pe.sets,
         repetitions: pe.repetitions,
-        modifications: generateExerciseModifications(pe.exercise, context),
+        modifications: generateExerciseModifications(pe.exercises, context),
       })) || [],
     };
 
@@ -166,9 +164,9 @@ function calculateConfidenceScore(protocol: any, context: any): number {
     const age = context.patientAge;
     
     // Adjust score based on age appropriateness of exercises
-    if (protocol.exercises) {
-      const ageAppropriateExercises = protocol.exercises.filter((pe: any) => {
-        const exercise = pe.exercise;
+    if (protocol.treatment_protocol_exercises) {
+      const ageAppropriateExercises = protocol.treatment_protocol_exercises.filter((pe: any) => {
+        const exercise = pe.exercises;
         
         // Young adults (18-35): higher intensity exercises
         if (age >= 18 && age <= 35 && exercise.difficulty >= 3) {
@@ -188,7 +186,7 @@ function calculateConfidenceScore(protocol: any, context: any): number {
         return false;
       });
       
-      const ageScore = ageAppropriateExercises.length / protocol.exercises.length;
+      const ageScore = ageAppropriateExercises.length / protocol.treatment_protocol_exercises.length;
       score += (ageScore - 0.5) * 0.2; // Adjust by up to ±0.1
     }
   }

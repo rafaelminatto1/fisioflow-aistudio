@@ -11,7 +11,7 @@ const updateAppointmentSchema = z.object({
   type: z.enum(['Avaliacao', 'Sessao', 'Retorno', 'Pilates', 'Urgente', 'Teleconsulta']).optional(),
   status: z.enum(['Agendado', 'Realizado', 'Concluido', 'Cancelado', 'Faltou']).optional(),
   value: z.number().positive().optional().nullable(),
-  payment_status: z.enum(['pending', 'confirmed', 'failed']).optional(),
+  payment_status: z.enum(['paid', 'pending']).optional(),
   observations: z.string().optional().nullable(),
   series_id: z.string().optional().nullable(),
   session_number: z.number().int().positive().optional().nullable(),
@@ -45,28 +45,15 @@ export async function GET(
           },
         },
         soap_notes: {
-          orderBy: { created_at: 'desc' },
-          include: {
-            users: {
-              select: {
-                name: true,
-              },
-            },
-          },
+          orderBy: { created_at: 'desc' }
         },
         assessment_results: {
-          orderBy: { created_at: 'desc' },
+          orderBy: { evaluated_at: 'desc' },
           include: {
-            assessment: {
+            standardized_assessments: {
               select: {
                 name: true,
                 category: true,
-                type: true,
-              },
-            },
-            users: {
-              select: {
-                name: true,
               },
             },
           },

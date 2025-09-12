@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
     const end = new Date(endDate);
 
     // Get all transactions in the period
-    const transactions = await prisma.financialTransaction.findMany({
+    const transactions = await prisma.financial_transactions.findMany({
       where: {
         date: {
           gte: start,
