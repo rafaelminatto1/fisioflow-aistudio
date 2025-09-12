@@ -7,13 +7,13 @@ async function main() {
   console.log('🌱 Iniciando seed do banco de dados...');
 
   // Limpar dados existentes
-  await prisma.communicationLog.deleteMany();
-  await prisma.soapNote.deleteMany();
-  await prisma.appointment.deleteMany();
-  await prisma.metricResult.deleteMany();
-  await prisma.painPoint.deleteMany();
-  await prisma.patient.deleteMany();
-  await prisma.user.deleteMany();
+  await prisma.communication_logs.deleteMany();
+  await prisma.soap_notes.deleteMany();
+  await prisma.appointments.deleteMany();
+  await prisma.metric_results.deleteMany();
+  await prisma.pain_points.deleteMany();
+  await prisma.patients.deleteMany();
+  await prisma.users.deleteMany();
 
   console.log('🗑️ Dados existentes removidos');
 
@@ -24,47 +24,51 @@ async function main() {
   const therapistPassword = await bcrypt.hash('fisio123', 12);
   const educatorPassword = await bcrypt.hash('edu123', 12);
 
-  const admin = await prisma.user.create({
+  const admin = await prisma.users.create({
     data: {
       id: 'user_admin',
       name: 'Admin FisioFlow',
       email: 'admin@fisioflow.com',
-      passwordHash: adminPassword,
+      password_hash: adminPassword,
       role: 'Admin',
-      avatarUrl: 'https://i.pravatar.cc/150?u=admin',
+      avatar_url: 'https://i.pravatar.cc/150?u=admin',
+      updated_at: new Date(),
     },
   });
 
-  const therapist1 = await prisma.user.create({
+  const therapist1 = await prisma.users.create({
     data: {
       id: 'user_therapist_1',
       name: 'Dr. Roberto Silva',
       email: 'roberto@fisioflow.com',
-      passwordHash: therapistPassword,
+      password_hash: therapistPassword,
       role: 'Fisioterapeuta',
-      avatarUrl: 'https://i.pravatar.cc/150?u=roberto',
+      avatar_url: 'https://i.pravatar.cc/150?u=roberto',
+      updated_at: new Date(),
     },
   });
 
-  const therapist2 = await prisma.user.create({
+  const therapist2 = await prisma.users.create({
     data: {
       id: 'user_therapist_2',
       name: 'Dra. Camila Santos',
       email: 'camila@fisioflow.com',
-      passwordHash: therapistPassword,
+      password_hash: therapistPassword,
       role: 'Fisioterapeuta',
-      avatarUrl: 'https://i.pravatar.cc/150?u=camila',
+      avatar_url: 'https://i.pravatar.cc/150?u=camila',
+      updated_at: new Date(),
     },
   });
 
-  const educator = await prisma.user.create({
+  const educator = await prisma.users.create({
     data: {
       id: 'user_educator_1',
       name: 'Dra. Juliana Costa',
       email: 'juliana@fisioflow.com',
-      passwordHash: educatorPassword,
+      password_hash: educatorPassword,
       role: 'EducadorFisico',
-      avatarUrl: 'https://i.pravatar.cc/150?u=juliana',
+      avatar_url: 'https://i.pravatar.cc/150?u=juliana',
+      updated_at: new Date(),
     },
   });
 
@@ -75,56 +79,58 @@ async function main() {
   console.log(`   Educador Físico: ${educator.email} / edu123`);
 
   // Criar pacientes de exemplo
-  const patient1 = await prisma.patient.create({
+  const patient1 = await prisma.patients.create({
     data: {
       id: 'patient_1',
       name: 'Ana Beatriz Costa',
       cpf: '123.456.789-01',
       email: 'ana.costa@example.com',
       phone: '(11) 98765-4321',
-      birthDate: new Date('1988-05-15'),
+      birth_date: new Date('1988-05-15'),
       address: {
         street: 'Rua das Flores, 123',
         city: 'São Paulo',
         state: 'SP',
         zip: '01234-567',
       },
-      emergencyContact: {
+      emergency_contact: {
         name: 'Carlos Costa',
         phone: '(11) 91234-5678',
       },
       status: 'Active',
-      lastVisit: new Date('2024-07-03'),
+      last_visit: new Date('2024-07-03'),
       allergies: 'Alergia a Dipirona',
-      medicalAlerts:
+      medical_alerts:
         'Paciente com histórico de hipertensão. Monitorar pressão arterial.',
-      consentGiven: true,
-      whatsappConsent: 'opt_in',
+      consent_given: true,
+      whatsapp_consent: 'opt_in',
+      updated_at: new Date(),
     },
   });
 
-  const patient2 = await prisma.patient.create({
+  const patient2 = await prisma.patients.create({
     data: {
       id: 'patient_2',
       name: 'Bruno Gomes',
       cpf: '234.567.890-12',
       email: 'bruno.gomes@example.com',
       phone: '(21) 99876-5432',
-      birthDate: new Date('1995-11-22'),
+      birth_date: new Date('1995-11-22'),
       address: {
         street: 'Avenida Copacabana, 456',
         city: 'Rio de Janeiro',
         state: 'RJ',
         zip: '22345-678',
       },
-      emergencyContact: {
+      emergency_contact: {
         name: 'Fernanda Lima',
         phone: '(21) 98765-4321',
       },
       status: 'Active',
-      lastVisit: new Date('2024-07-01'),
-      consentGiven: true,
-      whatsappConsent: 'opt_in',
+      last_visit: new Date('2024-07-01'),
+      consent_given: true,
+      whatsapp_consent: 'opt_in',
+      updated_at: new Date(),
     },
   });
 
@@ -137,13 +143,13 @@ async function main() {
   tomorrow.setDate(tomorrow.getDate() + 1);
   tomorrow.setHours(9, 0, 0, 0);
 
-  const appointment1 = await prisma.appointment.create({
+  const appointment1 = await prisma.appointments.create({
     data: {
       id: 'appointment_1',
-      patientId: patient1.id,
-      therapistId: therapist1.id,
-      startTime: tomorrow,
-      endTime: new Date(tomorrow.getTime() + 60 * 60 * 1000), // 1 hora depois
+      patient_id: patient1.id,
+      therapist_id: therapist1.id,
+      start_time: tomorrow,
+      end_time: new Date(tomorrow.getTime() + 60 * 60 * 1000), // 1 hora depois
       type: 'Sessao',
       status: 'Agendado',
       value: 120.0,
@@ -155,13 +161,13 @@ async function main() {
   nextWeek.setDate(nextWeek.getDate() + 7);
   nextWeek.setHours(14, 0, 0, 0);
 
-  const appointment2 = await prisma.appointment.create({
+  const appointment2 = await prisma.appointments.create({
     data: {
       id: 'appointment_2',
-      patientId: patient2.id,
-      therapistId: therapist2.id,
-      startTime: nextWeek,
-      endTime: new Date(nextWeek.getTime() + 60 * 60 * 1000),
+      patient_id: patient2.id,
+      therapist_id: therapist2.id,
+      start_time: nextWeek,
+      end_time: new Date(nextWeek.getTime() + 60 * 60 * 1000),
       type: 'Avaliacao',
       status: 'Agendado',
       value: 150.0,
@@ -178,46 +184,50 @@ async function main() {
   );
 
   // Criar pontos de dor de exemplo
-  await prisma.painPoint.create({
+  await prisma.pain_points.create({
     data: {
-      patientId: patient1.id,
-      xPosition: 58.5,
-      yPosition: 68.0,
+      id: 'pain_point_001',
+      patient_id: patient1.id,
+      x_position: 58.5,
+      y_position: 68.0,
       intensity: 7,
       type: 'aguda',
       description: 'Dor ao subir escadas, bem na frente do joelho',
-      bodyPart: 'front',
+      body_part: 'front',
     },
   });
 
-  await prisma.painPoint.create({
+  await prisma.pain_points.create({
     data: {
-      patientId: patient1.id,
-      xPosition: 35.0,
-      yPosition: 35.0,
+      id: 'pain_point_002',
+      patient_id: patient1.id,
+      x_position: 35.0,
+      y_position: 35.0,
       intensity: 4,
       type: 'cansaco',
       description: 'Cansaço no ombro esquerdo no final do dia',
-      bodyPart: 'back',
+      body_part: 'back',
     },
   });
 
   console.log('🎯 Pontos de dor criados para Ana Beatriz');
 
   // Criar métricas de exemplo
-  await prisma.metricResult.create({
+  await prisma.metric_results.create({
     data: {
-      patientId: patient1.id,
-      metricName: 'ADM de Flexão de Joelho D',
+      id: 'metric_result_001',
+      patient_id: patient1.id,
+      metric_name: 'ADM de Flexão de Joelho D',
       value: 85.0,
       unit: 'graus',
     },
   });
 
-  await prisma.metricResult.create({
+  await prisma.metric_results.create({
     data: {
-      patientId: patient1.id,
-      metricName: 'Perimetria Coxa D (15cm)',
+      id: 'metric_result_002',
+      patient_id: patient1.id,
+      metric_name: 'Perimetria Coxa D (15cm)',
       value: 42.5,
       unit: 'cm',
     },
@@ -237,66 +247,75 @@ async function seedClinicalData() {
   console.log('🧬 Começando a popular com dados clínicos...');
 
   // Limpar dados clínicos existentes para evitar duplicatas
-  await prisma.treatmentProtocolExercise.deleteMany();
-  await prisma.treatmentProtocol.deleteMany();
-  await prisma.pathology.deleteMany();
-  await prisma.exercise.deleteMany();
-  await prisma.standardizedAssessment.deleteMany();
+  await prisma.treatment_protocol_exercises.deleteMany();
+  await prisma.treatment_protocols.deleteMany();
+  await prisma.pathologies.deleteMany();
+  await prisma.exercises.deleteMany();
+  await prisma.standardized_assessments.deleteMany();
 
   console.log('🗑️ Dados clínicos antigos removidos.');
 
   // --- PATOLOGIAS ---
-  const lombalgia = await prisma.pathology.create({
+  const lombalgia = await prisma.pathologies.create({
     data: {
+      id: 'pathology_lombalgia_001',
       name: 'Lombalgia Mecânica Comum',
       description: 'Dor na região lombar, geralmente causada por sobrecarga, má postura ou fraqueza muscular.',
       symptoms: ['Dor na parte inferior das costas', 'Rigidez', 'Espasmos musculares'],
       causes: ['Má postura', 'Levantamento de peso incorreto', 'Sedentarismo', 'Fraqueza do core'],
-      icd10Code: 'M54.5',
+      icd10_code: 'M54.5',
+      updated_at: new Date(),
     },
   });
 
-  const hernaDisco = await prisma.pathology.create({
+  const hernaDisco = await prisma.pathologies.create({
     data: {
+      id: 'pathology_hernia_disco_002',
       name: 'Hérnia de Disco Lombar',
       description: 'Deslocamento do disco intervertebral, que pode comprimir nervos e causar dor irradiada.',
       symptoms: ['Dor lombar', 'Dor ciática (irradia para a perna)', 'Formigamento ou fraqueza na perna'],
       causes: ['Desgaste do disco (envelhecimento)', 'Trauma ou lesão', 'Fatores genéticos'],
-      icd10Code: 'M51.2',
+      icd10_code: 'M51.2',
+      updated_at: new Date(),
     },
   });
 
-  const entorseTornozelo = await prisma.pathology.create({
+  const entorseTornozelo = await prisma.pathologies.create({
     data: {
+      id: 'pathology_entorse_tornozelo_003',
       name: 'Entorse de Tornozelo (Grau II)',
       description: 'Lesão dos ligamentos do tornozelo devido a um movimento de inversão forçada.',
       symptoms: ['Dor intensa no tornozelo', 'Inchaço (edema)', 'Equimose (roxo)', 'Dificuldade para andar'],
       causes: ['Pisada em falso', 'Trauma esportivo', 'Instabilidade crônica do tornozelo'],
-      icd10Code: 'S93.4',
+      icd10_code: 'S93.4',
+      updated_at: new Date(),
     },
   });
 
-  const manguitoRotador = await prisma.pathology.create({
+  const manguitoRotador = await prisma.pathologies.create({
     data: {
+      id: 'pathology_manguito_rotador_004',
       name: 'Síndrome do Manguito Rotador',
       description: 'Dor e fraqueza no ombro, geralmente por inflamação ou lesão nos tendões do manguito rotador.',
       symptoms: ['Dor no ombro (piora à noite ou com movimentos de elevação)', 'Fraqueza no braço', 'Arco doloroso'],
       causes: ['Movimentos repetitivos acima da cabeça', 'Envelhecimento', 'Trauma'],
-      icd10Code: 'M75.1',
+      icd10_code: 'M75.1',
+      updated_at: new Date(),
     },
   });
 
   console.log('🩹 Patologias criadas:', { lombalgia, hernaDisco, entorseTornozelo, manguitoRotador });
 
   // --- EXERCÍCIOS ---
-  const ponteGluteos = await prisma.exercise.create({
+  const ponteGluteos = await prisma.exercises.create({
     data: {
+      id: 'exercise_ponte_gluteos_001',
       name: 'Ponte de Glúteos',
       description: 'Fortalece os músculos dos glúteos e isquiotibiais, estabilizando a pelve e a coluna lombar.',
       category: 'Fortalecimento',
       subcategory: 'Core e Quadril',
-      bodyParts: ['Glúteos', 'Isquiotibiais', 'Core'],
-      difficulty: 1,
+      body_parts: ['Glúteos', 'Isquiotibiais', 'Core'],
+      difficulty: '1',
       equipment: ['Nenhum'],
       instructions: [
         'Deite-se de costas com os joelhos dobrados e os pés apoiados no chão, na largura do quadril.',
@@ -307,17 +326,19 @@ async function seedClinicalData() {
       indications: ['Lombalgia', 'Fraqueza de glúteos', 'Instabilidade pélvica'],
       contraindications: ['Fase aguda de lesão lombar grave', 'Dor intensa durante o movimento'],
       status: 'approved',
+      updated_at: new Date(),
     },
   });
 
-  const pranchaFrontal = await prisma.exercise.create({
+  const pranchaFrontal = await prisma.exercises.create({
     data: {
+      id: 'exercise_prancha_frontal_002',
       name: 'Prancha Frontal Isométrica',
       description: 'Exercício isométrico para fortalecimento profundo do core (abdominais, lombar, oblíquos).',
       category: 'Fortalecimento',
       subcategory: 'Core',
-      bodyParts: ['Abdômen', 'Lombar', 'Ombros'],
-      difficulty: 2,
+      body_parts: ['Abdômen', 'Lombar', 'Ombros'],
+      difficulty: '2',
       equipment: ['Nenhum'],
       instructions: [
         'Apoie os antebraços e as pontas dos pés no chão.',
@@ -328,17 +349,19 @@ async function seedClinicalData() {
       indications: ['Fortalecimento do core', 'Prevenção de lombalgia', 'Melhora da postura'],
       contraindications: ['Hipertensão não controlada', 'Hérnia abdominal', 'Dor no ombro'],
       status: 'approved',
+      updated_at: new Date(),
     },
   });
 
-  const alongamentoGatoCamelo = await prisma.exercise.create({
+  const alongamentoGatoCamelo = await prisma.exercises.create({
     data: {
+      id: 'exercise_gato_camelo_003',
       name: 'Alongamento Gato-Camelo',
       description: 'Mobiliza a coluna torácica e lombar, aliviando a rigidez e melhorando a flexibilidade.',
       category: 'Mobilidade',
       subcategory: 'Coluna',
-      bodyParts: ['Coluna Torácica', 'Coluna Lombar'],
-      difficulty: 1,
+      body_parts: ['Coluna Torácica', 'Coluna Lombar'],
+      difficulty: '1',
       equipment: ['Nenhum'],
       instructions: [
         'Fique na posição de quatro apoios (mãos e joelhos no chão).',
@@ -349,17 +372,19 @@ async function seedClinicalData() {
       indications: ['Rigidez na coluna', 'Lombalgia crônica', 'Melhora da consciência corporal'],
       contraindications: ['Instabilidade vertebral', 'Dor aguda intensa'],
       status: 'approved',
+      updated_at: new Date(),
     },
   });
 
-  const dorsiflexaoTornozelo = await prisma.exercise.create({
+  const dorsiflexaoTornozelo = await prisma.exercises.create({
     data: {
+      id: 'exercise_dorsiflexao_004',
       name: 'Dorsiflexão Ativa do Tornozelo',
       description: 'Melhora a amplitude de movimento do tornozelo, essencial para a marcha e agachamento.',
       category: 'Mobilidade',
       subcategory: 'Tornozelo e Pé',
-      bodyParts: ['Tornozelo'],
-      difficulty: 1,
+      body_parts: ['Tornozelo'],
+      difficulty: '1',
       equipment: ['Nenhum'],
       instructions: [
         'Sente-se com a perna esticada.',
@@ -370,17 +395,19 @@ async function seedClinicalData() {
       indications: ['Pós-entorse de tornozelo', 'Rigidez articular', 'Prevenção de lesões'],
       contraindications: ['Fratura não consolidada', 'Dor aguda'],
       status: 'approved',
+      updated_at: new Date(),
     },
   });
 
-  const rotacaoExternaOmbro = await prisma.exercise.create({
+  const rotacaoExternaOmbro = await prisma.exercises.create({
     data: {
+      id: 'exercise_rotacao_externa_005',
       name: 'Rotação Externa de Ombro com Faixa Elástica',
       description: 'Fortalece os músculos do manguito rotador, melhorando a estabilidade do ombro.',
       category: 'Fortalecimento',
       subcategory: 'Ombro',
-      bodyParts: ['Ombro', 'Manguito Rotador'],
-      difficulty: 2,
+      body_parts: ['Ombro', 'Manguito Rotador'],
+      difficulty: '2',
       equipment: ['Faixa Elástica'],
       instructions: [
         'Prenda uma faixa elástica na altura do cotovelo.',
@@ -391,110 +418,77 @@ async function seedClinicalData() {
       indications: ['Síndrome do Manguito Rotador', 'Instabilidade de ombro', 'Prevenção de lesões em arremessadores'],
       contraindications: ['Fase aguda de bursite', 'Lesão grave que necessite de cirurgia'],
       status: 'approved',
+      updated_at: new Date(),
     },
   });
 
   console.log('🤸 Exercícios criados:', { ponteGluteos, pranchaFrontal, alongamentoGatoCamelo, dorsiflexaoTornozelo, rotacaoExternaOmbro });
 
   // --- PROTOCOLOS DE TRATAMENTO ---
-  const protocoloLombalgia = await prisma.treatmentProtocol.create({
+  const protocoloLombalgia = await prisma.treatment_protocols.create({
     data: {
+      id: 'protocol_lombalgia_001',
       name: 'Protocolo para Lombalgia Mecânica - Fase Inicial',
       description: 'Foco em alívio da dor, melhora da mobilidade e ativação do core.',
-      pathologyId: lombalgia.id,
+      pathology_id: lombalgia.id,
       frequency: '3x por semana',
       duration: '4 semanas',
       objectives: ['Reduzir a dor e o espasmo muscular', 'Restaurar a mobilidade da coluna lombar', 'Iniciar o fortalecimento do core'],
       contraindications: ['Sinais de alerta (red flags) como perda de força súbita ou alterações de esfíncteres.'],
-      createdBy: 'user_admin',
-      exercises: {
-        create: [
-          {
-            exerciseId: alongamentoGatoCamelo.id,
-            order: 1,
-            sets: 2,
-            repetitions: '15',
-            restTime: '30s',
-            notes: 'Focar na respiração e no movimento suave.',
-          },
-          {
-            exerciseId: ponteGluteos.id,
-            order: 2,
-            sets: 3,
-            repetitions: '12',
-            restTime: '45s',
-            notes: 'Contrair bem os glúteos no topo do movimento.',
-          },
-          {
-            exerciseId: pranchaFrontal.id,
-            order: 3,
-            sets: 3,
-            repetitions: '30s',
-            restTime: '60s',
-            progressionCriteria: 'Aumentar 5s a cada semana se não houver dor.',
-          },
-        ],
-      },
+      created_by: 'user_admin',
+      updated_at: new Date(),
     },
   });
 
-  const protocoloManguito = await prisma.treatmentProtocol.create({
+  const protocoloManguito = await prisma.treatment_protocols.create({
     data: {
+      id: 'protocol_manguito_002',
       name: 'Protocolo para Síndrome do Manguito Rotador - Fase Intermediária',
       description: 'Foco no fortalecimento dos estabilizadores do ombro e melhora da função.',
-      pathologyId: manguitoRotador.id,
+      pathology_id: manguitoRotador.id,
       frequency: '2-3x por semana',
       duration: '6 semanas',
       objectives: ['Fortalecer manguito rotador e músculos da escápula', 'Melhorar o arco de movimento sem dor', 'Melhorar a função do ombro em atividades diárias'],
       contraindications: ['Dor acima de 5/10 durante os exercícios', 'Sinais de lesão aguda'],
-      createdBy: 'user_admin',
-      exercises: {
-        create: [
-          {
-            exerciseId: rotacaoExternaOmbro.id,
-            order: 1,
-            sets: 3,
-            repetitions: '15',
-            restTime: '45s',
-            resistanceLevel: 'Faixa elástica leve (amarela)',
-            progressionCriteria: 'Progredir para faixa média (verde) quando completar as 3 séries sem dificuldade.',
-          },
-        ],
-      },
+      created_by: 'user_admin',
+      updated_at: new Date(),
     },
   });
 
   console.log('📝 Protocolos de tratamento criados:', { protocoloLombalgia, protocoloManguito });
 
   // --- AVALIAÇÕES PADRONIZADAS ---
-  const nps = await prisma.standardizedAssessment.create({
+  const nps = await prisma.standardized_assessments.create({
     data: {
+      id: 'assessment_nps_001',
       name: 'Net Promoter Score (NPS)',
       description: 'Mede a lealdade e a satisfação do cliente com uma única pergunta.',
       type: 'QUESTIONNAIRE',
       category: 'Satisfação do Cliente',
-      jsonFields: {
+      json_fields: {
         question: 'Em uma escala de 0 a 10, o quanto você recomendaria nossa clínica a um amigo ou familiar?',
         scale: { min: 0, max: 10 },
         labels: { min: 'Nada provável', max: 'Extremamente provável' },
       },
-      scoringRules: {
+      scoring_rules: {
         promoters: { min: 9, max: 10 },
         passives: { min: 7, max: 8 },
         detractors: { min: 0, max: 6 },
         formula: '((promoters - detractors) / total_responses) * 100',
       },
-      isActive: true,
+      is_active: true,
+      updated_at: new Date(),
     },
   });
 
-  const rolandMorris = await prisma.standardizedAssessment.create({
+  const rolandMorris = await prisma.standardized_assessments.create({
     data: {
+      id: 'assessment_roland_morris_002',
       name: 'Questionário de Incapacidade Roland-Morris',
       description: 'Avalia a incapacidade física causada pela dor lombar.',
       type: 'QUESTIONNAIRE',
       category: 'Incapacidade Funcional',
-      jsonFields: {
+      json_fields: {
         instructions: 'Por favor, marque as frases que descrevem sua condição hoje.',
         questions: [
           'Fico em casa a maior parte do tempo por causa das minhas costas.',
@@ -523,7 +517,7 @@ async function seedClinicalData() {
           'Fico na cama mais do que o habitual por causa das minhas costas.',
         ],
       },
-      scoringRules: {
+      scoring_rules: {
         description: 'A pontuação é o número total de itens marcados. Varia de 0 (sem incapacidade) a 24 (incapacidade máxima).',
         interpretation: {
           '0-4': 'Incapacidade mínima',
@@ -532,7 +526,8 @@ async function seedClinicalData() {
           '20-24': 'Incapacidade muito grave',
         },
       },
-      isActive: true,
+      is_active: true,
+      updated_at: new Date(),
     },
   });
 

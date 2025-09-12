@@ -105,7 +105,7 @@ export const authOptions = {
     maxAge: 8 * 60 * 60, // 8 horas
   },
   callbacks: {
-    async jwt({ token, user }: any) {
+    async jwt({ token, user }: { token: any; user?: ExtendedUser }) {
       try {
         if (user) {
           edgeLogger.debug('JWT callback - adding user data to token');
@@ -119,7 +119,7 @@ export const authOptions = {
         throw error;
       }
     },
-    async session({ session, token }: any) {
+    async session({ session, token }: { session: any; token: any }) {
       try {
         if (session.user) {
           edgeLogger.debug('Session callback - building session', { userId: token.id });
@@ -149,7 +149,7 @@ export { handler as GET, handler as POST };
 export const { auth, signIn, signOut } = handler;
 
 // Legacy export for compatibility with older NextAuth versions
-export const getServerSession = (req?: any, res?: any) => {
+export const getServerSession = () => {
   return auth();
 };
 

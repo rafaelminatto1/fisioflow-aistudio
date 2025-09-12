@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Clock, User, DollarSign, FileText, AlertCircle } from 'lucide-react';
 import { useToast } from '@/contexts/ToastContext';
-import { Patient, Therapist } from '@/types';
+import { Patient, Therapist, AppointmentStatus, AppointmentType, Appointment, PatientSummary, RecurrenceRule } from '@/types';
 import PatientSearchInput from './agenda/PatientSearchInput';
 import ValidationAlert from './agenda/ValidationAlert';
 import { format } from 'date-fns';

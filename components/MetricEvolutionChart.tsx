@@ -25,10 +25,10 @@ const MetricEvolutionChart: React.FC<MetricEvolutionChartProps> = ({
 }) => {
   const chartData = useMemo(() => {
     return notes
-      .filter(note => note.metricResults?.some(r => r.metricId === metric.id))
+      .filter(note => note.metric_results?.some(r => r.metricId === metric.id))
       .map(note => ({
         date: note.date,
-        value: note.metricResults!.find(r => r.metricId === metric.id)!.value,
+        value: note.metric_results!.find(r => r.metricId === metric.id)!.value,
       }))
       .sort(
         (a, b) =>

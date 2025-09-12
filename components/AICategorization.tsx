@@ -50,7 +50,15 @@ interface ExerciseApproval {
 
 export default function AICategorization() {
   const [approvals, setApprovals] = useState<ExerciseApproval[]>([]);
-  const [stats, setStats] = useState<any>(null);
+  interface AIStats {
+    totalProcessed: number;
+    pendingApprovals: number;
+    approvedCount: number;
+    rejectedCount: number;
+    averageConfidence: number;
+  }
+
+  const [stats, setStats] = useState<AIStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedApproval, setSelectedApproval] = useState<ExerciseApproval | null>(null);
   const [reviewComments, setReviewComments] = useState('');

@@ -1,0 +1,457 @@
+app/api/financial/receipts/templates/route.ts(13,36): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(63,20): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(75,35): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(119,43): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(135,20): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(156,35): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(189,43): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(205,42): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(220,18): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/receipts/templates/route.ts(311,23): error TS2339: Property 'receiptTemplate' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+app/api/financial/reports/export/route.ts(61,14): error TS2551: Property 'financialTransaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'financial_transactions'?
+app/api/financial/reports/export/route.ts(74,14): error TS2551: Property 'financialTransaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'financial_transactions'?
+app/api/financial/reports/export/route.ts(82,14): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+app/api/financial/reports/export/route.ts(93,46): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(93,51): error TS7006: Parameter 't' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(94,47): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(94,52): error TS7006: Parameter 't' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(97,58): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(129,28): error TS7006: Parameter 't' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(135,28): error TS7006: Parameter 't' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(141,32): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(219,35): error TS7006: Parameter 't' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(244,35): error TS7006: Parameter 't' implicitly has an 'any' type.
+app/api/financial/reports/export/route.ts(268,39): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(56,38): error TS2551: Property 'financialTransaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'financial_transactions'?
+app/api/financial/reports/route.ts(75,38): error TS2551: Property 'financialTransaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'financial_transactions'?
+app/api/financial/reports/route.ts(87,42): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+app/api/financial/reports/route.ts(101,38): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/financial/reports/route.ts(112,46): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(112,51): error TS7006: Parameter 'transaction' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(114,50): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(114,55): error TS7006: Parameter 'transaction' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(124,56): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(124,61): error TS7006: Parameter 'transaction' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(135,7): error TS2698: Spread types may only be created from object types.
+app/api/financial/reports/route.ts(136,39): error TS18046: 'item' is of type 'unknown'.
+app/api/financial/reports/route.ts(140,47): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(140,52): error TS7006: Parameter 'transaction' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(142,52): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(142,57): error TS7006: Parameter 'transaction' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(153,7): error TS2698: Spread types may only be created from object types.
+app/api/financial/reports/route.ts(154,40): error TS18046: 'item' is of type 'unknown'.
+app/api/financial/reports/route.ts(159,58): error TS7006: Parameter 'apt' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(160,58): error TS7006: Parameter 'apt' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(161,55): error TS7006: Parameter 'apt' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(165,44): error TS7006: Parameter 'patient' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(167,17): error TS7006: Parameter 'apt' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(168,16): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(168,19): error TS7006: Parameter 'b' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(190,48): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(190,53): error TS7006: Parameter 'transaction' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(200,49): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(200,54): error TS7006: Parameter 'transaction' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(223,57): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(223,62): error TS7006: Parameter 'appointment' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(235,49): error TS7006: Parameter 'acc' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(235,54): error TS7006: Parameter 'patient' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(242,17): error TS7006: Parameter 'apt' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(243,16): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(243,19): error TS7006: Parameter 'b' implicitly has an 'any' type.
+app/api/financial/reports/route.ts(256,63): error TS18046: 'a' is of type 'unknown'.
+app/api/financial/reports/route.ts(256,85): error TS18046: 'b' is of type 'unknown'.
+app/api/financial/reports/route.ts(263,64): error TS18046: 'a' is of type 'unknown'.
+app/api/financial/reports/route.ts(263,86): error TS18046: 'b' is of type 'unknown'.
+app/api/financial/reports/route.ts(274,68): error TS18046: 'a' is of type 'unknown'.
+app/api/financial/reports/route.ts(274,90): error TS18046: 'b' is of type 'unknown'.
+app/api/financial/reports/route.ts(280,64): error TS18046: 'a' is of type 'unknown'.
+app/api/financial/reports/route.ts(280,86): error TS18046: 'b' is of type 'unknown'.
+app/api/financial/transactions/route.ts(67,14): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(89,14): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(159,36): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/financial/transactions/route.ts(176,40): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+app/api/financial/transactions/route.ts(192,38): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(262,46): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(291,38): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(338,46): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(353,18): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(378,12): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(388,12): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(398,12): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/financial/transactions/route.ts(407,12): error TS2551: Property 'transaction' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean '$transaction'?
+app/api/inventory/items/route.ts(24,38): error TS2551: Property 'inventoryItem' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_items'?
+app/api/inventory/items/route.ts(38,14): error TS2551: Property 'inventoryItem' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_items'?
+app/api/inventory/items/route.ts(55,14): error TS2551: Property 'inventoryItem' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_items'?
+app/api/inventory/items/route.ts(99,31): error TS2551: Property 'inventoryItem' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_items'?
+app/api/inventory/items/route.ts(158,38): error TS2551: Property 'inventoryItem' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_items'?
+app/api/inventory/items/route.ts(185,18): error TS2551: Property 'inventoryItem' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_items'?
+app/api/inventory/movements/route.ts(32,14): error TS2551: Property 'inventoryLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_logs'?
+app/api/inventory/movements/route.ts(46,14): error TS2551: Property 'inventoryLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_logs'?
+app/api/inventory/movements/route.ts(83,33): error TS2551: Property 'inventoryItem' does not exist on type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">'. Did you mean 'inventory_items'?
+app/api/inventory/movements/route.ts(100,40): error TS2551: Property 'inventoryItem' does not exist on type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">'. Did you mean 'inventory_items'?
+app/api/inventory/movements/route.ts(106,37): error TS2551: Property 'inventoryLog' does not exist on type 'Omit<PrismaClient<PrismaClientOptions, never, DefaultArgs>, "$connect" | "$disconnect" | "$on" | "$transaction" | "$extends">'. Did you mean 'inventory_logs'?
+app/api/inventory/movements/route.ts(165,18): error TS2551: Property 'inventoryLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'inventory_logs'?
+app/api/marketing/automations/route.ts(22,38): error TS2551: Property 'marketingAutomation' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'marketing_automations'?
+app/api/marketing/automations/route.ts(67,37): error TS2551: Property 'marketingAutomation' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'marketing_automations'?
+app/api/marketing/automations/route.ts(120,44): error TS2551: Property 'marketingAutomation' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'marketing_automations'?
+app/api/marketing/automations/route.ts(147,18): error TS2551: Property 'marketingAutomation' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'marketing_automations'?
+app/api/pacientes/[id]/route.ts(20,34): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/pacientes/[id]/route.ts(57,42): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/pacientes/[id]/route.ts(109,41): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/pacientes/[id]/route.ts(145,42): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/pacientes/[id]/route.ts(154,45): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+app/api/pacientes/[id]/route.ts(171,18): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/pacientes/route.ts(68,35): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/pacientes/route.ts(145,37): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/patients/[id]/route.ts(45,13): error TS2353: Object literal may only specify known properties, and 'payments' does not exist in type 'appointmentsInclude<DefaultArgs>'.
+app/api/patients/[id]/route.ts(59,13): error TS2353: Object literal may only specify known properties, and 'appointments' does not exist in type 'paymentsInclude<DefaultArgs>'.
+app/api/patients/[id]/route.ts(94,31): error TS2339: Property 'payments' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(95,15): error TS7006: Parameter 'p' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(96,16): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(96,21): error TS7006: Parameter 'p' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(98,37): error TS2339: Property 'payments' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(99,15): error TS7006: Parameter 'p' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(100,16): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(100,21): error TS7006: Parameter 'p' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(102,37): error TS2339: Property 'appointments' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(103,15): error TS7006: Parameter 'apt' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(104,14): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(104,17): error TS7006: Parameter 'b' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(106,37): error TS2339: Property 'appointments' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(107,15): error TS7006: Parameter 'apt' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(108,14): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(108,17): error TS7006: Parameter 'b' implicitly has an 'any' type.
+app/api/patients/[id]/route.ts(130,29): error TS2339: Property 'appointments' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(131,25): error TS2339: Property 'payments' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(132,39): error TS2339: Property 'financial_transactions' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(133,35): error TS2339: Property 'communication_logs' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(135,36): error TS2339: Property '_count' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(136,32): error TS2339: Property '_count' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(137,38): error TS2339: Property '_count' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/[id]/route.ts(196,7): error TS2322: Type '{ updated_at: Date; status?: "Active" | "Inactive" | "Discharged" | undefined; name?: string | undefined; cpf?: string | undefined; email?: string | null | undefined; phone?: string | null | undefined; ... 6 more ...; whatsapp_consent?: "opt_in" | ... 1 more ... | undefined; }' is not assignable to type '(Without<patientsUpdateInput, patientsUncheckedUpdateInput> & patientsUncheckedUpdateInput) | (Without<...> & patientsUpdateInput)'.
+  Type '{ updated_at: Date; status?: "Active" | "Inactive" | "Discharged" | undefined; name?: string | undefined; cpf?: string | undefined; email?: string | null | undefined; phone?: string | null | undefined; ... 6 more ...; whatsapp_consent?: "opt_in" | ... 1 more ... | undefined; }' is not assignable to type 'Without<patientsUncheckedUpdateInput, patientsUpdateInput> & patientsUpdateInput'.
+    Type '{ updated_at: Date; status?: "Active" | "Inactive" | "Discharged" | undefined; name?: string | undefined; cpf?: string | undefined; email?: string | null | undefined; phone?: string | null | undefined; ... 6 more ...; whatsapp_consent?: "opt_in" | ... 1 more ... | undefined; }' is not assignable to type 'patientsUpdateInput'.
+      Types of property 'address' are incompatible.
+        Type '{ number?: string | undefined; street?: string | undefined; city?: string | undefined; state?: string | undefined; complement?: string | undefined; neighborhood?: string | undefined; zipCode?: string | undefined; } | null | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+          Type 'null' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+app/api/patients/[id]/route.ts(213,43): error TS2339: Property '_count' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/patients/route.ts(185,9): error TS2322: Type '{ number?: string | undefined; street?: string | undefined; city?: string | undefined; state?: string | undefined; complement?: string | undefined; neighborhood?: string | undefined; zipCode?: string | undefined; } | null | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type 'null' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+app/api/patients/route.ts(186,9): error TS2322: Type '{ name?: string | undefined; phone?: string | undefined; relationship?: string | undefined; } | null | undefined' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+  Type 'null' is not assignable to type 'NullableJsonNullValueInput | InputJsonValue | undefined'.
+app/api/patients/route.ts(206,36): error TS2339: Property '_count' does not exist on type '{ status: PatientStatus; id: string; created_at: Date; updated_at: Date; name: string; cpf: string; email: string | null; phone: string | null; birth_date: Date | null; ... 6 more ...; whatsapp_consent: WhatsAppConsent; }'.
+app/api/payments/[id]/route.ts(29,34): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/[id]/route.ts(95,42): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/[id]/route.ts(107,41): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/[id]/route.ts(167,34): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/[id]/route.ts(179,18): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/route.ts(75,14): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/route.ts(86,14): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/route.ts(144,34): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/payments/route.ts(156,34): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/webhook/route.ts(68,30): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/webhook/route.ts(86,30): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/payments/webhook/route.ts(118,20): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/export/route.ts(84,35): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/export/route.ts(95,37): error TS7006: Parameter 'payment' implicitly has an 'any' type.
+app/api/reports/financial/export/route.ts(115,27): error TS7006: Parameter 'row' implicitly has an 'any' type.
+app/api/reports/financial/route.ts(84,14): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/route.ts(85,14): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/route.ts(88,14): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/route.ts(91,14): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/route.ts(95,14): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/route.ts(104,43): error TS2551: Property 'payment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'payments'?
+app/api/reports/financial/route.ts(125,38): error TS7006: Parameter 'item' implicitly has an 'any' type.
+app/api/reports/financial/route.ts(130,38): error TS7006: Parameter 'item' implicitly has an 'any' type.
+app/api/whatsapp/history/[patientId]/route.ts(19,34): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/whatsapp/history/[patientId]/route.ts(32,35): error TS2551: Property 'whatsappLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'whatsapp_logs'?
+app/api/whatsapp/notifications/route.ts(6,35): error TS2551: Property 'whatsappNotificationSettings' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'whatsapp_notification_settings'?
+app/api/whatsapp/notifications/route.ts(71,35): error TS2551: Property 'whatsappNotificationSettings' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'whatsapp_notification_settings'?
+app/api/whatsapp/send/route.ts(18,34): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+app/api/whatsapp/send/route.ts(77,20): error TS2551: Property 'whatsappLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'whatsapp_logs'?
+app/api/whatsapp/send/route.ts(95,35): error TS2551: Property 'whatsappLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'whatsapp_logs'?
+app/api/whatsapp/send/route.ts(118,20): error TS2551: Property 'whatsappLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'whatsapp_logs'?
+app/exercicios/page.tsx(37,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(46,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(55,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(64,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(73,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(82,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(91,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(100,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type 'Exercise'.
+app/exercicios/page.tsx(121,12): error TS7053: Element implicitly has an 'any' type because expression of type 'string' can't be used to index type '{ HIPS: string; KNEE: string; BACK: string; SHOULDER: string; LEG: string; WRIST: string; }'.
+  No index signature with a parameter of type 'string' was found on type '{ HIPS: string; KNEE: string; BACK: string; SHOULDER: string; LEG: string; WRIST: string; }'.
+app/exercicios/page.tsx(142,36): error TS2339: Property 'title' does not exist on type 'Exercise'.
+app/exercicios/page.tsx(278,57): error TS2339: Property 'isFavorite' does not exist on type 'Exercise'.
+app/exercicios/page.tsx(286,31): error TS2339: Property 'title' does not exist on type 'Exercise'.
+app/exercicios/page.tsx(292,108): error TS2551: Property 'bodyPart' does not exist on type 'Exercise'. Did you mean 'bodyParts'?
+app/exercicios/page.tsx(293,31): error TS2551: Property 'bodyPart' does not exist on type 'Exercise'. Did you mean 'bodyParts'?
+app/pacientes/[id]/avaliacao/page.tsx(196,30): error TS2551: Property 'savePainMapSession' does not exist on type 'PainMapService'. Did you mean 'getPainMapSession'?
+app/pacientes/[id]/page.tsx(54,38): error TS2322: Type '{ appointments: { type: AppointmentType; id: string; value: Decimal | null; created_at: Date; status: AppointmentStatus; start_time: Date; ... 7 more ...; total_sessions: number | null; }[]; } & { ...; }' is not assignable to type 'Patient'.
+app/pacientes/[id]/page.tsx(73,30): error TS2740: Type '{ appointments: { type: AppointmentType; id: string; value: Decimal | null; created_at: Date; status: AppointmentStatus; start_time: Date; ... 7 more ...; total_sessions: number | null; }[]; } & { ...; }' is missing the following properties from type 'Patient': birthDate, emergencyContact, lastVisit, registrationDate, and 3 more.
+app/pacientes/page.tsx(260,10): error TS2741: Property 'title' is missing in type '{}' but required in type 'HeaderProps'.
+app/pacientes/page.tsx(533,9): error TS2322: Type 'Patient | null' is not assignable to type 'Patient | null | undefined'.
+  Type 'Patient' is missing the following properties from type 'Patient': birthDate, emergencyContact, lastVisit, registrationDate, and 3 more.
+app/pacientes/page.tsx(543,11): error TS2322: Type 'Patient' is not assignable to type 'import("/Users/andretakeda/rafael/fisioflow-aistudio-1/types").Patient'.
+app/pacientes/page.tsx(547,31): error TS2345: Argument of type 'Patient' is not assignable to parameter of type 'SetStateAction<Patient | null>'.
+  Type 'Patient' is missing the following properties from type 'Patient': created_at, updated_at
+app/prescricoes/page.tsx(17,55): error TS7016: Could not find a declaration file for module 'react-beautiful-dnd'. '/Users/andretakeda/rafael/fisioflow-aistudio-1/node_modules/react-beautiful-dnd/dist/react-beautiful-dnd.cjs.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/react-beautiful-dnd` if it exists or add a new declaration (.d.ts) file containing `declare module 'react-beautiful-dnd';`
+app/prescricoes/page.tsx(169,25): error TS7006: Parameter 'provided' implicitly has an 'any' type.
+app/prescricoes/page.tsx(177,33): error TS7006: Parameter 'provided' implicitly has an 'any' type.
+app/prescricoes/page.tsx(177,43): error TS7006: Parameter 'snapshot' implicitly has an 'any' type.
+app/prescricoes/page.tsx(226,25): error TS7006: Parameter 'provided' implicitly has an 'any' type.
+components/agenda/AgendaClient.tsx(8,15): error TS2724: '"@prisma/client"' has no exported member named 'User'. Did you mean 'users'?
+components/agenda/AgendaClient.tsx(85,5): error TS2322: Type '{ id: any; patientId: any; therapistId: any; startTime: Date; endTime: Date; type: any; status: any; notes: any; isRecurring: any; seriesId: any; patient: { id: any; name: any; email: any; phone: any; }; therapist: { ...; }; }[]' is not assignable to type 'EnrichedAppointment[]'.
+  Type '{ id: any; patientId: any; therapistId: any; startTime: Date; endTime: Date; type: any; status: any; notes: any; isRecurring: any; seriesId: any; patient: { id: any; name: any; email: any; phone: any; }; therapist: { ...; }; }' is missing the following properties from type 'EnrichedAppointment': therapistColor, typeColor, patientPhone, patientName, and 4 more.
+components/agenda/AgendaClient.tsx(118,28): error TS2448: Block-scoped variable 'fetchAppointments' used before its declaration.
+components/agenda/AgendaClient.tsx(118,28): error TS2454: Variable 'fetchAppointments' is used before being assigned.
+components/agenda/AgendaClient.tsx(171,15): error TS2554: Expected 2 arguments, but got 1.
+components/agenda/AgendaClient.tsx(224,28): error TS2345: Argument of type 'null' is not assignable to parameter of type 'SetStateAction<EnrichedAppointment | undefined>'.
+components/agenda/AgendaClient.tsx(225,5): error TS2304: Cannot find name 'setIsFormModalOpen'.
+components/agenda/AgendaClient.tsx(240,9): error TS2322: Type '{ appointments: EnrichedAppointment[]; therapists: PrismaUser[]; patients: PatientSummary[]; currentDate: Date; viewType: CalendarViewType; ... 5 more ...; onRefresh: () => Promise<...>; }' is not assignable to type 'IntrinsicAttributes & CalendarViewProps'.
+  Property 'patients' does not exist on type 'IntrinsicAttributes & CalendarViewProps'.
+components/agenda/AgendaClient.tsx(263,13): error TS2322: Type '(appointmentId: string, deleteType: "single" | "series") => Promise<void>' is not assignable to type '(appointmentId: string, seriesId?: string | undefined) => void'.
+  Types of parameters 'deleteType' and 'seriesId' are incompatible.
+    Type 'string | undefined' is not assignable to type '"single" | "series"'.
+      Type 'undefined' is not assignable to type '"single" | "series"'.
+components/agenda/CalendarView.tsx(158,9): error TS2322: Type '{ id: string; name: string; color?: string | undefined; }[]' is not assignable to type 'Therapist[]'.
+  Property 'avatarUrl' is missing in type '{ id: string; name: string; color?: string | undefined; }' but required in type 'Therapist'.
+components/agenda/CalendarView.tsx(261,30): error TS2739: Type '{ appointment: EnrichedAppointment; }' is missing the following properties from type 'AppointmentCardProps': startHour, pixelsPerMinute, onClick
+components/agenda/PatientSearchInput.tsx(154,13): error TS2739: Type '{ id: string; name: string; phone: string; cpf: string; email: string; birthDate: string; lastVisit: string; }' is missing the following properties from type 'PatientSummary': status, avatarUrl, createdAt
+components/agenda/RecurrenceSelector.tsx(5,26): error TS2305: Module '"../../types"' has no exported member 'RecurrenceType'.
+components/agenda/RecurrenceSelector.tsx(27,9): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(78,28): error TS2339: Property 'type' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(79,51): error TS2353: Object literal may only specify known properties, and 'type' does not exist in type 'Partial<RecurrenceRule>'.
+components/agenda/RecurrenceSelector.tsx(101,30): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(102,53): error TS2353: Object literal may only specify known properties, and 'interval' does not exist in type 'Partial<RecurrenceRule>'.
+components/agenda/RecurrenceSelector.tsx(107,24): error TS2339: Property 'type' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(107,51): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(108,24): error TS2339: Property 'type' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(108,52): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(109,24): error TS2339: Property 'type' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(109,54): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(110,24): error TS2339: Property 'type' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(110,53): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(127,35): error TS2339: Property 'endDate' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(127,53): error TS2339: Property 'occurrences' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(128,54): error TS2353: Object literal may only specify known properties, and 'endDate' does not exist in type 'Partial<RecurrenceRule>'.
+components/agenda/RecurrenceSelector.tsx(143,36): error TS2339: Property 'endDate' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(147,40): error TS2353: Object literal may only specify known properties, and 'endDate' does not exist in type 'Partial<RecurrenceRule>'.
+components/agenda/RecurrenceSelector.tsx(155,24): error TS2339: Property 'endDate' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(158,34): error TS2339: Property 'endDate' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(161,42): error TS2353: Object literal may only specify known properties, and 'endDate' does not exist in type 'Partial<RecurrenceRule>'.
+components/agenda/RecurrenceSelector.tsx(175,36): error TS2339: Property 'occurrences' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(176,54): error TS2353: Object literal may only specify known properties, and 'occurrences' does not exist in type 'Partial<RecurrenceRule>'.
+components/agenda/RecurrenceSelector.tsx(183,24): error TS2339: Property 'occurrences' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(189,36): error TS2339: Property 'occurrences' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(190,59): error TS2353: Object literal may only specify known properties, and 'occurrences' does not exist in type 'Partial<RecurrenceRule>'.
+components/agenda/RecurrenceSelector.tsx(220,12): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(221,18): error TS2339: Property 'type' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(236,18): error TS2339: Property 'type' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(238,39): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(241,39): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(244,39): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(247,39): error TS2339: Property 'interval' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(252,12): error TS2339: Property 'endDate' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(253,33): error TS2339: Property 'endDate' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(254,19): error TS2339: Property 'occurrences' does not exist on type 'RecurrenceRule'.
+components/agenda/RecurrenceSelector.tsx(255,33): error TS2339: Property 'occurrences' does not exist on type 'RecurrenceRule'.
+components/agenda/TimeSlotGrid.tsx(236,34): error TS2339: Property 'specialization' does not exist on type 'Therapist'.
+components/agenda/TimeSlotGrid.tsx(299,30): error TS2739: Type '{ appointment: EnrichedAppointment; }' is missing the following properties from type 'AppointmentCardProps': startHour, pixelsPerMinute, onClick
+components/agenda/TimeSlotGrid.tsx(324,35): error TS2739: Type '{ appointment: EnrichedAppointment; }' is missing the following properties from type 'AppointmentCardProps': startHour, pixelsPerMinute, onClick
+components/AISettingsModal.tsx(5,10): error TS2614: Module '"@/services/notificationService"' has no exported member 'NotificationConfig'. Did you mean to use 'import NotificationConfig from "@/services/notificationService"' instead?
+components/AppointmentCalendar.tsx(331,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(props: CalendarProps<AppointmentEvent, object>): Calendar<AppointmentEvent, object>', gave the following error.
+    Type '{ localizer: DateLocalizer; events: AppointmentEvent[]; startAccessor: "start"; endAccessor: "end"; views: ("month" | "week" | "day")[]; view: View; ... 18 more ...; className: string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<Calendar<AppointmentEvent, object>> & Readonly<CalendarProps<...>>'.
+      Property 'onEventDrop' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<Calendar<AppointmentEvent, object>> & Readonly<CalendarProps<...>>'.
+  Overload 2 of 2, '(props: CalendarProps<AppointmentEvent, object>, context: any): Calendar<AppointmentEvent, object>', gave the following error.
+    Type '{ localizer: DateLocalizer; events: AppointmentEvent[]; startAccessor: "start"; endAccessor: "end"; views: ("month" | "week" | "day")[]; view: View; ... 18 more ...; className: string; }' is not assignable to type 'IntrinsicAttributes & IntrinsicClassAttributes<Calendar<AppointmentEvent, object>> & Readonly<CalendarProps<...>>'.
+      Property 'onEventDrop' does not exist on type 'IntrinsicAttributes & IntrinsicClassAttributes<Calendar<AppointmentEvent, object>> & Readonly<CalendarProps<...>>'.
+components/AppointmentFormModal.tsx(22,25): error TS2304: Cannot find name 'Appointment'.
+components/AppointmentFormModal.tsx(24,23): error TS2304: Cannot find name 'Appointment'.
+components/AppointmentFormModal.tsx(28,20): error TS2304: Cannot find name 'Appointment'.
+components/AppointmentFormModal.tsx(43,5): error TS2304: Cannot find name 'PatientSummary'.
+components/AppointmentFormModal.tsx(46,5): error TS2552: Cannot find name 'AppointmentType'. Did you mean 'appointmentType'?
+components/AppointmentFormModal.tsx(52,5): error TS2304: Cannot find name 'RecurrenceRule'.
+components/AppointmentFormModal.tsx(59,20): error TS2552: Cannot find name 'useRef'. Did you mean 'User'?
+components/AppointmentFormModal.tsx(61,20): error TS2304: Cannot find name 'useMemo'.
+components/AppointmentFormModal.tsx(66,5): error TS2304: Cannot find name 'useMemo'.
+components/AppointmentFormModal.tsx(95,14): error TS2304: Cannot find name 'PatientSummary'.
+components/AppointmentFormModal.tsx(108,28): error TS2304: Cannot find name 'AppointmentType'.
+components/AppointmentFormModal.tsx(187,32): error TS2304: Cannot find name 'AppointmentStatus'.
+components/AppointmentFormModal.tsx(202,9): error TS2554: Expected 2-4 arguments, but got 5.
+components/AppointmentFormModal.tsx(249,44): error TS2304: Cannot find name 'AppointmentStatus'.
+components/AppointmentFormModal.tsx(368,54): error TS2304: Cannot find name 'AppointmentType'.
+components/AppointmentFormModal.tsx(372,30): error TS2304: Cannot find name 'AppointmentType'.
+components/AppointmentFormModal.tsx(376,30): error TS2304: Cannot find name 'AppointmentType'.
+components/AppointmentFormModal.tsx(379,27): error TS2322: Type 'unknown' is not assignable to type 'Key | null | undefined'.
+components/AppointmentFormModal.tsx(379,38): error TS2322: Type 'unknown' is not assignable to type 'string | number | readonly string[] | undefined'.
+components/AppointmentFormModal.tsx(380,21): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+components/AppointmentFormModal.tsx(452,13): error TS2322: Type 'boolean | null' is not assignable to type 'boolean | undefined'.
+  Type 'null' is not assignable to type 'boolean | undefined'.
+components/AppointmentFormModal.tsx(459,14): error TS2304: Cannot find name 'Save'.
+components/AssessmentCard.tsx(5,10): error TS2305: Module '"@/types"' has no exported member 'AssessmentResult'.
+components/ClinicalSummary.tsx(3,20): error TS2305: Module '"@/types"' has no exported member 'AssessmentResult'.
+components/ClinicalSummary.tsx(15,69): error TS2339: Property 'createdAt' does not exist on type 'SoapNote'.
+components/ClinicalSummary.tsx(49,27): error TS2339: Property 'bodyMap' does not exist on type 'SoapNote'.
+components/ClinicalSummary.tsx(56,27): error TS18046: 'b' is of type 'unknown'.
+components/ClinicalSummary.tsx(56,31): error TS18046: 'a' is of type 'unknown'.
+components/ClinicalSummary.tsx(170,43): error TS18046: 'count' is of type 'unknown'.
+components/ClinicalSummary.tsx(170,60): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'number'.
+components/ClinicalSummary.tsx(173,71): error TS2322: Type 'unknown' is not assignable to type 'ReactNode'.
+components/CustomExerciseBuilder.tsx(11,26): error TS2307: Cannot find module '@/components/ui/checkbox' or its corresponding type declarations.
+components/CustomExerciseBuilder.tsx(578,37): error TS7006: Parameter 'checked' implicitly has an 'any' type.
+components/ExercisePrescriptionModal.tsx(59,24): error TS2345: Argument of type '(ExercisePrescription | { exercise: Exercise | null; exerciseId: string; sets: number; reps: number; duration?: number | undefined; rest?: number | undefined; notes?: string | undefined; progression?: "increase" | ... 2 more ... | undefined; })[]' is not assignable to parameter of type 'SetStateAction<ExercisePrescription[]>'.
+  Type '(ExercisePrescription | { exercise: Exercise | null; exerciseId: string; sets: number; reps: number; duration?: number | undefined; rest?: number | undefined; notes?: string | undefined; progression?: "increase" | ... 2 more ... | undefined; })[]' is not assignable to type 'ExercisePrescription[]'.
+    Type 'ExercisePrescription | { exercise: Exercise | null; exerciseId: string; sets: number; reps: number; duration?: number | undefined; rest?: number | undefined; notes?: string | undefined; progression?: "increase" | ... 2 more ... | undefined; }' is not assignable to type 'ExercisePrescription'.
+      Type '{ exercise: Exercise | null; exerciseId: string; sets: number; reps: number; duration?: number; rest?: number; notes?: string; progression?: "maintain" | "increase" | "decrease"; }' is not assignable to type 'ExercisePrescription'.
+        Types of property 'exercise' are incompatible.
+          Type 'Exercise | null' is not assignable to type 'Exercise | undefined'.
+            Type 'null' is not assignable to type 'Exercise | undefined'.
+components/MedicalRecordTabs.tsx(5,20): error TS2305: Module '"@/types"' has no exported member 'AssessmentResult'.
+components/MedicalRecordTabs.tsx(12,29): error TS2307: Cannot find module './AssessmentModal' or its corresponding type declarations.
+components/MedicalRecordTabs.tsx(92,20): error TS2339: Property 'createdAt' does not exist on type 'SoapNote'.
+components/MedicalRecordTabs.tsx(163,49): error TS2339: Property 'createdAt' does not exist on type 'SoapNote'.
+components/MedicalRecordTabs.tsx(284,18): error TS2739: Type '{ key: string; note: SoapNote; }' is missing the following properties from type 'SoapNoteCardProps': onEdit, onDelete
+components/MedicalRecordTabs.tsx(361,11): error TS2322: Type '() => void' is not assignable to type '(note: Omit<SoapNote, "id" | "patientId" | "therapist">) => Promise<void>'.
+  Type 'void' is not assignable to type 'Promise<void>'.
+components/MedicalTimeline.tsx(3,20): error TS2305: Module '"@/types"' has no exported member 'AssessmentResult'.
+components/MedicalTimeline.tsx(27,27): error TS2339: Property 'createdAt' does not exist on type 'SoapNote'.
+components/NoShowPredictionDashboard.tsx(234,55): error TS2339: Property 'date' does not exist on type 'Appointment'.
+components/NoShowPredictionDashboard.tsx(234,89): error TS2339: Property 'time' does not exist on type 'Appointment'.
+components/OptimizedExerciseSearch.tsx(10,26): error TS2307: Cannot find module '@/components/ui/checkbox' or its corresponding type declarations.
+components/OptimizedExerciseSearch.tsx(25,26): error TS7016: Could not find a declaration file for module 'lodash'. '/Users/andretakeda/rafael/fisioflow-aistudio-1/node_modules/lodash/lodash.js' implicitly has an 'any' type.
+  Try `npm i --save-dev @types/lodash` if it exists or add a new declaration (.d.ts) file containing `declare module 'lodash';`
+components/OptimizedExerciseSearch.tsx(251,35): error TS7006: Parameter 'checked' implicitly has an 'any' type.
+components/OptimizedExerciseSearch.tsx(260,35): error TS7006: Parameter 'checked' implicitly has an 'any' type.
+components/OptimizedExerciseSearch.tsx(280,35): error TS7006: Parameter 'checked' implicitly has an 'any' type.
+components/PatientDetailModal.tsx(255,36): error TS2339: Property 'description' does not exist on type 'Condition'.
+components/PatientDetailModal.tsx(256,80): error TS2339: Property 'description' does not exist on type 'Condition'.
+components/PatientDetailModal.tsx(259,72): error TS2339: Property 'diagnosedAt' does not exist on type 'Condition'.
+components/PatientDetailModal.tsx(275,34): error TS2339: Property 'description' does not exist on type 'Surgery'.
+components/PatientDetailModal.tsx(276,78): error TS2339: Property 'description' does not exist on type 'Surgery'.
+components/PatientDetailModal.tsx(360,33): error TS2339: Property 'value' does not exist on type 'TrackedMetric'.
+components/PatientDetailModal.tsx(363,65): error TS2339: Property 'lastMeasured' does not exist on type 'TrackedMetric'.
+components/PatientFormModal.tsx(149,71): error TS2345: Argument of type '{ birthDate: Date | undefined; registrationDate: string | Date; lastVisit: string | undefined; conditions: Condition[]; surgeries: Surgery[]; communicationLogs: CommunicationLog[]; ... 12 more ...; emergencyContact: { ...; }; }' is not assignable to parameter of type 'Partial<Patient>'.
+  Types of property 'birthDate' are incompatible.
+    Type 'Date | undefined' is not assignable to type 'string | undefined'.
+      Type 'Date' is not assignable to type 'string'.
+components/PatientFormModal.tsx(153,56): error TS2345: Argument of type '{ birthDate: Date | undefined; registrationDate: string | Date; lastVisit: string | undefined; conditions: Condition[]; surgeries: Surgery[]; communicationLogs: CommunicationLog[]; ... 12 more ...; emergencyContact: { ...; }; }' is not assignable to parameter of type 'Omit<Patient, "id" | "lastVisit">'.
+  Property 'avatarUrl' is missing in type '{ birthDate: Date | undefined; registrationDate: string | Date; lastVisit: string | undefined; conditions: Condition[]; surgeries: Surgery[]; communicationLogs: CommunicationLog[]; ... 12 more ...; emergencyContact: { ...; }; }' but required in type 'Omit<Patient, "id" | "lastVisit">'.
+components/PatientFormModal.tsx(173,11): error TS2698: Spread types may only be created from object types.
+components/PatientInfoCard.tsx(207,15): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.
+components/PatientInfoCard.tsx(209,19): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_out"' have no overlap.
+components/PatientInfoCard.tsx(213,16): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.
+components/PatientInfoCard.tsx(214,16): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_out"' have no overlap.
+components/SearchAnalyticsDashboard.tsx(319,58): error TS2339: Property 'toFixed' does not exist on type 'ValueType'.
+  Property 'toFixed' does not exist on type 'string'.
+components/TelemedicineVideoCall.tsx(22,3): error TS2305: Module '"lucide-react"' has no exported member 'Record'.
+components/WhatsAppMessageButton.tsx(35,9): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.
+components/WhatsAppMessageButton.tsx(71,27): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.
+lib/actions/appointment.actions.ts(59,20): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+lib/actions/appointment.actions.ts(68,20): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+lib/actions/appointment.actions.ts(94,18): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+lib/actions/appointment.actions.ts(117,18): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+lib/actions/patient.actions.ts(54,31): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+lib/actions/patient.actions.ts(98,18): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+lib/actions/soap.actions.ts(58,44): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+lib/actions/soap.actions.ts(70,18): error TS2551: Property 'soapNote' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'soap_notes'?
+lib/auth-backup.ts(70,35): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+lib/auth-no-redis.ts(3,31): error TS2307: Cannot find module '@next-auth/prisma-adapter' or its corresponding type declarations.
+lib/auth-no-redis.ts(65,37): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+lib/auth-no-redis.ts(120,17): error TS7031: Binding element 'token' implicitly has an 'any' type.
+lib/auth-no-redis.ts(120,24): error TS7031: Binding element 'user' implicitly has an 'any' type.
+lib/auth-no-redis.ts(134,21): error TS7031: Binding element 'session' implicitly has an 'any' type.
+lib/auth-no-redis.ts(134,30): error TS7031: Binding element 'token' implicitly has an 'any' type.
+lib/auth-no-redis.ts(172,18): error TS7006: Parameter 'message' implicitly has an 'any' type.
+lib/auth-no-redis.ts(185,19): error TS7006: Parameter 'message' implicitly has an 'any' type.
+lib/auth-no-redis.ts(194,26): error TS2345: Argument of type '{ adapter: any; providers: CredentialsConfig<Record<string, CredentialInput>>[]; session: { strategy: "jwt"; maxAge: number; }; callbacks: { ...; }; ... 5 more ...; events: { ...; }; }' is not assignable to parameter of type 'NextAuthConfig | ((request: NextRequest | undefined) => Awaitable<NextAuthConfig>)'.
+  Type '{ adapter: any; providers: CredentialsConfig<Record<string, CredentialInput>>[]; session: { strategy: "jwt"; maxAge: number; }; callbacks: { ...; }; ... 5 more ...; events: { ...; }; }' is not assignable to type 'NextAuthConfig'.
+    The types of 'cookies.sessionToken.options.sameSite' are incompatible between these types.
+      Type 'string' is not assignable to type 'boolean | "lax" | "strict" | "none" | undefined'.
+lib/auth-simple.ts(36,37): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+lib/auth.ts(33,5): error TS2687: All declarations of 'role' must have identical modifiers.
+lib/auth.ts(69,30): error TS2551: Property 'passwordHash' does not exist on type '{ id: string; name: string; email: string; role: Role; password_hash: string | null; avatar_url: string | null; created_at: Date; updated_at: Date; }'. Did you mean 'password_hash'?
+lib/auth.ts(78,18): error TS2551: Property 'passwordHash' does not exist on type '{ id: string; name: string; email: string; role: Role; password_hash: string | null; avatar_url: string | null; created_at: Date; updated_at: Date; }'. Did you mean 'password_hash'?
+lib/auth.ts(93,29): error TS2551: Property 'avatarUrl' does not exist on type '{ id: string; name: string; email: string; role: Role; password_hash: string | null; avatar_url: string | null; created_at: Date; updated_at: Date; }'. Did you mean 'avatar_url'?
+lib/security/rls-config.ts(298,38): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+lib/security/rls-config.ts(366,51): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+lib/security/rls-config.ts(389,51): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+playwright.config.ts(2,39): error TS2307: Cannot find module '@playwright/test' or its corresponding type declarations.
+prisma/seed.ts(10,16): error TS2551: Property 'communicationLog' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'communication_logs'?
+prisma/seed.ts(11,16): error TS2551: Property 'soapNote' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'soap_notes'?
+prisma/seed.ts(12,16): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+prisma/seed.ts(13,16): error TS2551: Property 'metricResult' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'metric_results'?
+prisma/seed.ts(14,16): error TS2551: Property 'painPoint' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'pain_points'?
+prisma/seed.ts(15,16): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+prisma/seed.ts(16,16): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+prisma/seed.ts(27,30): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+prisma/seed.ts(38,35): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+prisma/seed.ts(49,35): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+prisma/seed.ts(60,33): error TS2551: Property 'user' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'users'?
+prisma/seed.ts(78,33): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+prisma/seed.ts(106,33): error TS2551: Property 'patient' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'patients'?
+prisma/seed.ts(140,37): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+prisma/seed.ts(158,37): error TS2551: Property 'appointment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'appointments'?
+prisma/seed.ts(181,16): error TS2551: Property 'painPoint' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'pain_points'?
+prisma/seed.ts(193,16): error TS2551: Property 'painPoint' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'pain_points'?
+prisma/seed.ts(208,16): error TS2551: Property 'metricResult' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'metric_results'?
+prisma/seed.ts(217,16): error TS2551: Property 'metricResult' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'metric_results'?
+prisma/seed.ts(240,16): error TS2551: Property 'treatmentProtocolExercise' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'treatment_protocol_exercises'?
+prisma/seed.ts(241,16): error TS2551: Property 'treatmentProtocol' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'treatment_protocols'?
+prisma/seed.ts(242,16): error TS2339: Property 'pathology' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+prisma/seed.ts(243,16): error TS2551: Property 'exercise' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'exercises'?
+prisma/seed.ts(244,16): error TS2551: Property 'standardizedAssessment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'standardized_assessments'?
+prisma/seed.ts(249,34): error TS2339: Property 'pathology' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+prisma/seed.ts(259,35): error TS2339: Property 'pathology' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+prisma/seed.ts(269,41): error TS2339: Property 'pathology' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+prisma/seed.ts(279,40): error TS2339: Property 'pathology' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'.
+prisma/seed.ts(292,37): error TS2551: Property 'exercise' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'exercises'?
+prisma/seed.ts(313,39): error TS2551: Property 'exercise' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'exercises'?
+prisma/seed.ts(334,46): error TS2551: Property 'exercise' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'exercises'?
+prisma/seed.ts(355,45): error TS2551: Property 'exercise' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'exercises'?
+prisma/seed.ts(376,44): error TS2551: Property 'exercise' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'exercises'?
+prisma/seed.ts(400,43): error TS2551: Property 'treatmentProtocol' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'treatment_protocols'?
+prisma/seed.ts(441,42): error TS2551: Property 'treatmentProtocol' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'treatment_protocols'?
+prisma/seed.ts(470,28): error TS2551: Property 'standardizedAssessment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'standardized_assessments'?
+prisma/seed.ts(491,37): error TS2551: Property 'standardizedAssessment' does not exist on type 'PrismaClient<PrismaClientOptions, never, DefaultArgs>'. Did you mean 'standardized_assessments'?
+sentry.client.config.ts(12,7): error TS2353: Object literal may only specify known properties, and 'sessionSampleRate' does not exist in type 'ReplayConfiguration'.
+services/aiNoShowPredictionService.ts(76,5): error TS2322: Type '"consultation"' is not assignable to type 'AppointmentType'.
+services/aiNoShowPredictionService.ts(77,5): error TS2322: Type '"scheduled"' is not assignable to type 'AppointmentStatus'.
+services/aiNoShowPredictionService.ts(90,5): error TS2322: Type '"follow_up"' is not assignable to type 'AppointmentType'.
+services/aiNoShowPredictionService.ts(91,5): error TS2322: Type '"scheduled"' is not assignable to type 'AppointmentStatus'.
+services/aiNoShowPredictionService.ts(105,5): error TS2322: Type '"consultation"' is not assignable to type 'AppointmentType'.
+services/aiNoShowPredictionService.ts(106,5): error TS2322: Type '"scheduled"' is not assignable to type 'AppointmentStatus'.
+services/aiNoShowPredictionService.ts(148,19): error TS2339: Property 'date' does not exist on type 'Appointment'.
+services/aiNoShowPredictionService.ts(149,19): error TS2339: Property 'createdAt' does not exist on type 'Appointment'.
+services/aiNoShowPredictionService.ts(154,73): error TS2339: Property 'date' does not exist on type 'Appointment'.
+services/aiNoShowPredictionService.ts(154,91): error TS2339: Property 'createdAt' does not exist on type 'Appointment'.
+services/aiNoShowPredictionService.ts(159,44): error TS2339: Property 'date' does not exist on type 'Appointment'.
+services/aiNoShowPredictionService.ts(172,69): error TS2339: Property 'time' does not exist on type 'Appointment'.
+services/aiNoShowPredictionService.ts(183,40): error TS2339: Property 'date' does not exist on type 'Appointment'.
+services/aiNoShowPredictionService.ts(241,34): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(241,63): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(241,84): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(245,26): error TS2339: Property 'createdAt' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(246,45): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(246,55): error TS2339: Property 'createdAt' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(254,53): error TS2339: Property 'time' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(265,34): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(282,38): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(321,28): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(339,53): error TS2339: Property 'time' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/aiNoShowPredictionService.ts(356,38): error TS2339: Property 'date' does not exist on type 'Appointment & { actualStatus: "completed" | "cancelled" | "no_show"; }'.
+services/eventService.ts(100,9): error TS2322: Type '{ name: string; description?: string | null | undefined; location?: string | null | undefined; address?: string | null | undefined; capacity?: number | null | undefined; price?: number | null | undefined; ... 12 more ...; bannerUrl?: string | ... 1 more ... | undefined; }' is not assignable to type '(Without<eventsCreateInput, eventsUncheckedCreateInput> & eventsUncheckedCreateInput) | (Without<...> & eventsCreateInput)'.
+  Type '{ name: string; description?: string | null | undefined; location?: string | null | undefined; address?: string | null | undefined; capacity?: number | null | undefined; price?: number | null | undefined; ... 12 more ...; bannerUrl?: string | ... 1 more ... | undefined; }' is not assignable to type 'Without<eventsUncheckedCreateInput, eventsCreateInput> & eventsCreateInput'.
+    Type '{ name: string; description?: string | null | undefined; location?: string | null | undefined; address?: string | null | undefined; capacity?: number | null | undefined; price?: number | null | undefined; ... 12 more ...; bannerUrl?: string | ... 1 more ... | undefined; }' is missing the following properties from type 'eventsCreateInput': id, event_type, start_date, end_date, and 2 more.
+services/painMapService.ts(62,7): error TS2741: Property 'date' is missing in type '{ id: string; x: number; y: number; intensity: number; bodyPart: "back"; description: string; type: "aguda"; }' but required in type 'PainPoint'.
+services/painMapService.ts(71,7): error TS2741: Property 'date' is missing in type '{ id: string; x: number; y: number; intensity: number; bodyPart: "front"; description: string; type: "latejante"; }' but required in type 'PainPoint'.
+services/painMapService.ts(93,7): error TS2741: Property 'date' is missing in type '{ id: string; x: number; y: number; intensity: number; bodyPart: "back"; description: string; type: "aguda"; }' but required in type 'PainPoint'.
+services/painMapService.ts(102,7): error TS2741: Property 'date' is missing in type '{ id: string; x: number; y: number; intensity: number; bodyPart: "front"; description: string; type: "latejante"; }' but required in type 'PainPoint'.
+services/painMapService.ts(111,7): error TS2741: Property 'date' is missing in type '{ id: string; x: number; y: number; intensity: number; bodyPart: "front"; description: string; type: "cansaço"; }' but required in type 'PainPoint'.
+services/painMapService.ts(133,7): error TS2741: Property 'date' is missing in type '{ id: string; x: number; y: number; intensity: number; bodyPart: "front"; description: string; type: "formigamento"; }' but required in type 'PainPoint'.
+services/whatsappBusinessService.ts(105,9): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.
+services/whatsappBusinessService.ts(152,9): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.
+services/whatsappBusinessService.ts(202,9): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.
+services/whatsappBusinessService.ts(239,9): error TS2367: This comparison appears to be unintentional because the types '"opt-in" | "opt-out"' and '"opt_in"' have no overlap.

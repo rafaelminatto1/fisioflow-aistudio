@@ -223,7 +223,7 @@ export const mockPatients: Patient[] = [
         isActive: false,
       },
     ],
-    painPoints: [
+    pain_points: [
       {
         id: 'pp1',
         x: 58.5,
@@ -836,7 +836,7 @@ export const mockSoapNotes: SoapNote[] = [
     plan: 'Manter cinesioterapia para fortalecimento do VMO e alongamento de isquiotibiais. Progredir para exercícios em cadeia cinética fechada.',
     bodyParts: ['Joelho Direito'],
     painScale: 4,
-    metricResults: [
+    metric_results: [
       { metricId: 'metric1', value: 110 },
       { metricId: 'metric2', value: 43 },
     ],
@@ -854,7 +854,7 @@ export const mockSoapNotes: SoapNote[] = [
     assessment: 'Gonalgia a ser investigada. Sinais inflamatórios presentes.',
     plan: 'Solicitar exames de imagem (Ressonância Magnética) para melhor diagnóstico. Iniciar com analgesia e TENS.',
     painScale: 7,
-    metricResults: [
+    metric_results: [
       { metricId: 'metric1', value: 95 },
       { metricId: 'metric2', value: 42.5 },
     ],

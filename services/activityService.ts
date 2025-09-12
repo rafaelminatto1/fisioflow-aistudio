@@ -9,7 +9,7 @@ export const getRecentActivities = async (): Promise<RecentActivity[]> => {
 
   // Create activities from patient pain points
   const allPainPoints = mockPatients
-    .flatMap(p => (p.painPoints || []).map(pp => ({ ...pp, patient: p })))
+    .flatMap(p => (p.pain_points || []).map(pp => ({ ...pp, patient: p })))
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
   const activities: RecentActivity[] = allPainPoints.slice(0, 5).map(point => ({

@@ -1,13 +1,11 @@
 generator client {
-  provider        = "prisma-client-js"
-  previewFeatures = ["fullTextSearchPostgres", "postgresqlExtensions"]
-  binaryTargets   = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x", "linux-musl-openssl-3.0.x"]
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model analytics_events {
@@ -33,7 +31,7 @@ model appointments {
   end_time           DateTime
   type               AppointmentType
   status             AppointmentStatus    @default(Agendado)
-  value              Decimal?             @db.Decimal(10, 2)
+  value              Decimal?
   payment_status     PaymentStatus        @default(pending)
   observations       String?
   series_id          String?
@@ -103,7 +101,7 @@ model custom_metrics {
 
 model daily_aggregations {
   id               String               @id
-  date             DateTime             @db.Date
+  date             DateTime
   aggregation_type DailyAggregationType
   total_value      Float
   avg_value        Float?
@@ -124,7 +122,7 @@ model event_certificates {
   registration_id     String?              @unique
   provider_id         String?              @unique
   certificate_type    EventCertificateType
-  certificate_code    String               @unique @db.VarChar(50)
+  certificate_code    String               @unique
   issued_at           DateTime             @default(now())
   view_count          Int                  @default(0)
   events              events               @relation(fields: [event_id], references: [id], onDelete: Cascade)
@@ -137,7 +135,7 @@ model event_certificates {
 model event_communications {
   id               String               @id
   event_id         String
-  campaign_name    String               @db.VarChar(200)
+  campaign_name    String
   message          String
   channel          CommunicationChannel
   target_audience  Json?
@@ -155,18 +153,18 @@ model event_communications {
 model event_providers {
   id                 String              @id
   event_id           String
-  name               String              @db.VarChar(200)
-  phone              String              @db.VarChar(20)
-  professional_id    String?             @db.VarChar(50)
-  pix_key            String?             @db.VarChar(200)
-  hourly_rate        Decimal?            @db.Decimal(10, 2)
+  name               String
+  phone              String
+  professional_id    String?
+  pix_key            String?
+  hourly_rate        Decimal?
   availability       Json?
   status             EventProviderStatus @default(applied)
   application_date   DateTime            @default(now())
   confirmed_at       DateTime?
-  payment_amount     Decimal?            @db.Decimal(10, 2)
+  payment_amount     Decimal?
   payment_date       DateTime?
-  payment_receipt    String?             @db.VarChar(500)
+  payment_receipt    String?
   admin_notes        String?
   event_certificates event_certificates?
   events             events              @relation(fields: [event_id], references: [id], onDelete: Cascade)
@@ -178,20 +176,20 @@ model event_providers {
 model event_registrations {
   id                 String                  @id
   event_id           String
-  full_name          String                  @db.VarChar(200)
-  email              String                  @db.VarChar(100)
-  phone              String?                 @db.VarChar(20)
-  cpf                String?                 @db.VarChar(14)
-  birth_date         DateTime?               @db.Date
+  full_name          String
+  email              String
+  phone              String?
+  cpf                String?
+  birth_date         DateTime?
   address            String?
-  instagram          String?                 @db.VarChar(100)
+  instagram          String?
   status             EventRegistrationStatus @default(pending)
   registration_date  DateTime                @default(now())
   qr_code            String?                 @unique
   checked_in_at      DateTime?
   checked_in_by_id   String?
   check_in_method    CheckInMethod?
-  check_in_location  String?                 @db.VarChar(200)
+  check_in_location  String?
   admin_notes        String?
   event_certificates event_certificates?
   users              users?                  @relation(fields: [checked_in_by_id], references: [id])
@@ -204,7 +202,7 @@ model event_registrations {
 model event_resources {
   id              String              @id
   event_id        String
-  resource_name   String              @db.VarChar(200)
+  resource_name   String
   resource_type   EventResourceType
   quantity_needed Int?
   start_time      DateTime?
@@ -217,24 +215,24 @@ model event_resources {
 
 model events {
   id                    String                 @id
-  name                  String                 @db.VarChar(200)
+  name                  String
   description           String?
   event_type            EventType
   start_date            DateTime
   end_date              DateTime
-  location              String?                @db.VarChar(300)
+  location              String?
   address               String?
   capacity              Int?
   is_free               Boolean                @default(true)
-  price                 Decimal?               @db.Decimal(10, 2)
+  price                 Decimal?
   status                EventStatus            @default(draft)
   organizer_id          String
   requires_registration Boolean                @default(true)
   allows_providers      Boolean                @default(false)
-  whatsapp_group        String?                @db.VarChar(500)
+  whatsapp_group        String?
   default_message       String?
-  provider_rate         Decimal?               @db.Decimal(10, 2)
-  banner_url            String?                @db.VarChar(500)
+  provider_rate         Decimal?
+  banner_url            String?
   images                Json?
   created_at            DateTime               @default(now())
   updated_at            DateTime
@@ -255,15 +253,15 @@ model exercises {
   description                  String?
   category                     String?
   subcategory                  String?
-  body_parts                   String[]
+  body_parts                   Json
   difficulty                   String?
-  equipment                    String[]
-  instructions                 String[]
+  equipment                    Json
+  instructions                 Json
   video_url                    String?
   thumbnail_url                String?
   duration                     Int?
-  indications                  String[]
-  contraindications            String[]
+  indications                  Json
+  contraindications            Json
   modifications                Json?
   status                       ExerciseStatus                 @default(pending_approval)
   author_id                    String?
@@ -319,7 +317,7 @@ model exercise_media {
 model financial_transactions {
   id          String                   @id
   type        FinancialTransactionType
-  amount      Decimal                  @db.Decimal(10, 2)
+  amount      Decimal
   description String
   date        DateTime
   patient_id  String?
@@ -342,7 +340,7 @@ model inventory_items {
   min_stock_level Int
   max_stock_level Int?
   unit            String
-  unit_cost       Decimal?         @db.Decimal(10, 2)
+  unit_cost       Decimal?
   location        String?
   expiry_date     DateTime?
   created_at      DateTime         @default(now())
@@ -395,7 +393,7 @@ model pain_points {
   patient_id  String
   x_position  Float
   y_position  Float
-  intensity   Int      @db.SmallInt
+  intensity   Int
   type        PainType
   description String?
   body_part   BodyPart
@@ -410,8 +408,8 @@ model pathologies {
   id                  String                @id
   name                String                @unique
   description         String?
-  symptoms            String[]
-  causes              String[]
+  symptoms            Json
+  causes              Json
   icd10_code          String?
   created_at          DateTime              @default(now())
   updated_at          DateTime
@@ -451,7 +449,7 @@ model payments {
   id             String        @id
   appointment_id String?
   patient_id     String
-  amount         Decimal       @db.Decimal(10, 2)
+  amount         Decimal
   status         PaymentStatus @default(pending)
   method         PaymentMethod @default(cash)
   description    String?
@@ -470,11 +468,11 @@ model professional_payouts {
   id              String       @id
   professional_id String
   period          String
-  base_amount     Decimal      @db.Decimal(10, 2)
-  commission_rate Decimal      @db.Decimal(5, 4)
-  gross_amount    Decimal      @db.Decimal(10, 2)
-  deductions      Decimal      @default(0) @db.Decimal(10, 2)
-  net_amount      Decimal      @db.Decimal(10, 2)
+  base_amount     Decimal
+  commission_rate Decimal
+  gross_amount    Decimal
+  deductions      Decimal      @default(0)
+  net_amount      Decimal
   status          PayoutStatus @default(pending)
   paid_at         DateTime?
   created_at      DateTime     @default(now())
@@ -496,10 +494,10 @@ model real_time_metrics {
 
 model receipts {
   id                     String                 @id
-  receipt_number         String                 @unique @db.VarChar(50)
+  receipt_number         String                 @unique
   transaction_id         String                 @unique
   patient_id             String
-  amount                 Decimal                @db.Decimal(10, 2)
+  amount                 Decimal
   description            String
   service_date           DateTime
   payment_method         PaymentMethod
@@ -566,8 +564,8 @@ model treatment_protocol_exercises {
   id                   String              @id
   protocol_id          String
   exercise_id          String
-  order                Int                 @db.SmallInt
-  sets                 Int?                @db.SmallInt
+  order                Int
+  sets                 Int?
   repetitions          String?
   rest_time            String?
   resistance_level     String?
@@ -587,8 +585,8 @@ model treatment_protocols {
   pathology_id                 String
   frequency                    String
   duration                     String
-  objectives                   String[]
-  contraindications            String[]
+  objectives                   Json
+  contraindications            Json
   notes                        String?
   created_by                   String
   is_active                    Boolean                        @default(true)
@@ -870,7 +868,7 @@ model telemedicine_sessions {
   notes               String?
   session_notes       String?
   patient_feedback    String?
-  technical_issues    String[]
+  technical_issues    Json
   recording_url       String?
   connection_quality  ConnectionQuality?
   requires_recording  Boolean                     @default(false)

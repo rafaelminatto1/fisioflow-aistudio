@@ -22,7 +22,7 @@ export async function GET(
       include: {
         conditions: true,
         surgeries: true,
-        communicationLogs: true,
+        communication_logs: true,
         trackedMetrics: true,
         attachments: true,
       },
@@ -112,7 +112,7 @@ export async function PUT(
       include: {
         conditions: true,
         surgeries: true,
-        communicationLogs: true,
+        communication_logs: true,
         trackedMetrics: true,
         attachments: true,
       },

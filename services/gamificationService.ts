@@ -83,7 +83,7 @@ export const getGamificationProgress = async (
     // evaluationService.getEvaluationsByPatientId(patientId) // would be added here
   ]);
 
-  const painPoints = patient?.painPoints || [];
+  const painPoints = patient?.pain_points || [];
 
   // Calculate Points
   const completedSessions = appointments.filter(

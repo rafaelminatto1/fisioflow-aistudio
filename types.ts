@@ -105,8 +105,8 @@ export interface Patient {
   conditions?: Condition[];
   attachments?: PatientAttachment[];
   trackedMetrics?: TrackedMetric[];
-  communicationLogs?: CommunicationLog[];
-  painPoints?: PainPoint[];
+  communication_logs?: CommunicationLog[];
+  pain_points?: PainPoint[];
 }
 
 export type AlertType = 'abandonment' | 'highRisk' | 'attention';
@@ -294,7 +294,7 @@ export interface SoapNote {
   bodyParts?: string[];
   painScale?: number;
   attachments?: { name: string; url: string; }[];
-  metricResults?: MetricResult[];
+  metric_results?: MetricResult[];
 }
 
 export interface TreatmentPlan {
@@ -927,7 +927,7 @@ export interface Event {
   defaultMessage?: string | null;
   providerRate?: number | null; // Decimal
   bannerUrl?: string | null;
-  images?: any | null; // JSON
+  images?: Record<string, string> | null; // JSON - URLs das imagens
   createdAt: Date;
   updatedAt: Date;
   registrations?: EventRegistration[]; // Added for convenience
@@ -962,7 +962,7 @@ export interface EventProvider {
   professionalId?: string | null;
   pixKey?: string | null;
   hourlyRate?: number | null; // Decimal
-  availability?: any | null; // JSON
+  availability?: Record<string, boolean | string[]> | null; // JSON - Disponibilidade por dia/horário
   status: EventProviderStatus;
   applicationDate: Date;
   confirmedAt?: Date | null;
@@ -1000,7 +1000,11 @@ export interface EventCommunication {
   campaignName: string;
   message: string;
   channel: CommunicationChannel;
-  targetAudience?: any | null; // JSON
+  targetAudience?: {
+    registrations?: boolean;
+    providers?: boolean;
+    customEmails?: string[];
+  } | null; // JSON - Público alvo da comunicação
   scheduledAt?: Date | null;
   sentAt?: Date | null;
   recipientsCount?: number | null;

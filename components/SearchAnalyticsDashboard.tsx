@@ -392,7 +392,7 @@ export default function SearchAnalyticsDashboard() {
         </h1>
         
         <div className="flex items-center gap-4">
-          <Select value={timeframe} onValueChange={(value: any) => setTimeframe(value)}>
+          <Select value={timeframe} onValueChange={(value: string) => setTimeframe(value)}>
             <SelectTrigger className="w-32">
               <SelectValue />
             </SelectTrigger>
@@ -415,7 +415,7 @@ export default function SearchAnalyticsDashboard() {
       {renderOverviewMetrics()}
 
       {/* Detailed Analytics */}
-      <Tabs value={metric} onValueChange={(value: any) => setMetric(value)}>
+      <Tabs value={metric} onValueChange={(value: string) => setMetric(value)}>
         <TabsList>
           <TabsTrigger value="queries">Consultas</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
@@ -465,13 +465,13 @@ export default function SearchAnalyticsDashboard() {
                 <div className="flex justify-between">
                   <span>P95 (95º percentil):</span>
                   <Badge variant="secondary">
-                    {formatTime((analytics as any)?.p95_query_time || 0)}
+                    {formatTime(analytics?.p95_query_time || 0)}
                   </Badge>
                 </div>
                 <div className="flex justify-between">
                   <span>P99 (99º percentil):</span>
                   <Badge variant="secondary">
-                    {formatTime((analytics as any)?.p99_query_time || 0)}
+                    {formatTime(analytics?.p99_query_time || 0)}
                   </Badge>
                 </div>
                 <div className="grid grid-cols-2 gap-2">

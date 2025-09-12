@@ -82,7 +82,7 @@ export const fisioTheme = {
  */
 export const getThemeColor = (path: string) => {
   const keys = path.split('.');
-  let value: any = fisioTheme.colors;
+  let value: unknown = fisioTheme.colors;
   
   for (const key of keys) {
     value = value?.[key];

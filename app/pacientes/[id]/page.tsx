@@ -28,7 +28,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
   }
 
   const patient = patientResult.data;
-  const soapNotes = soapNotesResult.success ? soapNotesResult.data : [];
+  const soap_notes = soapNotesResult.success ? soapNotesResult.data : [];
   const assessments = assessmentsResult.success ? assessmentsResult.data : [];
 
   return (
@@ -77,7 +77,7 @@ export default async function PatientDetailPage({ params }: PatientDetailPagePro
           <div className="lg:col-span-2">
             <MedicalRecordTabs
               patientId={patientId}
-              soapNotes={soapNotes || []}
+              soapNotes={soap_notes || []}
               assessments={assessments || []}
             />
           </div>

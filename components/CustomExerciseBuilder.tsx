@@ -339,7 +339,7 @@ export default function CustomExerciseBuilder() {
 
                 <div>
                   <Label htmlFor="difficulty">Dificuldade</Label>
-                  <Select value={exercise.difficulty} onValueChange={(value: any) => setExercise(prev => ({ ...prev, difficulty: value }))}>
+                  <Select value={exercise.difficulty} onValueChange={(value: string) => setExercise(prev => ({ ...prev, difficulty: value }))}>
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>

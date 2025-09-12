@@ -219,8 +219,8 @@ function calculateConfidenceScore(protocol: any, context: any): number {
   }
 
   // Assessment results consideration
-  if (context.patient?.assessmentResults?.length > 0) {
-    const latestAssessment = context.patient.assessmentResults[0];
+  if (context.patient?.assessment_results?.length > 0) {
+      const latestAssessment = context.patient.assessment_results[0];
     
     // Adjust based on functional capacity
     if (latestAssessment.score) {
@@ -297,8 +297,8 @@ function generateAdaptations(protocol: any, context: any): string[] {
   }
 
   // Assessment-based adaptations
-  if (context.patient?.assessmentResults?.length > 0) {
-    const latestAssessment = context.patient.assessmentResults[0];
+  if (context.patient?.assessment_results?.length > 0) {
+      const latestAssessment = context.patient.assessment_results[0];
     
     if (latestAssessment.assessment?.name.includes('Berg') && latestAssessment.score < 45) {
       adaptations.push('Incluir exercícios de equilíbrio com apoio');
@@ -357,7 +357,7 @@ Informações adicionais: ${context.additionalInfo || 'Nenhuma'}
 
 Histórico recente do paciente:
 ${context.patient?.appointments?.slice(0, 3).map((apt: any) => 
-  apt.soapNotes?.map((note: any) => `${note.subjective || ''} ${note.objective || ''}`).join(' ')
+  apt.soap_notes?.map((note: any) => `${note.subjective || ''} ${note.objective || ''}`).join(' ')
 ).join('\n') || 'Sem histórico disponível'}
 
 Por favor, forneça:

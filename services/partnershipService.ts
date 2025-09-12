@@ -96,7 +96,7 @@ export const getEducatorClients = async (
 interface IntegratedClientHistory {
   patient: Patient;
   voucher: Voucher;
-  soapNotes: SoapNote[];
+  soap_notes: SoapNote[];
 }
 
 export const getIntegratedClientHistory = async (
@@ -113,11 +113,11 @@ export const getIntegratedClientHistory = async (
   }
 
   // Simulate fetching related data
-  const soapNotes = mockSoapNotes.filter(note => note.patientId === clientId);
+  const soap_notes = mockSoapNotes.filter(note => note.patientId === clientId);
 
   return {
     patient,
     voucher,
-    soapNotes,
+    soap_notes,
   };
 };

@@ -318,9 +318,9 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({
                 </button>
               </div>
               
-              {patient.communicationLogs && patient.communicationLogs.length > 0 ? (
+              {patient.communication_logs && patient.communication_logs.length > 0 ? (
                 <div className="space-y-4">
-                  {patient.communicationLogs.map((log) => (
+                  {patient.communication_logs.map((log) => (
                     <div key={log.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">

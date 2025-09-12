@@ -1,6 +1,6 @@
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
-import { PrismaAdapter } from '@next-auth/prisma-adapter';
+import { PrismaAdapter } from '@auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
 import type { Role } from '@prisma/client';
@@ -62,11 +62,11 @@ export const authOptions = {
 
           // Rate limiting removido para evitar dependência do Redis
           console.log('[AUTH] Searching for user:', credentials.email);
-          const user = await prisma.user.findUnique({
+          const user = await prisma.users.findUnique({
             where: { email: credentials.email },
           });
 
-          if (!user || !user.passwordHash) {
+          if (!user || !user.password_hash) {
             console.error('[AUTH] User not found or no password hash:', credentials.email);
             throw new Error('Usuário ou senha inválidos.');
           }
@@ -75,7 +75,7 @@ export const authOptions = {
 
           const isPasswordCorrect = await bcrypt.compare(
             credentials.password,
-            user.passwordHash
+            user.password_hash
           );
 
           if (!isPasswordCorrect) {
@@ -90,7 +90,7 @@ export const authOptions = {
             name: user.name,
             email: user.email,
             role: user.role,
-            avatarUrl: user.avatarUrl || undefined,
+            avatarUrl: user.avatar_url || undefined,
           };
           
         } catch (error) {

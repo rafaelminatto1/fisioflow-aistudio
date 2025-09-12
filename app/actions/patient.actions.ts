@@ -64,11 +64,11 @@ export async function getPatientSoapNotes(patientId: string) {
     }
 
     // Mock soap notes for now
-    const soapNotes: any[] = [];
+    const soap_notes: any[] = [];
 
     return {
       success: true,
-      data: soapNotes
+      data: soap_notes
     };
   } catch (error) {
     console.error('Erro ao buscar notas SOAP:', error);

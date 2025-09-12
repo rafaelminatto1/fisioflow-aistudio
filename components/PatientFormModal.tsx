@@ -137,7 +137,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
         lastVisit: patient?.lastVisit,
         conditions: patient?.conditions || [],
         surgeries: patient?.surgeries || [],
-        communicationLogs: patient?.communicationLogs || [],
+        communication_logs: patient?.communication_logs || [],
         trackedMetrics: patient?.trackedMetrics || [],
         attachments: patient?.attachments || [],
       };
@@ -164,7 +164,7 @@ const PatientFormModal: React.FC<PatientFormModalProps> = ({
     }
   };
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (field: string, value: string | number | boolean) => {
     if (field.includes('.')) {
       const [parent, child] = field.split('.');
       setFormData(prev => ({

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const settings = await prisma.whatsappNotificationSettings.findFirst();
+    const settings = await prisma.whatsapp_notification_settings.findFirst();
     
     if (!settings) {
       // Retorna configurações padrão se não existir
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Upsert das configurações
-    const settings = await prisma.whatsappNotificationSettings.upsert({
+    const settings = await prisma.whatsapp_notification_settings.upsert({
       where: { id: 1 }, // Assumindo que sempre haverá apenas um registro
       update: {
         appointmentReminder,

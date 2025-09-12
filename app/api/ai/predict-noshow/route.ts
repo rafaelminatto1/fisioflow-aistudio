@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
 function calculateRiskFactors(patient: any): NoShowRiskFactors {
   const appointments = patient.appointments || [];
-  const communications = patient.communicationLogs || [];
+  const communications = patient.communication_logs || [];
   
   // 1. History Factor (0-1): Based on past no-show rate
   const historyFactor = calculateHistoryFactor(appointments);

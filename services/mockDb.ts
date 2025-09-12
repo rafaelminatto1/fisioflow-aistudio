@@ -17,7 +17,7 @@ import {
 // Create mutable copies of the mock data to act as our "database"
 let patients = [...mockPatients];
 let appointments = [...mockAppointments];
-let soapNotes = [...mockSoapNotes];
+let soap_notes = [...mockSoapNotes];
 let treatmentPlans = [...mockTreatmentPlans];
 let exercisePrescriptions = [...mockExercisePrescriptions];
 
@@ -56,13 +56,13 @@ export const db = {
   },
 
   // SoapNotes
-  getSoapNotes: (): SoapNote[] => [...soapNotes],
+  getSoapNotes: (): SoapNote[] => [...soap_notes],
   saveSoapNote: (note: SoapNote): void => {
-    const index = soapNotes.findIndex(n => n.id === note.id);
-    if (index > -1) {
-      soapNotes[index] = note;
+    const index = soap_notes.findIndex(n => n.id === note.id);
+    if (index >= 0) {
+      soap_notes[index] = note;
     } else {
-      soapNotes.unshift(note);
+      soap_notes.unshift(note);
     }
   },
 

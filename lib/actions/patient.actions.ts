@@ -59,8 +59,9 @@ export async function createPatient(data: PatientFormData) {
           : null,
       },
     });
-  } catch (error: any) {
-    if (error.code === 'P2002' && error.meta?.target?.includes('cpf')) {
+  } catch (error: unknown) {
+    const prismaError = error as { code?: string; meta?: { target?: string[] } };
+    if (prismaError.code === 'P2002' && prismaError.meta?.target?.includes('cpf')) {
       throw new Error('Este CPF já está cadastrado.');
     }
     // Outros erros de banco de dados
@@ -104,8 +105,9 @@ export async function updatePatient(id: string, data: PatientFormData) {
           : null,
       },
     });
-  } catch (error: any) {
-    if (error.code === 'P2002' && error.meta?.target?.includes('cpf')) {
+  } catch (error: unknown) {
+    const prismaError = error as { code?: string; meta?: { target?: string[] } };
+    if (prismaError.code === 'P2002' && prismaError.meta?.target?.includes('cpf')) {
       throw new Error('Este CPF já está cadastrado.');
     }
     throw new Error('Falha ao atualizar o paciente.');

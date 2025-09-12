@@ -121,10 +121,10 @@ export const addCommunicationLog = async (
 
 export const savePainPoints = async (
   patientId: string,
-  painPoints: PainPoint[]
+  pain_points: PainPoint[]
 ): Promise<Patient> => {
   const response = await api.put(`/api/patients/${patientId}/pain-points`, {
-    painPoints,
+    pain_points,
   });
   eventService.emit('patients:changed');
   return response.data;

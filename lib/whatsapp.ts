@@ -35,6 +35,11 @@ export const sendCustomMessage = whatsappBusinessService.sendCustomMessage.bind(
 export const sendHEP = whatsappBusinessService.sendHEP.bind(whatsappBusinessService)
 
 // Legacy export for compatibility
-export const sendWhatsAppMessage = (data: any) => {
+interface WhatsAppMessageData {
+  to: string;
+  message: string;
+}
+
+export const sendWhatsAppMessage = (data: WhatsAppMessageData) => {
   return whatsappBusinessService.sendCustomMessage(data.to, data.message);
 };

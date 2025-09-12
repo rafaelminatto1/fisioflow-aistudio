@@ -1,4 +1,4 @@
-import { Appointment } from '@/types'
+import { Appointment, AppointmentStatus } from '@/types'
 
 export interface NoShowPrediction {
   appointmentId: string
@@ -74,7 +74,7 @@ const mockAppointmentHistory: (Appointment & { actualStatus: 'completed' | 'no_s
     time: '09:00',
     duration: 60,
     type: 'consultation',
-    status: 'scheduled',
+    status: AppointmentStatus.Scheduled,
     actualStatus: 'no_show',
     notes: '',
     createdAt: '2024-01-10T10:00:00Z',
@@ -88,7 +88,7 @@ const mockAppointmentHistory: (Appointment & { actualStatus: 'completed' | 'no_s
     time: '14:00',
     duration: 60,
     type: 'follow_up',
-    status: 'scheduled',
+    status: AppointmentStatus.Scheduled,
     actualStatus: 'completed',
     notes: '',
     createdAt: '2024-01-05T15:00:00Z',
@@ -103,7 +103,7 @@ const mockAppointmentHistory: (Appointment & { actualStatus: 'completed' | 'no_s
     time: '10:00',
     duration: 60,
     type: 'consultation',
-    status: 'scheduled',
+    status: AppointmentStatus.Scheduled,
     actualStatus: 'completed',
     notes: '',
     createdAt: '2024-01-08T11:00:00Z',
