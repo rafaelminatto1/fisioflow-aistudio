@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/lib/auth';
+import { auth } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -31,7 +30,7 @@ export async function GET(request: NextRequest) {
         { description: { contains: search, mode: 'insensitive' } },
         { notes: { contains: search, mode: 'insensitive' } },
         {
-          patient: {
+          patients: {
             name: { contains: search, mode: 'insensitive' }
           }
         }
@@ -43,43 +42,52 @@ export async function GET(request: NextRequest) {
     }
 
     if (startDate || endDate) {
-      where.issueDate = {};
+      where.service_date = {};
       if (startDate) {
-        where.issueDate.gte = new Date(startDate);
+        where.service_date.gte = new Date(startDate);
       }
       if (endDate) {
-        where.issueDate.lte = new Date(endDate);
+        where.service_date.lte = new Date(endDate);
       }
     }
 
     // Buscar recibos
     const [receipts, totalCount] = await Promise.all([
-      prisma.receipt.findMany({
+      prisma.receipts.findMany({
         where,
         include: {
-          patient: {
+          patients: {
             select: {
               id: true,
               name: true,
+              cpf: true,
               email: true,
               phone: true
             }
           },
-          appointment: {
+          financial_transactions: {
             select: {
               id: true,
-              service: true,
-              date: true
+              type: true,
+              amount: true,
+              description: true
+            }
+          },
+          users: {
+            select: {
+              id: true,
+              name: true,
+              email: true
             }
           }
         },
         orderBy: {
-          issueDate: 'desc'
+          service_date: 'desc'
         },
         skip,
         take: limit
       }),
-      prisma.receipt.count({ where })
+      prisma.receipts.count({ where })
     ]);
 
     // Calcular estatísticas
@@ -106,7 +114,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -118,7 +126,7 @@ export async function POST(request: NextRequest) {
       amount,
       description,
       paymentMethod,
-      issueDate,
+      service_date: issueDate,
       dueDate,
       template = 'default',
       notes
@@ -127,7 +135,7 @@ export async function POST(request: NextRequest) {
     // Validações
     if (!patientId || !amount || !description || !paymentMethod || !issueDate) {
       return NextResponse.json(
-        { error: 'Campos obrigatórios: patientId, amount, description, paymentMethod, issueDate' },
+        { error: 'Campos obrigatórios: patientId, amount, description, paymentMethod, issue_date' },
         { status: 400 }
       );
     }
@@ -168,7 +176,7 @@ export async function POST(request: NextRequest) {
     const receiptNumber = await generateReceiptNumber(session.user.id);
 
     // Criar recibo
-    const receipt = await prisma.receipt.create({
+    const receipt = await prisma.receipts.create({
       data: {
         number: receiptNumber,
         patientId,
@@ -176,7 +184,7 @@ export async function POST(request: NextRequest) {
         amount: parseFloat(amount),
         description,
         paymentMethod,
-        issueDate: new Date(issueDate),
+        service_date: new Date(issueDate),
         dueDate: dueDate ? new Date(dueDate) : null,
         status: 'ISSUED',
         template,
@@ -184,7 +192,7 @@ export async function POST(request: NextRequest) {
         userId: session.user.id
       },
       include: {
-        patient: {
+        patients: {
           select: {
             id: true,
             name: true,
@@ -192,11 +200,12 @@ export async function POST(request: NextRequest) {
             phone: true
           }
         },
-        appointment: {
+        financial_transactions: {
           select: {
             id: true,
-            service: true,
-            date: true
+            type: true,
+            amount: true,
+            description: true
           }
         }
       }
@@ -214,7 +223,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -239,7 +248,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Verificar se o recibo existe e pertence ao usuário
-    const existingReceipt = await prisma.receipt.findFirst({
+    const existingReceipt = await prisma.receipts.findFirst({
       where: {
         id,
         userId: session.user.id
@@ -259,17 +268,17 @@ export async function PUT(request: NextRequest) {
     if (amount !== undefined) updateData.amount = parseFloat(amount);
     if (description !== undefined) updateData.description = description;
     if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
-    if (issueDate !== undefined) updateData.issueDate = new Date(issueDate);
+    if (issueDate !== undefined) updateData.service_date = new Date(issueDate);
     if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
     if (status !== undefined) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes || null;
 
     // Atualizar recibo
-    const receipt = await prisma.receipt.update({
+    const receipt = await prisma.receipts.update({
       where: { id },
       data: updateData,
       include: {
-        patient: {
+        patients: {
           select: {
             id: true,
             name: true,
@@ -277,11 +286,12 @@ export async function PUT(request: NextRequest) {
             phone: true
           }
         },
-        appointment: {
+        financial_transactions: {
           select: {
             id: true,
-            service: true,
-            date: true
+            type: true,
+            amount: true,
+            description: true
           }
         }
       }
@@ -299,7 +309,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -315,7 +325,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Verificar se o recibo existe e pertence ao usuário
-    const existingReceipt = await prisma.receipt.findFirst({
+    const existingReceipt = await prisma.receipts.findFirst({
       where: {
         id,
         userId: session.user.id
@@ -330,7 +340,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Cancelar recibo ao invés de deletar
-    const receipt = await prisma.receipt.update({
+    const receipt = await prisma.receipts.update({
       where: { id },
       data: { status: 'CANCELLED' }
     });
@@ -351,7 +361,7 @@ async function generateReceiptNumber(userId: string): Promise<string> {
   const prefix = `REC-${currentYear}-`;
 
   // Buscar o último recibo do ano
-  const lastReceipt = await prisma.receipt.findFirst({
+  const lastReceipt = await prisma.receipts.findFirst({
     where: {
       userId,
       number: {
@@ -375,7 +385,7 @@ async function generateReceiptNumber(userId: string): Promise<string> {
 // Função auxiliar para calcular estatísticas
 async function calculateReceiptStats(userId: string) {
   const [totalStats, paidStats, pendingStats] = await Promise.all([
-    prisma.receipt.aggregate({
+    prisma.receipts.aggregate({
       where: {
         userId,
         status: { not: 'CANCELLED' }
@@ -387,7 +397,7 @@ async function calculateReceiptStats(userId: string) {
         amount: true
       }
     }),
-    prisma.receipt.aggregate({
+    prisma.receipts.aggregate({
       where: {
         userId,
         status: 'PAID'
@@ -399,7 +409,7 @@ async function calculateReceiptStats(userId: string) {
         amount: true
       }
     }),
-    prisma.receipt.aggregate({
+    prisma.receipts.aggregate({
       where: {
         userId,
         status: { in: ['ISSUED', 'SENT'] }

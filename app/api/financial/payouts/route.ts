@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     const where: any = {};
 
     if (professionalId) {
-      where.professionalId = professionalId;
+      where.professional_id = professionalId;
     }
 
     if (period) {
@@ -27,18 +27,18 @@ export async function GET(request: NextRequest) {
     }
 
     const [payouts, total] = await Promise.all([
-      prisma.professionalPayout.findMany({
+      prisma.professional_payouts.findMany({
         where,
         include: {
-          professional: {
+          users: {
             select: { id: true, name: true, email: true }
           }
         },
-        orderBy: { createdAt: 'desc' },
+        orderBy: { created_at: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
       }),
-      prisma.professionalPayout.count({ where }),
+      prisma.professional_payouts.count({ where }),
     ]);
 
     return NextResponse.json({
@@ -79,10 +79,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if payout already exists for this professional and period
-    const existingPayout = await prisma.professionalPayout.findUnique({
+    const existingPayout = await prisma.professional_payouts.findUnique({
       where: {
-        professionalId_period: {
-          professionalId,
+        professional_id_period: {
+          professional_id: professionalId,
           period,
         },
       },
@@ -99,19 +99,20 @@ export async function POST(request: NextRequest) {
     const grossAmount = parseFloat(baseAmount) * parseFloat(commissionRate);
     const netAmount = grossAmount - parseFloat(deductions);
 
-    const payout = await prisma.professionalPayout.create({
+    const payout = await prisma.professional_payouts.create({
       data: {
-        professionalId,
+        id: `payout_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        professional_id: professionalId,
         period,
-        baseAmount: parseFloat(baseAmount),
-        commissionRate: parseFloat(commissionRate),
-        grossAmount,
+        base_amount: parseFloat(baseAmount),
+        commission_rate: parseFloat(commissionRate),
+        gross_amount: grossAmount,
         deductions: parseFloat(deductions),
-        netAmount,
+        net_amount: netAmount,
         status: 'pending',
       },
       include: {
-        professional: {
+        users: {
           select: { id: true, name: true, email: true }
         }
       },
@@ -165,7 +166,7 @@ export async function PUT(request: NextRequest) {
 
     // Recalculate amounts if base values change
     if (baseAmount || commissionRate || deductions !== undefined) {
-      const currentPayout = await prisma.professionalPayout.findUnique({
+      const currentPayout = await prisma.professional_payouts.findUnique({
         where: { id },
       });
 
@@ -176,22 +177,22 @@ export async function PUT(request: NextRequest) {
         );
       }
 
-      const newBaseAmount = baseAmount ? parseFloat(baseAmount) : currentPayout.baseAmount;
-      const newCommissionRate = commissionRate ? parseFloat(commissionRate) : currentPayout.commissionRate;
-      const newDeductions = deductions !== undefined ? parseFloat(deductions) : currentPayout.deductions;
+      const newBaseAmount = baseAmount ? parseFloat(baseAmount) : Number(currentPayout.base_amount);
+      const newCommissionRate = commissionRate ? parseFloat(commissionRate) : Number(currentPayout.commission_rate);
+      const newDeductions = deductions !== undefined ? parseFloat(deductions) : Number(currentPayout.deductions);
 
-      updateData.baseAmount = newBaseAmount;
-      updateData.commissionRate = newCommissionRate;
+      updateData.base_amount = newBaseAmount;
+      updateData.commission_rate = newCommissionRate;
       updateData.deductions = newDeductions;
-      updateData.grossAmount = Number(newBaseAmount) * Number(newCommissionRate);
-      updateData.netAmount = Number(updateData.grossAmount) - Number(newDeductions);
+      updateData.gross_amount = Number(newBaseAmount) * Number(newCommissionRate);
+      updateData.net_amount = Number(updateData.gross_amount) - Number(newDeductions);
     }
 
-    const updatedPayout = await prisma.professionalPayout.update({
+    const updatedPayout = await prisma.professional_payouts.update({
       where: { id },
       data: updateData,
       include: {
-        professional: {
+        users: {
           select: { id: true, name: true, email: true }
         }
       },

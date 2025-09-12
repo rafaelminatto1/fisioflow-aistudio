@@ -34,13 +34,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Buscar recibo com dados relacionados
-    const receipt = await prisma.receipt.findFirst({
+    const receipt = await prisma.receipts.findFirst({
       where: {
         id: receiptId,
         userId: session.user.id
       },
       include: {
-        patient: true,
+        patients: true,
         appointment: {
           select: {
             service: true,
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // Enviar por email
     if (method === 'email' || method === 'both') {
-      if (!receipt.patient.email) {
+      if (!receipt.patients.email) {
         return NextResponse.json(
           { error: 'Paciente não possui email cadastrado' },
           { status: 400 }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     // Enviar por WhatsApp
     if (method === 'whatsapp' || method === 'both') {
-      if (!receipt.patient.phone) {
+      if (!receipt.patients.phone) {
         return NextResponse.json(
           { error: 'Paciente não possui telefone cadastrado' },
           { status: 400 }
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
     // Atualizar status do recibo
     const hasSuccess = (results.email?.success !== false) && (results.whatsapp?.success !== false);
     if (hasSuccess) {
-      await prisma.receipt.update({
+      await prisma.receipts.update({
         where: { id: receiptId },
         data: { 
           status: 'SENT',
@@ -182,7 +182,7 @@ async function generateReceiptHtml(receipt: any, user: any, template: any) {
   
   const templateData = {
     number: receipt.number,
-    issueDate: new Date(receipt.issueDate).toLocaleDateString('pt-BR'),
+    issueDate: new Date(receipt.service_date).toLocaleDateString('pt-BR'),
     dueDate: receipt.dueDate ? new Date(receipt.dueDate).toLocaleDateString('pt-BR') : null,
     amount: receipt.amount.toLocaleString('pt-BR', {
       style: 'currency',
@@ -192,9 +192,9 @@ async function generateReceiptHtml(receipt: any, user: any, template: any) {
     paymentMethod: receipt.paymentMethod,
     notes: receipt.notes,
     patient: {
-      name: receipt.patient.name,
-      email: receipt.patient.email,
-      phone: receipt.patient.phone
+      name: receipt.patients.name,
+      email: receipt.patients.email,
+      phone: receipt.patients.phone
     },
     appointment: receipt.appointment ? {
       service: receipt.appointment.service,
@@ -215,7 +215,7 @@ async function sendReceiptByEmail(receipt: any, receiptHtml: string, customMessa
   const subject = `Recibo ${receipt.number} - ${receipt.description}`;
   
   let message = customMessage || `
-Olá ${receipt.patient.name},
+Olá ${receipt.patients.name},
 
 Segue em anexo o recibo referente ao serviço prestado.
 
@@ -228,7 +228,7 @@ Equipe FisioFlow
   `;
 
   return await sendEmail({
-    to: receipt.patient.email,
+    to: receipt.patients.email,
     subject,
     text: message,
     html: receiptHtml,
@@ -245,20 +245,20 @@ async function sendReceiptByWhatsApp(receipt: any, receiptHtml: string, customMe
   let message = customMessage || `
 🧾 *Recibo ${receipt.number}*
 
-Olá ${receipt.patient.name}!
+Olá ${receipt.patients.name}!
 
 Segue o recibo do serviço prestado:
 
 💰 *Valor:* ${receipt.amount.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
 📝 *Descrição:* ${receipt.description}
-📅 *Data:* ${new Date(receipt.issueDate).toLocaleDateString('pt-BR')}
+📅 *Data:* ${new Date(receipt.service_date).toLocaleDateString('pt-BR')}
 💳 *Forma de Pagamento:* ${receipt.paymentMethod}
 
 Obrigado pela confiança! 🙏
   `;
 
   return await sendWhatsAppMessage({
-    to: receipt.patient.phone,
+    to: receipt.patients.phone,
     message: message.trim()
   });
 }

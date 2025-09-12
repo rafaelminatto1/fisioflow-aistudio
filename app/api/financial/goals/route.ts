@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { auth } from '@/lib/auth';
 import { z } from 'zod';
 
 const prisma = new PrismaClient();
@@ -99,7 +98,7 @@ const goalSchema = z.object({
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -189,7 +188,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -252,7 +251,7 @@ export async function POST(request: NextRequest) {
 
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -318,7 +317,7 @@ export async function PUT(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: 'Não autorizado' }, { status: 401 });
     }
@@ -367,29 +366,27 @@ async function calculateCurrentValue(goal: FinancialGoal, userId: string): Promi
   try {
     switch (goal.type) {
       case 'REVENUE':
-        const revenue = await prisma.financialTransaction.aggregate({
-          where: {
-            userId,
-            type: 'INCOME',
-            status: 'PAID',
-            createdAt: {
-              gte: goal.startDate,
-              lte: goal.endDate
-            }
-          },
+        const revenue = await prisma.financial_transactions.aggregate({
+            where: {
+              user_id: userId,
+              type: 'INCOME',
+              date: {
+                gte: goal.startDate,
+                lte: goal.endDate
+              }
+            },
           _sum: {
             amount: true
           }
         });
-        return revenue._sum.amount || 0;
+        return Number(revenue._sum.amount) || 0;
 
       case 'PROFIT':
-        const income = await prisma.financialTransaction.aggregate({
+        const income = await prisma.financial_transactions.aggregate({
           where: {
-            userId,
+            user_id: userId,
             type: 'INCOME',
-            status: 'PAID',
-            createdAt: {
+            date: {
               gte: goal.startDate,
               lte: goal.endDate
             }
@@ -399,11 +396,11 @@ async function calculateCurrentValue(goal: FinancialGoal, userId: string): Promi
           }
         });
 
-        const expenses = await prisma.financialTransaction.aggregate({
+        const expenses = await prisma.financial_transactions.aggregate({
           where: {
-            userId,
+            user_id: userId,
             type: 'EXPENSE',
-            createdAt: {
+            date: {
               gte: goal.startDate,
               lte: goal.endDate
             }
@@ -413,13 +410,12 @@ async function calculateCurrentValue(goal: FinancialGoal, userId: string): Promi
           }
         });
 
-        return (income._sum.amount || 0) - (expenses._sum.amount || 0);
+        return (Number(income._sum.amount) || 0) - (Number(expenses._sum.amount) || 0);
 
       case 'PATIENTS':
-        const patients = await prisma.patient.count({
+        const patients = await prisma.patients.count({
           where: {
-            userId,
-            createdAt: {
+            created_at: {
               gte: goal.startDate,
               lte: goal.endDate
             }
@@ -428,11 +424,11 @@ async function calculateCurrentValue(goal: FinancialGoal, userId: string): Promi
         return patients;
 
       case 'APPOINTMENTS':
-        const appointments = await prisma.appointment.count({
+        const appointments = await prisma.appointments.count({
           where: {
-            userId,
-            status: 'COMPLETED',
-            createdAt: {
+            therapist_id: userId,
+            status: 'Concluido',
+            created_at: {
               gte: goal.startDate,
               lte: goal.endDate
             }

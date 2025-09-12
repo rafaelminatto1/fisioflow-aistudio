@@ -20,10 +20,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const receipt = await prisma.receipt.findUnique({
+    const receipt = await prisma.receipts.findUnique({
       where: { id: params.id },
       include: {
-        patient: {
+        patients: {
           select: { 
             id: true, 
             name: true, 
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             address: true
           }
         },
-        transaction: {
+        financial_transactions: {
           select: { 
             id: true, 
             type: true, 
@@ -41,7 +41,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             date: true
           }
         },
-        issuer: {
+        users: {
           select: { 
             id: true, 
             name: true, 
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const receipt = await prisma.receipt.findUnique({
+    const receipt = await prisma.receipts.findUnique({
       where: { id: params.id }
     });
 
@@ -118,33 +118,33 @@ export async function PUT(request: NextRequest, { params }: RouteParams) {
     const body = await request.json();
     const { notes, items } = body;
 
-    const updatedReceipt = await prisma.receipt.update({
+    const updatedReceipt = await prisma.receipts.update({
       where: { id: params.id },
       data: {
         ...(notes !== undefined && { notes }),
         ...(items !== undefined && { items: JSON.stringify(items) }),
-        updatedAt: new Date(),
+        updated_at: new Date(),
       },
       include: {
-        patient: {
+        patients: {
           select: { 
             id: true, 
             name: true, 
             cpf: true, 
-            email: true,
-            phone: true,
-            address: true
+            email: true, 
+            phone: true, 
+            address: true 
           }
         },
-        transaction: {
+        financial_transactions: {
           select: { 
             id: true, 
             type: true, 
-            category: true,
-            date: true
+            amount: true, 
+            description: true 
           }
         },
-        issuer: {
+        users: {
           select: { 
             id: true, 
             name: true, 
@@ -187,7 +187,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const receipt = await prisma.receipt.findUnique({
+    const receipt = await prisma.receipts.findUnique({
       where: { id: params.id }
     });
 
@@ -198,7 +198,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    await prisma.receipt.delete({
+    await prisma.receipts.delete({
       where: { id: params.id }
     });
 

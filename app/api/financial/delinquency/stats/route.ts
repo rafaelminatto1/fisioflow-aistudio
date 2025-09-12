@@ -19,8 +19,12 @@ export async function GET(request: NextRequest) {
     // Get all overdue payments
     const overduePayments = await prisma.payments.findMany({
       where: {
-        patient: {
-          user_id: session.user.id
+        patients: {
+          appointments: {
+            some: {
+              therapist_id: session.user.id
+            }
+          }
         },
         status: 'pending',
         due_date: {
@@ -28,21 +32,17 @@ export async function GET(request: NextRequest) {
         }
       },
       include: {
-        patient: {
-          select: {
-            id: true,
-            name: true
-          }
-        }
+        patients: true
       }
     });
 
     // Calculate total overdue amount
-    const totalAmount = overduePayments.reduce((sum, payment) => sum + payment.amount, 0);
+    const totalAmount = overduePayments.reduce((sum, payment) => sum + payment.amount.toNumber(), 0);
 
     // Calculate average days overdue
     const averageDaysOverdue = overduePayments.length > 0 
       ? overduePayments.reduce((sum, payment) => {
+          if (!payment.due_date) return sum;
           const days = Math.floor(
             (currentDate.getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24)
           );
@@ -53,8 +53,12 @@ export async function GET(request: NextRequest) {
     // Get payments contacted today (using updatedAt as proxy for contact date)
     const contactedToday = await prisma.payments.count({
       where: {
-        patient: {
-          user_id: session.user.id
+        patients: {
+          appointments: {
+            some: {
+              therapist_id: session.user.id
+            }
+          }
         },
         status: 'pending',
         due_date: {
@@ -70,8 +74,14 @@ export async function GET(request: NextRequest) {
     // Get payments recovered this month (completed payments that were previously overdue)
     const recoveredThisMonth = await prisma.payments.findMany({
       where: {
-        user_id: session.user.id,
-        status: 'completed',
+        patients: {
+          appointments: {
+            some: {
+              therapist_id: session.user.id
+            }
+          }
+        },
+        status: 'paid',
         paid_at: {
           gte: startOfMonth,
           lt: currentDate
@@ -82,12 +92,18 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const recoveredAmount = recoveredThisMonth.reduce((sum, payment) => sum + payment.amount, 0);
+    const recoveredAmount = recoveredThisMonth.reduce((sum, payment) => sum + payment.amount.toNumber(), 0);
 
     // Calculate recovery rate (recovered vs total overdue in the period)
     const totalOverdueThisMonth = await prisma.payments.findMany({
       where: {
-        user_id: session.user.id,
+        patients: {
+          appointments: {
+            some: {
+              therapist_id: session.user.id
+            }
+          }
+        },
         OR: [
           {
             status: 'pending',
@@ -97,7 +113,7 @@ export async function GET(request: NextRequest) {
             }
           },
           {
-            status: 'completed',
+            status: 'paid',
             paid_at: {
               gte: startOfMonth,
               lt: currentDate
@@ -111,7 +127,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    const totalOverdueAmountThisMonth = totalOverdueThisMonth.reduce((sum, payment) => sum + payment.amount, 0);
+    const totalOverdueAmountThisMonth = totalOverdueThisMonth.reduce((sum, payment) => sum + payment.amount.toNumber(), 0);
     const recoveryRate = totalOverdueAmountThisMonth > 0 
       ? (recoveredAmount / totalOverdueAmountThisMonth) * 100 
       : 0;
@@ -150,9 +166,13 @@ export async function GET(request: NextRequest) {
 }
 
 async function getTopDelinquentPatients(userId: string, currentDate: Date) {
-  const patients = await prisma.patient.findMany({
+  const patients = await prisma.patients.findMany({
     where: {
-      user_id: userId,
+      appointments: {
+        some: {
+          therapist_id: userId
+        }
+      },
       payments: {
         some: {
           status: 'pending',
@@ -180,13 +200,15 @@ async function getTopDelinquentPatients(userId: string, currentDate: Date) {
       name: patient.name,
       email: patient.email,
       phone: patient.phone,
-      overdueAmount: patient.payments.reduce((sum, t) => sum + t.amount, 0),
+      overdueAmount: patient.payments.reduce((sum, t) => sum + t.amount.toNumber(), 0),
       overdueCount: patient.payments.length,
       oldestOverdue: Math.min(
-        ...patient.payments.map(t => 
-          Math.floor((currentDate.getTime() - new Date(t.due_date).getTime()) / (1000 * 60 * 60 * 24))
+          ...patient.payments
+            .filter(t => t.due_date)
+            .map(t => 
+              Math.floor((currentDate.getTime() - new Date(t.due_date!).getTime()) / (1000 * 60 * 60 * 24))
+            )
         )
-      )
     }))
     .sort((a, b) => b.overdueAmount - a.overdueAmount)
     .slice(0, 10);
@@ -202,15 +224,16 @@ function getOverdueByAge(overduePayments: any[], currentDate: Date) {
   };
 
   overduePayments.forEach(payment => {
+    if (!payment.due_date) return;
     const days = Math.floor(
       (currentDate.getTime() - new Date(payment.due_date).getTime()) / (1000 * 60 * 60 * 24)
     );
 
-    if (days <= 7) brackets['1-7'] += payment.amount;
-    else if (days <= 15) brackets['8-15'] += payment.amount;
-    else if (days <= 30) brackets['16-30'] += payment.amount;
-    else if (days <= 60) brackets['31-60'] += payment.amount;
-    else brackets['60+'] += payment.amount;
+    if (days <= 7) brackets['1-7'] += payment.amount.toNumber();
+    else if (days <= 15) brackets['8-15'] += payment.amount.toNumber();
+    else if (days <= 30) brackets['16-30'] += payment.amount.toNumber();
+    else if (days <= 60) brackets['31-60'] += payment.amount.toNumber();
+    else brackets['60+'] += payment.amount.toNumber();
   });
 
   return brackets;
@@ -226,7 +249,13 @@ async function getMonthlyTrend(userId: string, currentDate: Date) {
     // Get overdue payments for this month
     const overduePayments = await prisma.payments.findMany({
       where: {
-        user_id: userId,
+        patients: {
+          appointments: {
+            some: {
+              therapist_id: userId
+            }
+          }
+        },
         status: 'pending',
         due_date: {
           gte: monthStart,
@@ -238,8 +267,14 @@ async function getMonthlyTrend(userId: string, currentDate: Date) {
     // Get recovered payments for this month
     const recoveredPayments = await prisma.payments.findMany({
       where: {
-        user_id: userId,
-        status: 'completed',
+        patients: {
+          appointments: {
+            some: {
+              therapist_id: userId
+            }
+          }
+        },
+        status: 'paid',
         paid_at: {
           gte: monthStart,
           lte: monthEnd
@@ -253,9 +288,9 @@ async function getMonthlyTrend(userId: string, currentDate: Date) {
     months.push({
       month: monthStart.toISOString().slice(0, 7), // YYYY-MM format
       overdueCount: overduePayments.length,
-      overdueAmount: overduePayments.reduce((sum, p) => sum + p.amount, 0),
+      overdueAmount: overduePayments.reduce((sum, p) => sum + p.amount.toNumber(), 0),
       recoveredCount: recoveredPayments.length,
-      recoveredAmount: recoveredPayments.reduce((sum, p) => sum + p.amount, 0)
+      recoveredAmount: recoveredPayments.reduce((sum, p) => sum + p.amount.toNumber(), 0)
     });
   }
 

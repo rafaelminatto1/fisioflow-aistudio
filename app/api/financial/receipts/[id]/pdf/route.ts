@@ -21,10 +21,10 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const receipt = await prisma.receipt.findUnique({
+    const receipt = await prisma.receipts.findUnique({
       where: { id: params.id },
       include: {
-        patient: {
+        patients: {
           select: { 
             id: true, 
             name: true, 
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             address: true
           }
         },
-        transaction: {
+        financial_transactions: {
           select: { 
             id: true, 
             type: true, 
@@ -42,7 +42,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
             date: true
           }
         },
-        issuer: {
+        users: {
           select: { 
             id: true, 
             name: true, 
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       status: 200,
       headers: {
         'Content-Type': 'text/html',
-        'Content-Disposition': `inline; filename="recibo-${receipt.receiptNumber}.html"`
+        'Content-Disposition': `inline; filename="recibo-${receipt.receipt_number}.html"`
       }
     });
 
@@ -116,7 +116,7 @@ function generateReceiptHTML(receipt: any, items: any[]): string {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recibo - ${receipt.receiptNumber}</title>
+    <title>Recibo - ${receipt.receipt_number}</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -259,7 +259,7 @@ function generateReceiptHTML(receipt: any, items: any[]): string {
                 contato@fisioflow.com.br
             </div>
             <div class="receipt-number">
-                ${receipt.receiptNumber}
+                ${receipt.receipt_number}
             </div>
         </div>
 
@@ -269,21 +269,21 @@ function generateReceiptHTML(receipt: any, items: any[]): string {
                 <div>
                     <div class="info-item">
                         <div class="info-label">Nome Completo</div>
-                        <div class="info-value">${receipt.patient.name}</div>
+                        <div class="info-value">${receipt.patients.name}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">CPF</div>
-                        <div class="info-value">${receipt.patient.cpf ? formatCPF(receipt.patient.cpf) : 'Não informado'}</div>
+                        <div class="info-value">${receipt.patients.cpf ? formatCPF(receipt.patients.cpf) : 'Não informado'}</div>
                     </div>
                 </div>
                 <div>
                     <div class="info-item">
                         <div class="info-label">E-mail</div>
-                        <div class="info-value">${receipt.patient.email || 'Não informado'}</div>
+                        <div class="info-value">${receipt.patients.email || 'Não informado'}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Telefone</div>
-                        <div class="info-value">${receipt.patient.phone || 'Não informado'}</div>
+                        <div class="info-value">${receipt.patients.phone || 'Não informado'}</div>
                     </div>
                 </div>
             </div>
@@ -299,17 +299,17 @@ function generateReceiptHTML(receipt: any, items: any[]): string {
                     </div>
                     <div class="info-item">
                         <div class="info-label">Data do Serviço</div>
-                        <div class="info-value">${formatDate(receipt.serviceDate)}</div>
+                        <div class="info-value">${formatDate(receipt.service_date)}</div>
                     </div>
                 </div>
                 <div>
                     <div class="info-item">
                         <div class="info-label">Método de Pagamento</div>
-                        <div class="info-value">${getPaymentMethodLabel(receipt.paymentMethod)}</div>
+                        <div class="info-value">${getPaymentMethodLabel(receipt.payment_method)}</div>
                     </div>
                     <div class="info-item">
                         <div class="info-label">Data de Emissão</div>
-                        <div class="info-value">${formatDate(receipt.createdAt)}</div>
+                        <div class="info-value">${formatDate(receipt.created_at)}</div>
                     </div>
                 </div>
             </div>
@@ -363,7 +363,7 @@ function generateReceiptHTML(receipt: any, items: any[]): string {
             <div class="signature-box">
                 <div>Assinatura do Profissional</div>
                 <div style="margin-top: 5px; font-size: 12px; color: #6b7280;">
-                    ${receipt.issuer.name}
+                    ${receipt.users.name}
                 </div>
             </div>
             <div class="signature-box">
