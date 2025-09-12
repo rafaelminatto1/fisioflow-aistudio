@@ -1,2 +1,11 @@
-# Skip pre-commit hooks for this commit
-exit 0
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Run lint-staged for code quality checks
+npx lint-staged
+
+# Run TypeScript type checking
+npm run type-check
+
+# Run tests (optional - can be commented out for faster commits)
+# npm run test:unit

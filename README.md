@@ -6,10 +6,13 @@
 
 **Plataforma completa para gestão de clínicas de fisioterapia**
 
-[![Deploy Status](https://img.shields.io/badge/deploy-ready-brightgreen)](https://fisioflow.digitalocean.app)
+[![CI/CD](https://github.com/your-org/fisioflow/workflows/CI%2FCD/badge.svg)](https://github.com/your-org/fisioflow/actions)
+[![Deploy to DigitalOcean](https://github.com/your-org/fisioflow/workflows/🚀%20Deploy%20to%20DigitalOcean/badge.svg)](https://github.com/your-org/fisioflow/actions)
+[![TypeScript](https://img.shields.io/badge/TypeScript-Ready-blue)](./tsconfig.json)
+[![Code Quality](https://img.shields.io/badge/code%20quality-A+-brightgreen)](https://github.com/your-org/fisioflow/actions)
 [![Security](https://img.shields.io/badge/security-A+-green)](./docs/SECURITY.md)
-[![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://status.fisioflow.com)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](./CONTRIBUTING.md)
 
 </div>
 
@@ -161,19 +164,22 @@ graph TB
 
 ### Pré-requisitos
 
-- Node.js 18+ 
-- npm ou pnpm
-- PostgreSQL 15+
-- Git
+- **Node.js** 20+ (recomendado: usar nvm)
+- **npm** ou **pnpm** (pnpm recomendado para performance)
+- **PostgreSQL** 15+ ou **Supabase** (recomendado)
+- **Git** 2.30+
+- **Docker** (opcional, para desenvolvimento)
 
-### Instalação Local
+### Instalação Rápida
 
 ```bash
 # 1. Clonar o repositório
 git clone https://github.com/your-org/fisioflow.git
 cd fisioflow
 
-# 2. Instalar dependências
+# 2. Instalar dependências (pnpm recomendado)
+pnpm install
+# ou
 npm install
 
 # 3. Configurar ambiente
@@ -181,51 +187,121 @@ cp .env.example .env.local
 # Editar .env.local com suas configurações
 
 # 4. Configurar banco de dados
-npx prisma migrate dev
-npx prisma db seed
+pnpm prisma:generate
+pnpm prisma:migrate
+pnpm prisma:seed
 
 # 5. Iniciar desenvolvimento
-npm run dev
+pnpm dev
 ```
 
-### Configuração do Ambiente
+### Configuração Detalhada
+
+#### 1. Variáveis de Ambiente
 
 ```bash
-# Configurar variáveis de ambiente
-./scripts/setup-environment.sh
+# Copiar arquivo de exemplo
+cp .env.example .env.local
 
-# Validar configuração
-node environment/validation/validate-env.js
+# Configurar variáveis essenciais
+echo "DATABASE_URL=postgresql://user:pass@localhost:5432/fisioflow" >> .env.local
+echo "NEXTAUTH_SECRET=$(openssl rand -base64 32)" >> .env.local
+echo "NEXTAUTH_URL=http://localhost:3000" >> .env.local
+```
+
+#### 2. Banco de Dados (Supabase)
+
+```bash
+# Instalar Supabase CLI
+npm install -g supabase
+
+# Inicializar projeto Supabase
+supabase init
+
+# Aplicar migrações
+supabase db push
+```
+
+#### 3. Verificação da Instalação
+
+```bash
+# Verificar dependências
+pnpm run check
+
+# Executar testes
+pnpm test
+
+# Verificar lint e tipos
+pnpm run lint
+pnpm run type-check
+```
+
+### Desenvolvimento com Docker
+
+```bash
+# Iniciar ambiente completo
+docker-compose up -d
+
+# Acessar aplicação
+open http://localhost:3000
 ```
 
 ## 🌐 Deploy
 
-### Deploy Rápido
+### Deploy Automático (Recomendado)
+
+O projeto está configurado com **CI/CD automático** via GitHub Actions:
 
 ```bash
-# 1. Configurar infraestrutura
-./scripts/setup-infrastructure.sh
+# Deploy automático é acionado ao fazer push para main
+git push origin main
 
-# 2. Deploy na DigitalOcean (Full Stack)
-./scripts/deploy-backend.sh
-
-# 4. Configurar monitoramento
-./scripts/setup-monitoring.sh
-
-# 5. Configurar segurança
-./scripts/setup-security.sh
-
-# 6. Configurar backup
-./scripts/setup-backup.sh
-
-# 7. Testes finais
-./scripts/final-tests.sh
+# Ou manualmente via GitHub Actions
+# Acesse: Actions > Deploy to DigitalOcean > Run workflow
 ```
+
+#### Configuração Necessária
+
+1. **Secrets do GitHub** (configurar em Settings > Secrets):
+   ```
+   DIGITALOCEAN_ACCESS_TOKEN=your_do_token
+   DATABASE_URL=your_production_db_url
+   NEXTAUTH_SECRET=your_production_secret
+   NEXTAUTH_URL=https://your-domain.com
+   ```
+
+2. **Arquivo de Configuração DigitalOcean** (`.do/app.yaml`):
+   - ✅ Já configurado no projeto
+   - ✅ Inclui frontend, backend e banco de dados
+   - ✅ Configurações de ambiente automáticas
+
+### Deploy Manual
+
+```bash
+# 1. Verificar pré-requisitos
+./deploy.sh check
+
+# 2. Build e testes
+./deploy.sh build
+
+# 3. Deploy para DigitalOcean
+./deploy.sh deploy
+
+# 4. Configurar banco de dados
+./deploy.sh db
+```
+
+### Monitoramento do Deploy
+
+- 🔍 **GitHub Actions**: [Ver workflows](https://github.com/your-org/fisioflow/actions)
+- 📊 **DigitalOcean**: [Painel de controle](https://cloud.digitalocean.com/apps)
+- 🏥 **Health Check**: Automático após deploy
+- 📧 **Notificações**: Via GitHub (sucesso/falha)
 
 ### Deploy Detalhado
 
 Para instruções completas de deploy, consulte:
-- 📖 [Guia de Deploy](./docs/DEPLOYMENT-GUIDE.md)
+- 📖 [Guia de Deploy](./DEPLOY.md)
 - 🔧 [Runbook de Operações](./docs/OPERATIONS.md)
 - 🔒 [Guia de Segurança](./docs/SECURITY.md)
 
@@ -253,19 +329,68 @@ Para instruções completas de deploy, consulte:
 ### Validação e Testes
 
 ```bash
-# Validar ambiente
-node environment/validation/validate-env.js
+# Executar todos os checks de qualidade
+pnpm run check
 
 # Executar testes
-npm run test
-npm run test:e2e
-npm run test:load
+pnpm test
+pnpm test:e2e
+pnpm test:load
 
 # Verificar qualidade do código
-npm run lint
-npm run type-check
-npm run audit
+pnpm run lint
+pnpm run type-check
+pnpm run audit
 ```
+
+## 🔧 Qualidade de Código e CI/CD
+
+### Pipeline Automático
+
+O projeto inclui um pipeline completo de CI/CD com:
+
+#### ✅ Verificações de Qualidade
+- **ESLint**: Análise estática de código
+- **Prettier**: Formatação automática
+- **TypeScript**: Verificação de tipos
+- **Tests**: Testes unitários e integração
+- **Security Audit**: Verificação de vulnerabilidades
+
+#### 🚀 Deploy Automático
+- **Build**: Compilação otimizada
+- **Health Check**: Verificação pós-deploy
+- **Database Migrations**: Aplicação automática
+- **Rollback**: Reversão automática em caso de falha
+
+#### 🛡️ Pre-commit Hooks
+
+```bash
+# Hooks automáticos configurados:
+# - lint-staged (formatação e lint)
+# - type-check (verificação TypeScript)
+# - tests (opcional)
+
+# Para pular hooks (não recomendado):
+git commit --no-verify
+```
+
+### Scripts Disponíveis
+
+| Script | Descrição |
+|--------|-----------|
+| `pnpm dev` | Servidor de desenvolvimento |
+| `pnpm build` | Build de produção |
+| `pnpm start` | Servidor de produção |
+| `pnpm lint` | Verificação de lint |
+| `pnpm lint:fix` | Correção automática de lint |
+| `pnpm type-check` | Verificação TypeScript |
+| `pnpm test` | Testes unitários |
+| `pnpm test:watch` | Testes em modo watch |
+| `pnpm test:e2e` | Testes end-to-end |
+| `pnpm check` | Todos os checks de qualidade |
+| `pnpm prisma:generate` | Gerar cliente Prisma |
+| `pnpm prisma:migrate` | Aplicar migrações |
+| `pnpm prisma:seed` | Popular banco de dados |
 
 ## 🤝 Contribuição
 

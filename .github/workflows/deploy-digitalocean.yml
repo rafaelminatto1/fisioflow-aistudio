@@ -1,0 +1,195 @@
+name: 🚀 Deploy to DigitalOcean
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+        - production
+        - staging
+
+env:
+  NODE_VERSION: '20'
+  APP_NAME: 'fisioflow'
+
+jobs:
+  # Pre-deployment checks
+  pre-deploy-checks:
+    name: 🔍 Pre-deployment Checks
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 📦 Install dependencies
+      run: npm ci
+      
+    - name: 🔧 Generate Prisma Client
+      run: npx prisma generate
+      
+    - name: 🧹 Lint check
+      run: npm run lint
+      
+    - name: 🔍 Type check
+      run: npm run type-check
+      
+    - name: 🏗️ Build application
+      env:
+        SKIP_ENV_VALIDATION: true
+        DATABASE_URL: "postgresql://user:pass@localhost:5432/test"
+        NEXTAUTH_SECRET: "test-secret"
+        NEXTAUTH_URL: "http://localhost:3000"
+      run: npm run build
+
+  # Deploy to DigitalOcean
+  deploy:
+    name: 🚀 Deploy to DigitalOcean
+    runs-on: ubuntu-latest
+    needs: pre-deploy-checks
+    environment: production
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🔧 Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+        
+    - name: 🚀 Deploy to DigitalOcean App Platform
+      run: |
+        # Check if app exists
+        if doctl apps list --format Name --no-header | grep -q "^${{ env.APP_NAME }}$"; then
+          echo "📱 Updating existing app: ${{ env.APP_NAME }}"
+          APP_ID=$(doctl apps list --format ID,Name --no-header | grep "${{ env.APP_NAME }}" | awk '{print $1}')
+          doctl apps create-deployment $APP_ID --wait
+        else
+          echo "🆕 Creating new app: ${{ env.APP_NAME }}"
+          if [ -f ".do/app.yaml" ]; then
+            doctl apps create --spec .do/app.yaml --wait
+          else
+            echo "❌ App spec file (.do/app.yaml) not found!"
+            exit 1
+          fi
+        fi
+        
+    - name: 📊 Get deployment info
+      run: |
+        APP_ID=$(doctl apps list --format ID,Name --no-header | grep "${{ env.APP_NAME }}" | awk '{print $1}')
+        APP_URL=$(doctl apps get $APP_ID --format DefaultIngress --no-header)
+        echo "🌐 App URL: https://$APP_URL"
+        echo "📱 App ID: $APP_ID"
+        
+        # Save deployment info for later steps
+        echo "APP_ID=$APP_ID" >> $GITHUB_ENV
+        echo "APP_URL=$APP_URL" >> $GITHUB_ENV
+
+  # Database migrations (optional)
+  migrate-database:
+    name: 🗄️ Database Migrations
+    runs-on: ubuntu-latest
+    needs: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: 📥 Checkout code
+      uses: actions/checkout@v4
+      
+    - name: 🟢 Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        
+    - name: 📦 Install dependencies
+      run: npm ci
+      
+    - name: 🔧 Generate Prisma Client
+      run: npx prisma generate
+      
+    - name: 🗄️ Run database migrations
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        echo "🔄 Running database migrations..."
+        npx prisma migrate deploy
+        echo "✅ Database migrations completed"
+        
+    - name: 🌱 Seed database (if needed)
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      run: |
+        if [ -f "prisma/seed.ts" ] || [ -f "prisma/seed.js" ]; then
+          echo "🌱 Seeding database..."
+          npm run prisma:seed || npx prisma db seed
+          echo "✅ Database seeding completed"
+        else
+          echo "ℹ️ No seed file found, skipping..."
+        fi
+      continue-on-error: true
+
+  # Health check
+  health-check:
+    name: 🏥 Health Check
+    runs-on: ubuntu-latest
+    needs: [deploy, migrate-database]
+    if: always() && needs.deploy.result == 'success'
+    
+    steps:
+    - name: 🏥 Check application health
+      run: |
+        echo "🔍 Checking application health..."
+        
+        # Wait for deployment to be ready
+        sleep 30
+        
+        # Get app URL from DigitalOcean
+        APP_URL="${{ needs.deploy.outputs.APP_URL || 'fisioflow-xxxxx.ondigitalocean.app' }}"
+        
+        # Health check
+        if curl -f -s "https://$APP_URL/api/health" > /dev/null; then
+          echo "✅ Application is healthy!"
+        else
+          echo "⚠️ Health check failed, but deployment may still be starting..."
+          echo "🔗 Check manually: https://$APP_URL"
+        fi
+
+  # Notification
+  notify:
+    name: 📢 Deployment Notification
+    runs-on: ubuntu-latest
+    needs: [deploy, migrate-database, health-check]
+    if: always()
+    
+    steps:
+    - name: 📢 Deployment Status
+      run: |
+        if [ "${{ needs.deploy.result }}" == "success" ]; then
+          echo "🎉 Deployment successful!"
+          echo "🌐 Application URL: https://fisioflow-xxxxx.ondigitalocean.app"
+          echo "📊 Monitor at: https://cloud.digitalocean.com/apps"
+        else
+          echo "❌ Deployment failed!"
+          echo "🔍 Check logs at: https://github.com/${{ github.repository }}/actions"
+        fi
+        
+        echo "📋 Deployment Summary:"
+        echo "- Pre-checks: ${{ needs.pre-deploy-checks.result }}"
+        echo "- Deploy: ${{ needs.deploy.result }}"
+        echo "- Migrations: ${{ needs.migrate-database.result }}"
+        echo "- Health Check: ${{ needs.health-check.result }}"

@@ -1,4 +1,12 @@
 {
-  "*.{js,jsx,ts,tsx}": ["prettier --write"],
-  "*.{json,css,md}": ["prettier --write"]
+  "*.{js,jsx,ts,tsx}": [
+    "eslint --fix",
+    "prettier --write"
+  ],
+  "*.{json,css,md}": [
+    "prettier --write"
+  ],
+  "*.{ts,tsx}": [
+    "bash -c 'npm run type-check'"
+  ]
 }
