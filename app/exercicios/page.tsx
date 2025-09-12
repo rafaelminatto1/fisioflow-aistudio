@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Sidebar from '@/components/Sidebar';
+import { Sidebar } from '@/components/Sidebar';
 import { Search, Filter, Grid, List, Star, Play, Clock, User, BarChart3, TrendingUp } from 'lucide-react';
 import { 
   getExerciseLibraryData, 

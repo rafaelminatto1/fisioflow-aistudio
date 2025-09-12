@@ -9,6 +9,18 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   
+  // Optimize build for Vercel
+  output: 'standalone',
+  compress: true,
+  poweredByHeader: false,
+  
+  // Reduce bundle size
+  modularizeImports: {
+    'lucide-react': {
+      transform: 'lucide-react/dist/esm/icons/{{member}}',
+    },
+  },
+  
   // Simplified Image Configuration
   images: {
     remotePatterns: [
@@ -43,6 +55,27 @@ const nextConfig = {
     
     // Ignore handlebars warnings
     config.externals = [...(config.externals || []), 'handlebars'];
+    
+    // Optimize cache and reduce size
+    config.cache = {
+      type: 'memory',
+    };
+    
+    // Reduce chunk size
+    config.optimization = {
+      ...config.optimization,
+      splitChunks: {
+        chunks: 'all',
+        cacheGroups: {
+          vendor: {
+            test: /[\\/]node_modules[\\/]/,
+            name: 'vendors',
+            chunks: 'all',
+            maxSize: 244000,
+          },
+        },
+      },
+    };
     
     return config;
   },

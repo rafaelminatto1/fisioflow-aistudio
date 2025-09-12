@@ -6,6 +6,7 @@ import { ThemeProvider } from '../contexts/ThemeContext';
 import ToastContainer from '../components/ui/Toast';
 import { ResourcePreloader } from '../components/preload/ResourcePreloader';
 import { AuthProvider as CustomAuthProvider } from '@/contexts/AuthContext';
+import { ToastProvider } from '@/contexts/ToastContext';
 import './globals.css';
 import './responsive.css';
 
@@ -68,10 +69,12 @@ export default function RootLayout({
         <ThemeProvider>
           <AuthProvider>
             <CustomAuthProvider>
-              <div id="main-content" className="min-h-screen">
-                {children}
-              </div>
-              <ToastContainer />
+              <ToastProvider>
+                <div id="main-content" className="min-h-screen">
+                  {children}
+                </div>
+                <ToastContainer />
+              </ToastProvider>
             </CustomAuthProvider>
           </AuthProvider>
         </ThemeProvider>
