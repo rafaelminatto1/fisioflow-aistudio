@@ -3,6 +3,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 // import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import bcrypt from 'bcryptjs';
 import { prisma } from './prisma';
+import edgeLogger from './edge-logger';
 import type { Role } from '@prisma/client';
 
 // Tipos estendidos para NextAuth
@@ -46,7 +47,7 @@ export const authOptions = {
       },
       async authorize(credentials) {
         try {
-          console.log('[AUTH] Starting authorization process');
+          edgeLogger.info('Starting authorization process');
           
           if (
             !credentials?.email ||
@@ -54,24 +55,23 @@ export const authOptions = {
             typeof credentials.password !== 'string' ||
             typeof credentials.email !== 'string'
           ) {
-            console.error('[AUTH] Invalid credentials format');
+            edgeLogger.warn('Invalid credentials format provided');
             throw new Error('Credenciais inválidas.');
           }
           
-          console.log('[AUTH] Credentials format validated for:', credentials.email);
+          edgeLogger.info('Credentials format validated', { email: credentials.email });
 
           // Buscar usuário no banco
-          console.log('[AUTH] Searching for user:', credentials.email);
-          const user = await prisma.user.findUnique({
+          const user = await prisma.users.findUnique({
             where: { email: credentials.email },
           });
 
           if (!user || !user.passwordHash) {
-            console.error('[AUTH] User not found or no password hash:', credentials.email);
+            edgeLogger.warn('User authentication failed - user not found or no password', { email: credentials.email });
             throw new Error('Usuário ou senha inválidos.');
           }
           
-          console.log('[AUTH] User found, verifying password for:', user.email);
+          edgeLogger.debug('User found, verifying password');
 
           const isPasswordCorrect = await bcrypt.compare(
             credentials.password,
@@ -79,11 +79,11 @@ export const authOptions = {
           );
 
           if (!isPasswordCorrect) {
-            console.error('[AUTH] Password verification failed for:', user.email);
+            edgeLogger.warn('Password verification failed', { email: user.email });
             throw new Error('Usuário ou senha inválidos.');
           }
           
-          console.log('[AUTH] Authentication successful for:', user.email);
+          edgeLogger.info('Authentication successful', { email: user.email, role: user.role });
           
           return {
             id: user.id,
@@ -94,7 +94,7 @@ export const authOptions = {
           };
           
         } catch (error) {
-          console.error('[AUTH] Authorization error:', error);
+          edgeLogger.error('Authorization error', error);
           throw error;
         }
       },
@@ -108,21 +108,21 @@ export const authOptions = {
     async jwt({ token, user }: any) {
       try {
         if (user) {
-          console.log('[AUTH] JWT callback - adding user data to token');
+          edgeLogger.debug('JWT callback - adding user data to token');
           token.id = user.id;
           token.role = user.role;
           token.avatarUrl = user.avatarUrl;
         }
         return token;
       } catch (error) {
-        console.error('[AUTH] JWT callback error:', error);
+        edgeLogger.error('JWT callback error', error);
         throw error;
       }
     },
     async session({ session, token }: any) {
       try {
         if (session.user) {
-          console.log('[AUTH] Session callback - building session for user:', token.id);
+          edgeLogger.debug('Session callback - building session', { userId: token.id });
           const extendedUser = session.user as ExtendedUser;
           extendedUser.id = token.id as string;
           extendedUser.role = token.role as Role;
@@ -130,7 +130,7 @@ export const authOptions = {
         }
         return session;
       } catch (error) {
-        console.error('[AUTH] Session callback error:', error);
+        edgeLogger.error('Session callback error', error);
         throw error;
       }
     },

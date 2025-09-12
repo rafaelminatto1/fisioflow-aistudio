@@ -43,7 +43,7 @@ interface Metrics {
 
 /**
  * @class EdgeLogger
- * @description Um logger leve e compatível com Edge Runtimes (Vercel, Railway).
+ * @description Um logger leve e compatível com Edge Runtimes.
  * Mantém um buffer de logs em memória e coleta métricas básicas.
  */
 class EdgeLogger {

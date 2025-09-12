@@ -3,14 +3,13 @@ const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: true, // TODO: Fix 800+ ESLint errors then set to false
   },
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: true, // TODO: Fix 524 TypeScript errors then set to false
   },
   
-  // Optimize build for Vercel
-  output: 'standalone',
+  // General optimizations
   compress: true,
   poweredByHeader: false,
   
@@ -56,9 +55,12 @@ const nextConfig = {
     // Ignore handlebars warnings
     config.externals = [...(config.externals || []), 'handlebars'];
     
-    // Optimize cache and reduce size
+    // Optimize cache for better build performance
     config.cache = {
-      type: 'memory',
+      type: 'filesystem',
+      buildDependencies: {
+        config: [__filename],
+      },
     };
     
     // Reduce chunk size

@@ -28,8 +28,7 @@ DATABASE_URL=postgresql://user:pass@host:25060/db?sslmode=require
 # Execute no terminal:
 openssl rand -base64 32
 
-# Ou online:
-https://generate-secret.vercel.app/32
+# Ou use um gerador online de sua preferência
 ```
 
 #### **3. Principais Causas e Soluções**

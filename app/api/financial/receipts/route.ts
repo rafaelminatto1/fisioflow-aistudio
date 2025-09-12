@@ -21,12 +21,12 @@ export async function GET(request: NextRequest) {
 
     // Construir filtros
     const where: any = {
-      userId: session.user.id,
+      issued_by: session.user.id,
     };
 
     if (search) {
       where.OR = [
-        { number: { contains: search, mode: 'insensitive' } },
+        { receipt_number: { contains: search, mode: 'insensitive' } },
         { description: { contains: search, mode: 'insensitive' } },
         { notes: { contains: search, mode: 'insensitive' } },
         {
@@ -141,10 +141,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar se o paciente existe
-    const patient = await prisma.patient.findFirst({
+    const patient = await prisma.patients.findFirst({
       where: {
-        id: patientId,
-        userId: session.user.id
+        id: patientId
       }
     });
 
@@ -157,10 +156,10 @@ export async function POST(request: NextRequest) {
 
     // Verificar se o agendamento existe (se fornecido)
     if (appointmentId) {
-      const appointment = await prisma.appointment.findFirst({
+      const appointment = await prisma.appointments.findFirst({
         where: {
           id: appointmentId,
-          userId: session.user.id
+          therapist_id: session.user.id
         }
       });
 
@@ -175,21 +174,35 @@ export async function POST(request: NextRequest) {
     // Gerar número sequencial do recibo
     const receiptNumber = await generateReceiptNumber(session.user.id);
 
-    // Criar recibo
-    const receipt = await prisma.receipts.create({
+    // Criar transação financeira primeiro
+    const transactionId = `tx_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const transaction = await prisma.financial_transactions.create({
       data: {
-        number: receiptNumber,
-        patientId,
-        appointmentId: appointmentId || null,
+        id: transactionId,
+        type: 'INCOME',
         amount: parseFloat(amount),
         description,
-        paymentMethod,
+        date: new Date(issueDate),
+        patient_id: patientId,
+        user_id: session.user.id
+      }
+    });
+
+    // Criar recibo
+    const receiptId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const receipt = await prisma.receipts.create({
+      data: {
+        id: receiptId,
+        receipt_number: receiptNumber,
+        transaction_id: transaction.id,
+        patient_id: patientId,
+        amount: parseFloat(amount),
+        description,
         service_date: new Date(issueDate),
-        dueDate: dueDate ? new Date(dueDate) : null,
-        status: 'ISSUED',
-        template,
+        payment_method: paymentMethod,
         notes: notes || null,
-        userId: session.user.id
+        issued_by: session.user.id,
+        updated_at: new Date()
       },
       include: {
         patients: {
@@ -235,8 +248,6 @@ export async function PUT(request: NextRequest) {
       description,
       paymentMethod,
       issueDate,
-      dueDate,
-      status,
       notes
     } = body;
 
@@ -251,7 +262,7 @@ export async function PUT(request: NextRequest) {
     const existingReceipt = await prisma.receipts.findFirst({
       where: {
         id,
-        userId: session.user.id
+        issued_by: session.user.id
       }
     });
 
@@ -267,10 +278,8 @@ export async function PUT(request: NextRequest) {
     
     if (amount !== undefined) updateData.amount = parseFloat(amount);
     if (description !== undefined) updateData.description = description;
-    if (paymentMethod !== undefined) updateData.paymentMethod = paymentMethod;
+    if (paymentMethod !== undefined) updateData.payment_method = paymentMethod;
     if (issueDate !== undefined) updateData.service_date = new Date(issueDate);
-    if (dueDate !== undefined) updateData.dueDate = dueDate ? new Date(dueDate) : null;
-    if (status !== undefined) updateData.status = status;
     if (notes !== undefined) updateData.notes = notes || null;
 
     // Atualizar recibo
@@ -328,7 +337,7 @@ export async function DELETE(request: NextRequest) {
     const existingReceipt = await prisma.receipts.findFirst({
       where: {
         id,
-        userId: session.user.id
+        issued_by: session.user.id
       }
     });
 
@@ -339,11 +348,12 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Cancelar recibo ao invés de deletar
-    const receipt = await prisma.receipts.update({
-      where: { id },
-      data: { status: 'CANCELLED' }
+    // Deletar recibo
+    await prisma.receipts.delete({
+      where: { id }
     });
+
+    const receipt = { id, message: 'Recibo cancelado com sucesso' };
 
     return NextResponse.json({ message: 'Recibo cancelado com sucesso', receipt });
   } catch (error) {
@@ -363,19 +373,19 @@ async function generateReceiptNumber(userId: string): Promise<string> {
   // Buscar o último recibo do ano
   const lastReceipt = await prisma.receipts.findFirst({
     where: {
-      userId,
-      number: {
+      issued_by: userId,
+      receipt_number: {
         startsWith: prefix
       }
     },
     orderBy: {
-      number: 'desc'
+      receipt_number: 'desc'
     }
   });
 
   let nextNumber = 1;
   if (lastReceipt) {
-    const lastNumber = parseInt(lastReceipt.number.replace(prefix, ''));
+    const lastNumber = parseInt(lastReceipt.receipt_number.replace(prefix, ''));
     nextNumber = lastNumber + 1;
   }
 
@@ -387,8 +397,7 @@ async function calculateReceiptStats(userId: string) {
   const [totalStats, paidStats, pendingStats] = await Promise.all([
     prisma.receipts.aggregate({
       where: {
-        userId,
-        status: { not: 'CANCELLED' }
+        issued_by: userId
       },
       _count: {
         id: true
@@ -399,8 +408,7 @@ async function calculateReceiptStats(userId: string) {
     }),
     prisma.receipts.aggregate({
       where: {
-        userId,
-        status: 'PAID'
+        issued_by: userId
       },
       _count: {
         id: true
@@ -411,8 +419,7 @@ async function calculateReceiptStats(userId: string) {
     }),
     prisma.receipts.aggregate({
       where: {
-        userId,
-        status: { in: ['ISSUED', 'SENT'] }
+        issued_by: userId
       },
       _count: {
         id: true
@@ -424,11 +431,11 @@ async function calculateReceiptStats(userId: string) {
   ]);
 
   return {
-    totalIssued: totalStats._count.id || 0,
-    totalAmount: totalStats._sum.amount || 0,
-    paidCount: paidStats._count.id || 0,
-    paidAmount: paidStats._sum.amount || 0,
-    pendingCount: pendingStats._count.id || 0,
-    pendingAmount: pendingStats._sum.amount || 0
+    totalIssued: totalStats._count.id ?? 0,
+    totalAmount: totalStats._sum.amount ?? 0,
+    paidCount: paidStats._count.id ?? 0,
+    paidAmount: paidStats._sum.amount ?? 0,
+    pendingCount: pendingStats._count.id ?? 0,
+    pendingAmount: pendingStats._sum.amount ?? 0
   };
 }

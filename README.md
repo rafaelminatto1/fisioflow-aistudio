@@ -6,7 +6,7 @@
 
 **Plataforma completa para gestão de clínicas de fisioterapia**
 
-[![Deploy Status](https://img.shields.io/badge/deploy-ready-brightgreen)](https://fisioflow.vercel.app)
+[![Deploy Status](https://img.shields.io/badge/deploy-ready-brightgreen)](https://fisioflow.digitalocean.app)
 [![Security](https://img.shields.io/badge/security-A+-green)](./docs/SECURITY.md)
 [![Uptime](https://img.shields.io/badge/uptime-99.9%25-brightgreen)](https://status.fisioflow.com)
 [![License](https://img.shields.io/badge/license-MIT-blue)](./LICENSE)
@@ -91,8 +91,7 @@ O **FisioFlow** é uma plataforma moderna e completa para gestão de clínicas d
 - **Validation**: Zod
 
 ### Infraestrutura
-- **Frontend Hosting**: Vercel
-- **Backend Hosting**: DigitalOcean Droplets
+- **Hosting**: DigitalOcean Droplets (Frontend + Backend)
 - **Database**: DigitalOcean Managed PostgreSQL
 - **File Storage**: DigitalOcean Spaces
 - **Monitoring**: Grafana + Prometheus
@@ -110,7 +109,7 @@ O **FisioFlow** é uma plataforma moderna e completa para gestão de clínicas d
 
 ```mermaid
 graph TB
-    subgraph "Frontend (Vercel)"
+    subgraph "Frontend (DigitalOcean)"
         A[Next.js App]
         B[Static Assets]
         C[API Routes]
@@ -151,7 +150,7 @@ graph TB
 
 ### Fluxo de Dados
 
-1. **Frontend** (Vercel) serve a interface do usuário
+1. **Frontend** (DigitalOcean) serve a interface do usuário
 2. **API Routes** (Next.js) fazem chamadas para o backend
 3. **Backend** (DigitalOcean) processa lógica de negócio
 4. **Database** (PostgreSQL) armazena dados estruturados
@@ -207,10 +206,7 @@ node environment/validation/validate-env.js
 # 1. Configurar infraestrutura
 ./scripts/setup-infrastructure.sh
 
-# 2. Deploy no Vercel (Frontend)
-vercel --prod
-
-# 3. Deploy no DigitalOcean (Backend)
+# 2. Deploy na DigitalOcean (Full Stack)
 ./scripts/deploy-backend.sh
 
 # 4. Configurar monitoramento

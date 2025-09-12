@@ -128,7 +128,7 @@ jobs:
           NODE_ENV: production
           DATABASE_URL: "postgresql://user:pass@localhost:5432/prod"
           NEXTAUTH_SECRET: "production-secret"
-          NEXTAUTH_URL: "https://fisioflow.vercel.app"
+          NEXTAUTH_URL: "https://fisioflow.digitalocean.app"
           
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -367,7 +367,7 @@ jobs:
           sleep 60
           
           # Health check
-          PROD_URL="https://fisioflow.vercel.app"
+          PROD_URL="https://fisioflow.digitalocean.app"
           
           for i in {1..10}; do
             if curl -f "$PROD_URL/api/health"; then
@@ -413,7 +413,7 @@ jobs:
                   \"type\": \"section\",
                   \"text\": {
                     \"type\": \"mrkdwn\",
-                    \"text\": \"$EMOJI *FisioFlow $TYPE $VERSION* has been deployed to production!\\n\\n:link: <https://fisioflow.vercel.app|View Application>\\n:octocat: <https://github.com/${{ github.repository }}/releases/tag/$VERSION|View Release>\"
+                    \"text\": \"$EMOJI *FisioFlow $TYPE $VERSION* has been deployed to production!\\n\\n:link: <https://fisioflow.digitalocean.app|View Application>\\n:octocat: <https://github.com/${{ github.repository }}/releases/tag/$VERSION|View Release>\"
                   }
                 }
               ]

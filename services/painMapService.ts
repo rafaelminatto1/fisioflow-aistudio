@@ -64,18 +64,18 @@ const mockPainMapSessions: PainMapSession[] = [
         x: 150,
         y: 200,
         intensity: 7,
-        bodyPart: 'back_lower',
+        bodyPart: 'back',
         description: 'Dor lombar intensa ao acordar',
-        type: 'sharp'
+        type: 'aguda'
       },
       {
         id: '2',
         x: 120,
         y: 150,
         intensity: 5,
-        bodyPart: 'shoulder_left',
+        bodyPart: 'front',
         description: 'Tensão no ombro esquerdo',
-        type: 'aching'
+        type: 'latejante'
       }
     ],
     overallPainLevel: 6,
@@ -95,27 +95,27 @@ const mockPainMapSessions: PainMapSession[] = [
         x: 150,
         y: 200,
         intensity: 8,
-        bodyPart: 'back_lower',
+        bodyPart: 'back',
         description: 'Dor lombar severa',
-        type: 'sharp'
+        type: 'aguda'
       },
       {
         id: '4',
         x: 120,
         y: 150,
         intensity: 6,
-        bodyPart: 'shoulder_left',
+        bodyPart: 'front',
         description: 'Dor no ombro esquerdo',
-        type: 'aching'
+        type: 'latejante'
       },
       {
         id: '5',
         x: 180,
         y: 150,
         intensity: 4,
-        bodyPart: 'shoulder_right',
+        bodyPart: 'front',
         description: 'Leve desconforto no ombro direito',
-        type: 'dull'
+        type: 'cansaço'
       }
     ],
     overallPainLevel: 7,
@@ -135,9 +135,9 @@ const mockPainMapSessions: PainMapSession[] = [
         x: 100,
         y: 100,
         intensity: 6,
-        bodyPart: 'neck',
+        bodyPart: 'front',
         description: 'Dor cervical por postura',
-        type: 'stiff'
+        type: 'formigamento'
       }
     ],
     overallPainLevel: 6,
@@ -328,7 +328,7 @@ class PainMapService {
     const resolvedPainAreas: string[] = []
 
     // Check all body parts from both sessions
-    const allBodyParts = new Set([...bodyParts1.keys(), ...bodyParts2.keys()])
+    const allBodyParts = new Set([...Array.from(bodyParts1.keys()), ...Array.from(bodyParts2.keys())])
 
     allBodyParts.forEach(bodyPart => {
       const intensities1 = bodyParts1.get(bodyPart) || []

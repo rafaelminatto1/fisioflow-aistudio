@@ -1,5 +1,32 @@
 # Deploy do FisioFlow no DigitalOcean
 
+## 📋 Migração da Vercel para DigitalOcean
+
+### Por que migramos da Vercel?
+
+1. **Controle Total**: DigitalOcean oferece maior controle sobre a infraestrutura
+2. **Custos Previsíveis**: Planos fixos sem surpresas de billing
+3. **Performance**: Melhor performance para aplicações full-stack
+4. **Banco de Dados**: Managed Database integrado na mesma plataforma
+5. **Escalabilidade**: Recursos dedicados e escaláveis
+
+### Configurações Removidas da Vercel
+
+Durante a migração, foram removidas as seguintes configurações específicas da Vercel:
+
+- ✅ `output: 'standalone'` do `next.config.js`
+- ✅ Referências à URLs `*.vercel.app` em workflows e documentação
+- ✅ Comentários e configurações específicas da Vercel
+- ✅ Scripts de deploy da Vercel no `package.json`
+
+### Benefícios da Nova Arquitetura
+
+- **Infraestrutura Unificada**: Frontend, backend e banco na mesma plataforma
+- **Melhor Debugging**: Logs centralizados e ferramentas de monitoramento
+- **Backup Automático**: Banco de dados com backup automático
+- **SSL/TLS**: Certificados gerenciados automaticamente
+- **CDN Global**: Distribuição de conteúdo otimizada
+
 ## 🚀 Guia Completo de Deploy
 
 ### Pré-requisitos

@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { Sidebar } from '@/components/Sidebar';
-import { Search, Filter, Grid, List, Star, Play, Clock, User, BarChart3, TrendingUp } from 'lucide-react';
+import { Search, Filter, Grid, List, Star, Play, Clock, User, BarChart3, TrendingUp, Heart } from 'lucide-react';
 import { 
   getExerciseLibraryData, 
   searchExercises, 
@@ -173,7 +174,7 @@ const ExerciseLibraryPage: React.FC = () => {
                     : 'bg-white text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <Grid3X3 className="w-4 h-4" />
+                <Grid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setView('list')}
