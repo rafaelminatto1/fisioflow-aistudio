@@ -35,7 +35,7 @@ const navigation = [
   { name: 'Configurações', href: '/configuracoes', icon: Settings },
 ];
 
-export default function Sidebar() {
+function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
@@ -187,3 +187,6 @@ export default function Sidebar() {
     </>
   );
 }
+
+export default Sidebar;
+export { Sidebar };

@@ -210,3 +210,5 @@ export default function FinancialGoals() {
     </div>
   );
 }
+
+export { FinancialGoals };

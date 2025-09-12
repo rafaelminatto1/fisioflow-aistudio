@@ -1,4 +1,4 @@
-import { GET as authGET, POST as authPOST } from '@/lib/auth';
+import { GET as authGET, POST as authPOST, authOptions } from '@/lib/auth';
 import { NextRequest } from 'next/server';
 
 // Wrap handlers with error logging
@@ -28,3 +28,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   return handleRequest(request, authPOST);
 }
+
+// Export authOptions for compatibility
+export { authOptions };

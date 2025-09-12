@@ -96,3 +96,8 @@ export class EmailService {
 
 export const emailService = new EmailService()
 export default emailService
+
+// Legacy export for compatibility
+export const sendEmail = (data: any) => {
+  return emailService.sendEmail(data);
+};

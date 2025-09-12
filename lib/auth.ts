@@ -148,6 +148,11 @@ const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };
 export const { auth, signIn, signOut } = handler;
 
+// Legacy export for compatibility with older NextAuth versions
+export const getServerSession = (req?: any, res?: any) => {
+  return auth();
+};
+
 /**
  * Helper para obter a sessão do usuário no lado do servidor.
  */

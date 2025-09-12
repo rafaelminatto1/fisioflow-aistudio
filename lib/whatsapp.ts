@@ -33,3 +33,8 @@ export const sendAppointmentConfirmation = whatsappBusinessService.sendAppointme
 export const sendAppointmentReminder = whatsappBusinessService.sendAppointmentReminder.bind(whatsappBusinessService)
 export const sendCustomMessage = whatsappBusinessService.sendCustomMessage.bind(whatsappBusinessService)
 export const sendHEP = whatsappBusinessService.sendHEP.bind(whatsappBusinessService)
+
+// Legacy export for compatibility
+export const sendWhatsAppMessage = (data: any) => {
+  return whatsappBusinessService.sendCustomMessage(data.to, data.message);
+};
