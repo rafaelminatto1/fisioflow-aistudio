@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: true,
   swcMinify: true,
+  output: 'standalone',
   eslint: {
     ignoreDuringBuilds: true, // TODO: Fix 800+ ESLint errors then set to false
   },
