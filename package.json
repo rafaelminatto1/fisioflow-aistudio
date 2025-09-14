@@ -13,7 +13,7 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "check": "npm run lint && npm run type-check",
-    "prebuild": "prisma generate",
+    "prebuild": "echo 'Skipping prebuild'",
     "prisma:migrate": "prisma migrate dev",
     "prisma:studio": "prisma studio",
     "prisma:seed": "tsx prisma/seed.ts",
